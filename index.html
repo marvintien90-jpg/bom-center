@@ -578,7 +578,8 @@ function startWatch(){ if(watchOn) return; watchOn=true; setInterval(checkRemote
 function saveLocalVers(){}
 function sbQueue(){}
 async function markSynced(){}
-function siteDeleteBrand(id){ delete revs[id]; sbc.from('bom_brands').delete().eq('id',id).then(({error})=>{ if(error) setStatus('刪除失敗'); else loadVersions() }) }
+function siteDeleteBrand(id){ const keep=brands[id]||null, keepRev=revs[id]; delete revs[id]; setStatus("刪除中…");
+  sbc.from("bom_brands").delete().eq("id",id).select("id").then(({data,error})=>{ if(error||!data||!data.length){ window.__delErr=error?(error.code+" "+error.message):"0 rows"; notice="品牌沒有刪除成功"+(error?"（"+(error.message||"").slice(0,80)+"）":"：資料庫沒有刪到任何資料")+"。資料仍然保留，請把這段訊息告訴顧問。"; setStatus("刪除失敗"); checkRemote().then(render); render() } else { setStatus("已刪除，並已自動保留一份刪除前備份"); loadVersions() } }) }
 function siteDeleteVer(id){ sbc.from('bom_snapshots').delete().eq('id',id).then(({error})=>{ if(error) setStatus('刪除失敗：只有管理員可以刪除存檔點') }) }
 async function verCreate(brandId,note){ const b=brands[brandId]; if(!b||RO()) return null;
   const v={id:uid('v')+Date.now().toString(36),brandId,brandName:b.name,note:note||'手動存檔',at:new Date().toISOString(),data:JSON.parse(JSON.stringify(b)),by:me&&me.email,auto:false,synced:true};
