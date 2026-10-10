@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BOM 運算中心</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 版面：上方品牌列＋兩組分頁（門市 BOM／總部試算），下方單一工作區，表格為主、摘要在前 */
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:18px 48px;display:flex;flex-direction:column;gap:16px}
+header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.02em}
+h2{font-size:16px;margin:0;font-weight:700;text-wrap:balance}
+.sub{color:var(--mute);font-size:13px;margin:0;max-width:65ch}
+.brandbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input,button{font:inherit;color:inherit}
+select,input[type=text],input[type=number]{background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;min-width:0}
+input[type=number]{font-family:var(--mono);text-align:right;width:92px}
+td input[type=text]{width:100%;min-width:110px}
+:is(select,input,button,a):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:500}
+button.del{color:var(--bad);padding:3px 8px;font-size:12px}
+button.del.armed{background:var(--bad-bg);border-color:var(--bad)}
+.status{font-size:12px;color:var(--mute)}
+nav{display:flex;flex-direction:column;gap:6px}
+.grp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.grp>span{font-size:12px;color:var(--mute);letter-spacing:.08em;width:72px}
+.tab{border-radius:999px;padding:4px 14px}
+.tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:500}
+main{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:flex-start}
+.head>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-weight:500;color:var(--mute);font-size:12px;background:var(--field);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+tfoot td{font-weight:700;background:var(--field)}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:500}
+.good{background:var(--good-bg);color:var(--good)}.warn{background:var(--warn-bg);color:var(--warn)}.bad{background:var(--bad-bg);color:var(--bad)}
+.puz{background:var(--accent-soft);color:var(--accent)}
+svg text{font-family:var(--sans)}
+.tag{background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:0 6px;font-size:12px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.tile b{font-family:var(--mono);font-size:20px;font-weight:500}
+.tile span{font-size:12px;color:var(--mute)}
+.params{display:flex;flex-wrap:wrap;gap:10px 18px;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.params label{display:flex;gap:6px;align-items:center;font-size:13px}
+.split{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px}
+.list{display:flex;flex-direction:column;gap:4px}
+.list button{text-align:left;display:flex;justify-content:space-between;gap:8px}
+.list button[aria-current=true]{border-color:var(--accent);background:var(--accent-soft)}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.note{font-size:12px;color:var(--mute);margin:0}
+.bar{display:inline-block;height:6px;border-radius:3px;background:var(--accent);vertical-align:middle;margin-right:6px}
+.empty{text-align:center;padding:36px 12px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.sample{background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:6px 10px;font-size:13px}
+@media (max-width:720px){.split{grid-template-columns:1fr}.grp>span{width:100%}}
+body{margin:0}[hidden]{display:none!important}img{max-width:100%}
+input[type=email],input[type=password],input[type=date]{background:var(--field);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font:inherit;color:inherit;min-width:0}
+:disabled{opacity:.75;cursor:not-allowed}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div><h1>BOM 運算中心</h1><p class="sub">食材、配方、成本、叫貨到總部疊價獲利，改一個數字全部跟著重算。</p></div>
+    <div class="brandbar" id="brandbar">
+      <label for="brandSel">品牌</label>
+      <select id="brandSel"></select>
+      <button id="btnNew">新增品牌</button>
+      <button id="btnCopy">複製品牌</button>
+      <button id="btnExport" hidden>匯出 Excel</button>
+      <span class="status" id="status"></span>
+    </div>
+    <div class="brandbar" id="userbar"></div>
+  </header>
+  <nav id="nav"></nav>
+  <div id="banner"></div>
+  <main id="main"><div class="empty"><p class="sub">讀取中…</p></div></main>
+  <footer class="note" style="text-align:center">BOM 運算中心 · 品牌加辣餐飲顧問工作室 授權使用</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const TABS=[['store','門市 BOM',[['ing','食材主檔'],['semi','半成品'],['recipe','品項配方'],['combo','套餐組合'],['order','叫貨推估'],['pricelog','價格紀錄']]],
+            ['ana','經營分析',[['cost','成本毛利'],['matrix','產品四象限'],['price','定價漲價試算'],['channel','外送通路定價'],['pl','損益趨勢'],['be','損益兩平']]],
+            ['hq','總部試算',[['markup','疊價設定'],['hqitem','單品獲利'],['supply','總供貨試算'],['frsim','加盟主損益']]],
+            ['sys','系統',[['ver','版本與備份']]]];
+const TABIDS=TABS.flatMap(g=>g[2].map(t=>t[0]));
+let brands={}, cur=null, tab='cost', db=null, mode='loading', selItem=null, selSemi=null, sim={}, armed=null, mxCat='';
+const dirty=new Set(); let timer=null, chain=Promise.resolve();
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=p=>p+Math.random().toString(36).slice(2,8);
+const nf=(n,d=1)=>isFinite(n)?n.toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d}):'–';
+const $$=(n,d=1)=>isFinite(n)?'$'+nf(n,d):'–';
+const pct=(n,d=1)=>isFinite(n)?nf(n*100,d)+'%':'–';
+const B=()=>brands[cur];
+
+/* ---------- 運算核心 ---------- */
+function ctx(b,adj={}){
+  const def=b.settings.defaultMarkup, I={}, S={};
+  b.ingredients.forEach(i=>{
+    const m=(i.markup??def)/100, buy=i.buyPrice*(1+(adj[i.id]||0)/100);
+    const hq=buy/(i.packSize||1)/((i.yield||100)/100);
+    I[i.id]={...i,m,hq,fr:i.supply==='hq'?hq*(1+m):hq,isHq:i.supply==='hq'};
+  });
+  b.semis.forEach(s=>{
+    let hq=0,fr=0; const y=s.batchYield||1, m=(s.markup??def)/100;
+    s.lines.forEach(l=>{const g=I[l.ref.slice(2)]; if(g){hq+=g.hq*l.qty; fr+=g.fr*l.qty}});
+    hq/=y; fr/=y;
+    S[s.id]={...s,m,hq,fr:s.supply==='hq'?hq*(1+m):fr,isHq:s.supply==='hq',yield:100};
+  });
+  return {I,S,get:k=>k[0]==='i'?I[k.slice(2)]:S[k.slice(2)]};
+}
+/* 把一份餐點拆成「門市實際會進貨的東西」：食材，或總部供應的半成品 */
+function explode(item,c){
+  const out={}; const add=(k,q)=>out[k]=(out[k]||0)+q;
+  item.lines.forEach(l=>{
+    if(l.ref[0]==='i'){ if(c.get(l.ref)) add(l.ref,l.qty); return }
+    const s=c.S[l.ref.slice(2)]; if(!s) return;
+    if(s.isHq) add(l.ref,l.qty);
+    else s.lines.forEach(x=>{ if(c.get(x.ref)) add(x.ref,x.qty*l.qty/(s.batchYield||1)) });
+  });
+  return out;
+}
+function itemCalc(item,c){
+  let hq=0,fr=0,rev=0,cogs=0; const ex=explode(item,c);
+  for(const k in ex){const p=c.get(k),q=ex[k]; hq+=p.hq*q; fr+=p.fr*q; if(p.isHq){rev+=p.fr*q; cogs+=p.hq*q}}
+  return {hq,fr,rev,cogs,ex};
+}
+function demand(b,c){ const d={};
+  b.items.forEach(it=>{const ex=explode(it,c); for(const k in ex) d[k]=(d[k]||0)+ex[k]*(it.monthlySales||0)});
+  return d; }
+
+/* ---------- 儲存 ---------- */
+function setStatus(t){$('#status').textContent=t}
+function touch(){ if(!cur) return; dirty.add(cur); sbQueue(cur); setStatus('儲存中…'); clearTimeout(timer); timer=setTimeout(flush,700) }
+function flush(){
+  const ids=[...dirty]; dirty.clear();
+  if(!db){ try{localStorage.setItem('bom-brands',JSON.stringify(brands)); setStatus('已存在這個瀏覽器')}catch(e){setStatus('無法儲存')} return }
+  ids.forEach(id=>{ const body=brands[id]&&JSON.parse(JSON.stringify(brands[id])); if(!body) return;
+    chain=chain.then(()=>db.doc('brands/'+id).set(body)).then(()=>{ if(!dirty.size) setStatus('已儲存') })
+      .catch(e=>setStatus(e&&e.code==='invalid_argument'?'你沒有修改權限，變更未儲存':'儲存失敗，請稍後再改一次')) });
+}
+async function boot(){
+  const h=location.hash.slice(1); if(TABIDS.includes(h)) tab=h;
+  try{ db=window.claude&&window.claude.use?await window.claude.use('db'):null }catch(e){db=null}
+  try{ dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null }catch(e){dl=null}
+  try{ mcp=window.claude&&window.claude.use?await window.claude.use('mcp'):null }catch(e){mcp=null}
+  if(!db){ try{versions=JSON.parse(localStorage.getItem('bom-versions')||'[]')}catch(e){versions=[]} mode='local'; try{brands=JSON.parse(localStorage.getItem('bom-brands')||'{}')}catch(e){brands={}} Object.values(brands).forEach(norm);
+    pick(); setStatus('僅存在這個瀏覽器'); render(); return }
+  db.collection('brands').onSnapshot(snap=>{
+    mode='cloud'; let changed=false; const seen=new Set();
+    snap.docs.forEach(d=>{ seen.add(d.id); if(dirty.has(d.id)) return;
+      const j=JSON.stringify(d.data()); if(raw[d.id]!==j){raw[d.id]=j; brands[d.id]=norm(JSON.parse(j)); changed=true} });
+    Object.keys(brands).forEach(id=>{ if(!seen.has(id)&&!dirty.has(id)&&!snap.metadata.fromCache){delete brands[id]; changed=true} });
+    if(pick()||changed||$('#main .empty')) render();
+    if(!dirty.size) setStatus('已儲存');
+  },()=>{ setStatus('連線中斷，重新整理頁面可恢復') });
+  db.collection('versions').onSnapshot(snap=>{ versions=snap.docs.map(d=>({id:d.id,...JSON.parse(JSON.stringify(d.data()))})).sort((a,z)=>a.at<z.at?1:-1); reVer() },()=>{});
+}
+function pick(){ const ids=Object.keys(brands); if(cur&&brands[cur]) return false; cur=ids[0]||null; selItem=selSemi=null; return true }
+function blank(name){return {name,sample:false,settings:{defaultMarkup:15,targetRate:35,franchiseStores:1,directStores:0,logisticsPct:3,cycleDays:3,safetyPct:10,daysPerMonth:30},ingredients:[],semis:[],items:[]}}
+
+/* ---------- 共用元件 ---------- */
+const num=(p,v,o={})=>`<input type="number" id="f-${p}" data-p="${p}" data-t="n" ${o.nul?'data-nul="1"':''} value="${v??''}" step="${o.step||'any'}" placeholder="${o.ph||''}" aria-label="${o.label||p}">`;
+const txt=(p,v,l)=>`<input type="text" id="f-${p}" data-p="${p}" value="${esc(v)}" aria-label="${l||p}">`;
+const sel=(p,v,opts,l)=>`<select id="f-${p}" data-p="${p}" aria-label="${l||p}">${opts.map(o=>`<option value="${esc(o[0])}" ${o[0]===v?'selected':''}>${esc(o[1])}</option>`).join('')}</select>`;
+const del=p=>`<button class="del ${armed===p?'armed':''}" data-del="${p}">${armed===p?'確定刪除':'刪除'}</button>`;
+const SUP=[['hq','總部供貨'],['self','門市自採']];
+function rateCell(r,t){ const cls=r<=t?'good':r<=t+0.03?'warn':'bad', lab=r<=t?'達標':r<=t+0.03?'留意':'超標';
+  return `<td class="n">${pct(r)}</td><td><span class="pill ${cls}">${lab}</span></td>` }
+const refOpts=(b,withSemi)=>[...b.ingredients.map(i=>['i:'+i.id,i.name]),...(withSemi?b.semis.map(s=>['s:'+s.id,'〔半成品〕'+s.name]):[])];
+function params(b,keys){ const L={defaultMarkup:'預設疊價 %',targetRate:'目標成本率 %',franchiseStores:'加盟店數',directStores:'直營店數',logisticsPct:'物流倉儲費占供貨額 %',cycleDays:'叫貨週期（天）',safetyPct:'安全庫存 %',daysPerMonth:'每月營業天數'};
+  return `<div class="params">${keys.map(k=>`<label for="f-settings.${k}">${L[k]} ${num('settings.'+k,b.settings[k],{label:L[k]})}</label>`).join('')}</div>` }
+
+/* ---------- 各分頁 ---------- */
+const V={};
+V.ing=(b,c)=>`<div class="head"><div><h2>食材主檔</h2><p class="sub">每樣食材填進貨價與包裝量，系統換算成「每 1 個用量單位多少錢」。可用率是去皮去骨後剩下的比例。</p></div><button class="pri" data-add="ing">新增食材</button></div>
+<div class="scroll"><table><thead><tr><th>食材</th><th>分類</th><th>進貨單位</th><th class="n">進貨價</th><th class="n">每單位含量</th><th>用量單位</th><th class="n">可用率 %</th><th>供貨方式</th><th class="n">單位成本</th><th></th></tr></thead><tbody>
+${b.ingredients.map((i,x)=>{const p='ingredients.'+x;return `<tr><td>${txt(p+'.name',i.name,'食材名稱')}</td><td>${txt(p+'.cat',i.cat,'分類')}</td><td>${txt(p+'.packUnit',i.packUnit,'進貨單位')}</td><td class="n">${num(p+'.buyPrice',i.buyPrice,{label:'進貨價'})}</td><td class="n">${num(p+'.packSize',i.packSize,{label:'每單位含量'})}</td><td>${txt(p+'.unit',i.unit,'用量單位')}</td><td class="n">${num(p+'.yield',i.yield,{label:'可用率'})}</td><td>${sel(p+'.supply',i.supply,SUP,'供貨方式')}</td><td class="n">${$$(c.I[i.id].hq,3)}/${esc(i.unit)}</td><td>${del(p)}</td></tr>`}).join('')||'<tr><td colspan="10">還沒有食材，按右上角「新增食材」開始。</td></tr>'}
+</tbody></table></div>`;
+
+V.semi=(b,c)=>{ if(!b.semis.find(s=>s.id===selSemi)) selSemi=b.semis[0]?.id||null; const x=b.semis.findIndex(s=>s.id===selSemi), s=b.semis[x];
+return `<div class="head"><div><h2>半成品</h2><p class="sub">醬料、白飯、高湯這類先做好再用的東西。填一鍋的材料與做出來的總量，就能算出每 1 單位成本。</p></div><button class="pri" data-add="semi">新增半成品</button></div>
+<div class="split"><div class="list">${b.semis.map(t=>`<button data-pick-semi="${t.id}" aria-current="${t.id===selSemi}"><span>${esc(t.name)}</span><span class="tag">${t.supply==='hq'?'總部':'自製'}</span></button>`).join('')||'<p class="note">尚無半成品</p>'}</div>
+${s?`<div class="col"><div class="params"><label>名稱 ${txt(`semis.${x}.name`,s.name,'名稱')}</label><label>單位 ${txt(`semis.${x}.unit`,s.unit,'單位')}</label><label>一批做出總量 ${num(`semis.${x}.batchYield`,s.batchYield,{label:'產出量'})}</label><label>來源 ${sel(`semis.${x}.supply`,s.supply,[['hq','總部製作供貨'],['self','門市自製']],'來源')}</label>${s.supply==='hq'?`<label>供貨包裝量 ${num(`semis.${x}.packSize`,s.packSize,{label:'包裝量'})}</label><label>包裝單位 ${txt(`semis.${x}.packUnit`,s.packUnit,'包裝單位')}</label>`:''}${del('semis.'+x)}</div>
+<div class="scroll"><table><thead><tr><th>材料</th><th class="n">一批用量</th><th>單位</th><th class="n">小計（總部成本）</th><th></th></tr></thead><tbody>
+${s.lines.map((l,y)=>{const g=c.get(l.ref);return `<tr><td>${sel(`semis.${x}.lines.${y}.ref`,l.ref,refOpts(b,false),'材料')}</td><td class="n">${num(`semis.${x}.lines.${y}.qty`,l.qty,{label:'用量'})}</td><td>${esc(g?.unit||'')}</td><td class="n">${g?$$(g.hq*l.qty,2):'已刪除'}</td><td>${del(`semis.${x}.lines.${y}`)}</td></tr>`}).join('')}
+</tbody><tfoot><tr><td colspan="3">每 1 ${esc(s.unit)} 成本</td><td class="n">${$$(c.S[s.id].hq,3)}</td><td></td></tr></tfoot></table></div>
+<div><button data-add="semiline">加一項材料</button></div>
+<p class="note">${s.supply==='hq'?`加盟主進貨價：每 1 ${esc(s.unit)} ${$$(c.S[s.id].fr,3)}（疊價 ${nf(c.S[s.id].m*100,0)}%，可在「疊價設定」調整）`:'門市自製時，成本直接用各材料的門市進貨價計算。'}</p></div>`:'<div class="empty"><p class="sub">新增一個半成品，例如招牌醬或白飯。</p></div>'}</div>` };
+
+V.recipe=(b,c)=>{ if(!b.items.find(s=>s.id===selItem)) selItem=b.items[0]?.id||null; const x=b.items.findIndex(s=>s.id===selItem), it=b.items[x]; const k=it&&itemCalc(it,c);
+return `<div class="head"><div><h2>品項配方</h2><p class="sub">每道餐點的「食譜卡」：用了哪些料、各多少量。右邊即時算出一份的成本。</p></div><button class="pri" data-add="item">新增品項</button></div>
+<div class="split"><div class="list">${b.items.map(t=>`<button data-pick-item="${t.id}" aria-current="${t.id===selItem}"><span>${esc(t.name)}</span><span>${$$(t.price,0)}</span></button>`).join('')||'<p class="note">尚無品項</p>'}</div>
+${it?`<div class="col"><div class="params"><label>品名 ${txt(`items.${x}.name`,it.name,'品名')}</label><label>分類 ${txt(`items.${x}.cat`,it.cat,'分類')}</label><label>售價 ${num(`items.${x}.price`,it.price,{label:'售價'})}</label><label>單店月銷量 ${num(`items.${x}.monthlySales`,it.monthlySales,{label:'月銷量'})}</label>${del('items.'+x)}</div>
+<div class="tiles"><div class="tile"><span>加盟主一份成本</span><b>${$$(k.fr)}</b><span>成本率 ${pct(k.fr/it.price)}</span></div><div class="tile"><span>總部進貨一份成本</span><b>${$$(k.hq)}</b><span>成本率 ${pct(k.hq/it.price)}（直營店看這個）</span></div><div class="tile"><span>加盟主一份毛利</span><b>${$$(it.price-k.fr)}</b><span>售價減食材成本</span></div></div>
+<div class="scroll"><table><thead><tr><th>用料</th><th class="n">一份用量</th><th>單位</th><th class="n">總部成本</th><th class="n">加盟主成本</th><th></th></tr></thead><tbody>
+${it.lines.map((l,y)=>{const g=c.get(l.ref);return `<tr><td>${sel(`items.${x}.lines.${y}.ref`,l.ref,refOpts(b,true),'用料')}</td><td class="n">${num(`items.${x}.lines.${y}.qty`,l.qty,{label:'用量'})}</td><td>${esc(g?.unit||'')}</td><td class="n">${g?$$(g.hq*l.qty,2):'已刪除'}</td><td class="n">${g?$$(g.fr*l.qty,2):''}</td><td>${del(`items.${x}.lines.${y}`)}</td></tr>`}).join('')}
+</tbody><tfoot><tr><td colspan="3">一份合計</td><td class="n">${$$(k.hq,2)}</td><td class="n">${$$(k.fr,2)}</td><td></td></tr></tfoot></table></div>
+<div><button data-add="itemline">加一項用料</button></div></div>`:'<div class="empty"><p class="sub">新增第一個品項，開始建立配方。</p></div>'}</div>` };
+
+V.cost=(b,c)=>{ const t=b.settings.targetRate/100; let sales=0,cost=0;
+const rows=b.items.map(it=>{const k=itemCalc(it,c),q=it.monthlySales||0; sales+=it.price*q; cost+=k.fr*q;
+ return `<tr><td>${esc(it.name)}</td><td>${esc(it.cat)}</td><td class="n">${$$(it.price,0)}</td><td class="n">${$$(k.hq)}</td><td class="n">${$$(k.fr)}</td>${rateCell(k.fr/it.price,t)}<td class="n">${$$(it.price-k.fr)}</td><td class="n">${nf(q,0)}</td><td class="n">${$$((it.price-k.fr)*q,0)}</td></tr>`}).join('');
+return `<div class="head"><div><h2>成本毛利總表</h2><p class="sub">一眼看出哪道菜成本超標。燈號以「加盟主成本率」對照目標成本率判定，超過 3 個百分點內列為留意。</p></div></div>
+${params(b,['targetRate'])}
+<div class="tiles"><div class="tile"><span>單店月營收（依月銷量估）</span><b>${$$(sales,0)}</b></div><div class="tile"><span>單店月食材成本</span><b>${$$(cost,0)}</b></div><div class="tile"><span>整體食材成本率</span><b>${pct(cost/sales)}</b><span>目標 ${nf(b.settings.targetRate,0)}%</span></div><div class="tile"><span>單店月毛利</span><b>${$$(sales-cost,0)}</b></div></div>
+<div class="scroll"><table><thead><tr><th>品項</th><th>分類</th><th class="n">售價</th><th class="n">總部成本</th><th class="n">加盟主成本</th><th class="n">成本率</th><th>狀態</th><th class="n">一份毛利</th><th class="n">月銷量</th><th class="n">月毛利</th></tr></thead><tbody>${rows||'<tr><td colspan="10">尚無品項</td></tr>'}</tbody></table></div>
+<p class="note">售價以菜單標價計算，未另外扣除營業稅。</p>` };
+
+V.price=(b,c)=>{ const t=b.settings.targetRate/100, c2=ctx(b,sim); const any=Object.values(sim).some(v=>v);
+return `<div class="head"><div><h2>定價與漲價試算</h2><p class="sub">上半部：用目標成本率倒推建議售價。下半部：假設某些食材漲跌幾 %，看每道菜成本率變多少。試算數字不會存進主檔。</p></div></div>
+${params(b,['targetRate'])}
+<div class="scroll"><table><thead><tr><th>品項</th><th class="n">現行售價</th><th class="n">加盟主成本</th><th class="n">現行成本率</th><th class="n">建議售價</th><th class="n">取整到 5 元</th><th class="n">與現價差</th></tr></thead><tbody>
+${b.items.map(it=>{const k=itemCalc(it,c),s=k.fr/t,r=Math.ceil(s/5)*5;return `<tr><td>${esc(it.name)}</td><td class="n">${$$(it.price,0)}</td><td class="n">${$$(k.fr)}</td><td class="n">${pct(k.fr/it.price)}</td><td class="n">${$$(s)}</td><td class="n">${$$(r,0)}</td><td class="n">${r-it.price>0?'+':''}${nf(r-it.price,0)}</td></tr>`}).join('')}</tbody></table></div>
+<div class="head"><div><h2>食材漲跌模擬</h2><p class="sub">在想試算的食材填入漲跌幅，例如牛肉漲 10% 就填 10，跌價填負數。</p></div><button data-simclear="1">清除模擬</button></div>
+<div class="split"><div class="scroll"><table><thead><tr><th>食材</th><th class="n">漲跌 %</th></tr></thead><tbody>${b.ingredients.map(i=>`<tr><td>${esc(i.name)}</td><td class="n"><input type="number" id="sim-${i.id}" data-sim="${i.id}" data-p="sim.${i.id}" value="${sim[i.id]||''}" placeholder="0" aria-label="${esc(i.name)}漲跌"></td></tr>`).join('')}</tbody></table></div>
+<div class="scroll"><table><thead><tr><th>品項</th><th class="n">原成本</th><th class="n">模擬後成本</th><th class="n">原成本率</th><th class="n">模擬後</th><th>狀態</th><th class="n">單店月毛利變化</th></tr></thead><tbody>
+${b.items.map(it=>{const a=itemCalc(it,c).fr,n=itemCalc(it,c2).fr;return `<tr><td>${esc(it.name)}</td><td class="n">${$$(a)}</td><td class="n">${$$(n)}</td><td class="n">${pct(a/it.price)}</td>${rateCell(n/it.price,t)}<td class="n">${any?$$((a-n)*(it.monthlySales||0),0):'–'}</td></tr>`}).join('')}</tbody></table></div></div>` };
+
+V.order=(b,c)=>{ const s=b.settings, d=demand(b,c); let tot=0;
+const rows=Object.keys(d).map(k=>{const p=c.get(k),net=d[k],gross=net/((p.yield||100)/100),ps=p.packSize||1;
+ const cyc=gross/(s.daysPerMonth||30)*s.cycleDays*(1+s.safetyPct/100); tot+=net*p.fr;
+ return {p,html:`<tr><td>${esc(p.name)}</td><td><span class="tag">${p.isHq?'向總部叫貨':'門市自採'}</span></td><td class="n">${nf(gross,0)} ${esc(p.unit)}</td><td class="n">${ps>1||p.packUnit?nf(gross/ps,1)+' '+esc(p.packUnit||''):'–'}</td><td class="n">${nf(cyc,0)} ${esc(p.unit)}</td><td class="n">${p.packUnit?Math.ceil(cyc/ps)+' '+esc(p.packUnit):'–'}</td><td class="n">${$$(net*p.fr,0)}</td></tr>`}}).sort((a,z)=>(z.p.isHq-a.p.isHq)).map(r=>r.html).join('');
+return `<div class="head"><div><h2>叫貨與用量推估</h2><p class="sub">用各品項的單店月銷量，回推每樣食材一個月要用多少、每次該叫幾包。已把可用率的損耗算進去。月銷量在「品項配方」修改。</p></div></div>
+${params(b,['cycleDays','safetyPct','daysPerMonth'])}
+<div class="scroll"><table><thead><tr><th>進貨品項</th><th>來源</th><th class="n">月需求量</th><th class="n">月需求（進貨單位）</th><th class="n">每次叫貨量</th><th class="n">每次叫貨（整數）</th><th class="n">月進貨金額</th></tr></thead><tbody>${rows||'<tr><td colspan="7">尚無資料</td></tr>'}</tbody><tfoot><tr><td colspan="6">單店月進貨合計</td><td class="n">${$$(tot,0)}</td></tr></tfoot></table></div>
+<p class="note">每次叫貨量 = 月需求 ÷ 每月營業天數 × 叫貨週期 ×（1 + 安全庫存）。門市自製的半成品已拆回原料計算。</p>` };
+
+V.markup=(b,c)=>{ const row=(p,path,kind)=>{const ps=p.packSize||1;return `<tr><td>${esc(p.name)}</td><td>${kind}</td><td class="n">${$$(p.hq*ps*((p.yield||100)/100),1)}／${esc(p.packUnit||p.unit)}</td><td class="n">${num(path+'.markup',p.markup,{nul:1,ph:b.settings.defaultMarkup,label:'疊價'})}</td><td class="n">${$$(p.fr*ps*((p.yield||100)/100),1)}／${esc(p.packUnit||p.unit)}</td><td class="n">${$$((p.fr-p.hq)*ps*((p.yield||100)/100),1)}</td></tr>`};
+return `<div class="head"><div><h2>總部對加盟主疊價</h2><p class="sub">疊價就是總部進貨價往上加的成數，等於批發商的價差。留空的品項套用預設疊價，個別填數字則以該數字為準。</p></div></div>
+${params(b,['defaultMarkup'])}
+<div class="scroll"><table><thead><tr><th>供貨品項</th><th>類型</th><th class="n">總部成本</th><th class="n">疊價 %</th><th class="n">加盟主進貨價</th><th class="n">每單位價差</th></tr></thead><tbody>
+${b.ingredients.map((i,x)=>i.supply==='hq'?row(c.I[i.id],'ingredients.'+x,'食材'):'').join('')}${b.semis.map((s,x)=>s.supply==='hq'?row(c.S[s.id],'semis.'+x,'半成品'):'').join('')}</tbody></table></div>
+<p class="note">門市自採的食材不經過總部，不在此表。要改成總部供貨，請到「食材主檔」調整供貨方式。</p>` };
+
+V.hqitem=(b,c)=>{ const s=b.settings; let T=0;
+const rows=b.items.map(it=>{const k=itemCalc(it,c),g=k.rev-k.cogs,lg=k.rev*s.logisticsPct/100,net=g-lg,m=net*(it.monthlySales||0)*s.franchiseStores; T+=m;
+ return `<tr><td>${esc(it.name)}</td><td class="n">${$$(it.price,0)}</td><td class="n">${$$(k.rev,2)}</td><td class="n">${$$(k.cogs,2)}</td><td class="n">${$$(g,2)}</td><td class="n">${$$(lg,2)}</td><td class="n">${$$(net,2)}</td><td class="n">${pct(k.rev?net/k.rev:NaN)}</td><td class="n">${pct(k.fr?k.rev/k.fr:NaN,0)}</td><td class="n">${$$(m,0)}</td></tr>`}).join('');
+return `<div class="head"><div><h2>總部單品獲利試算</h2><p class="sub">加盟店每賣出一份，總部從供貨賺到多少。只計算總部供貨的品項價差，不含權利金與加盟金。</p></div></div>
+${params(b,['franchiseStores','logisticsPct'])}
+<div class="scroll"><table><thead><tr><th>品項</th><th class="n">售價</th><th class="n">總部供貨收入／份</th><th class="n">總部成本／份</th><th class="n">供貨毛利／份</th><th class="n">物流費／份</th><th class="n">淨賺／份</th><th class="n">淨利率</th><th class="n">總部供貨占比</th><th class="n">全體加盟店月貢獻</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="9">總部每月供貨淨利合計（${nf(s.franchiseStores,0)} 家加盟店）</td><td class="n">${$$(T,0)}</td></tr></tfoot></table></div>
+<p class="note">總部供貨占比 = 這道菜的食材成本裡，有多少比例是跟總部買的。占比低代表門市自採多，總部賺得少也較難控管品質。</p>` };
+
+V.supply=(b,c)=>{ const s=b.settings, d=demand(b,c), all=s.franchiseStores+s.directStores; let R=0,C=0;
+const rows=Object.keys(d).filter(k=>c.get(k).isHq).map(k=>{const p=c.get(k),net=d[k],gross=net/((p.yield||100)/100),ps=p.packSize||1,rev=net*p.fr*s.franchiseStores,cg=net*p.hq*s.franchiseStores; R+=rev;C+=cg;
+ return [rev,`<tr><td>${esc(p.name)}</td><td class="n">${nf(gross*all/ps,1)} ${esc(p.packUnit||p.unit)}</td><td class="n">${$$(net*p.hq*all,0)}</td><td class="n">${$$(rev,0)}</td><td class="n">${$$(cg,0)}</td><td class="n">${$$(rev-cg,0)}</td><td class="n">${pct((rev-cg)/rev)}</td><td><span class="bar" style="width:WIDpx"></span></td></tr>`]}).sort((a,z)=>z[0]-a[0]);
+const mx=rows[0]?.[0]||1, lg=R*s.logisticsPct/100;
+return `<div class="head"><div><h2>總部總供貨試算</h2><p class="sub">把所有門市的用量加總，看總部每月要備多少貨、供貨給加盟店能賺多少。直營店以成本價調撥，只計入備貨量，不計入供貨收入。</p></div></div>
+${params(b,['franchiseStores','directStores','logisticsPct'])}
+<div class="tiles"><div class="tile"><span>月供貨營收（加盟店）</span><b>${$$(R,0)}</b></div><div class="tile"><span>月供貨毛利</span><b>${$$(R-C,0)}</b><span>毛利率 ${pct((R-C)/R)}</span></div><div class="tile"><span>扣物流倉儲後淨利</span><b>${$$(R-C-lg,0)}</b><span>物流費 ${$$(lg,0)}</span></div><div class="tile"><span>平均每家加盟店月貢獻</span><b>${$$((R-C-lg)/(s.franchiseStores||1),0)}</b></div></div>
+<div class="scroll"><table><thead><tr><th>供貨品項</th><th class="n">月備貨量（全體門市）</th><th class="n">月採購金額</th><th class="n">加盟供貨收入</th><th class="n">加盟供貨成本</th><th class="n">供貨毛利</th><th class="n">毛利率</th><th>收入占比</th></tr></thead><tbody>${rows.map(r=>r[1].replace('WID',Math.max(2,Math.round(r[0]/mx*90)))).join('')||'<tr><td colspan="8">尚無總部供貨品項</td></tr>'}</tbody><tfoot><tr><td colspan="3">合計</td><td class="n">${$$(R,0)}</td><td class="n">${$$(C,0)}</td><td class="n">${$$(R-C,0)}</td><td class="n">${pct((R-C)/R)}</td><td></td></tr></tfoot></table></div>
+<p class="note">假設每家門市的月銷量相同（取自「品項配方」的單店月銷量）。</p>` };
+
+const ui={}, raw={}; let selCombo=null, dl=null;
+const sumA=x=>x.reduce((t,r)=>t+(+r.amount||0),0);
+const VAR=/服務費|促銷|廣告費|上架費|退款|免洗餐具|手續費/;
+function norm(b){ if(!b.periods) b.periods=b.actual?[b.actual]:[]; delete b.actual;
+  b.fixed=b.fixed||[]; b.be=Object.assign({varPct:0,ticket:0,target:0,foodMode:'auto',foodPct:35},b.be||{});
+  b.channels=b.channels||[{name:'內用／外帶',comm:0,extra:0,pack:0,up:0}];
+  b.combos=b.combos||[]; b.priceLog=b.priceLog||[];
+  b.fr=Object.assign({revenue:0,foodPct:35,laborPct:25,rent:60000,utilPct:4,royaltyPct:3,mktPct:1,otherFixed:20000,invest:2500000},b.fr||{});
+  return b }
+function theory(b,c){ let s=0,k=0; b.items.forEach(it=>{const q=it.monthlySales||0; s+=it.price*q; k+=itemCalc(it,c).fr*q}); return {sales:s,cost:k,rate:s?k/s:NaN} }
+function foodRate(b,c){ if(b.be.foodMode==='manual') return {r:b.be.foodPct/100,src:'手動輸入'};
+  const t=theory(b,c); if(isFinite(t.rate)) return {r:t.rate,src:'配方理論成本率'};
+  const p=b.periods[b.periods.length-1], R=p?sumA(p.revenue):0; if(R) return {r:sumA(p.purchases)/R,src:'最新一期損益表的實際值'};
+  return {r:b.be.foodPct/100,src:'手動輸入（尚無配方與損益表）'} }
+const P2=(p,v,l)=>`<label for="f-${p}">${l} ${num(p,v,{label:l})}</label>`;
+const EMPTY=t=>`<div class="empty"><p class="sub">${t}</p></div>`;
+function lineChart(labels,series,fmt){ const W=640,H=230,L=52,R=120,T=14,Bm=28; const all=series.flatMap(s=>s.vals).filter(isFinite);
+  let lo=Math.min(0,...all),hi=Math.max(0,...all); if(hi===lo) hi=lo+1; const pad=(hi-lo)*.1; hi+=pad; if(lo<0) lo-=pad;
+  const X=i=>L+(labels.length>1?i/(labels.length-1):.5)*(W-L-R), Y=v=>T+(hi-v)/(hi-lo)*(H-T-Bm);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="趨勢圖" style="width:100%;max-width:720px;height:auto"><rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-Bm}" fill="var(--field)" stroke="var(--line)"/>`
+  +`<line x1="${L}" y1="${Y(0)}" x2="${W-R}" y2="${Y(0)}" stroke="var(--mute)" stroke-dasharray="4 4"/>`
+  +[hi,0,lo].filter((v,i,a)=>a.indexOf(v)===i).map(v=>`<text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--mute)">${fmt(v)}</text>`).join('')
+  +labels.map((l,i)=>`<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--mute)">${esc(l)}</text>`).join('')
+  +series.map(s=>`<polyline fill="none" stroke="${s.color}" stroke-width="2" points="${s.vals.map((v,i)=>X(i)+','+Y(v)).join(' ')}"/>`+s.vals.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="3.5" fill="${s.color}"/>`).join('')
+    +`<text x="${X(s.vals.length-1)+10}" y="${Y(s.vals[s.vals.length-1])+4}" font-size="12" fill="var(--fg)">${esc(s.name)} ${fmt(s.vals[s.vals.length-1])}</text>`).join('')+'</svg>' }
+
+/* ---- 損益對照與多期趨勢 ---- */
+V.pl=(b,c)=>{ const ps=b.periods, head=`<div class="head"><div><h2>損益對照與趨勢</h2><p class="sub">把每個月損益表的實際數字累積起來，看食材成本率的走勢，並跟配方算出的理論成本對照。差距就是損耗、份量失準或漏記的線索。</p></div></div>`;
+  if(!ps.length) return head+EMPTY('這個品牌還沒有導入損益表。請把損益表交給 Claude 導入，可一次導入多個月份。');
+  let si=+ui.period; if(!(ui.period!==undefined&&si>=0&&si<ps.length)) si=ps.length-1; const a=ps[si];
+  const M=ps.map(p=>{const R=sumA(p.revenue),P=sumA(p.purchases),E=sumA(p.expenses);return{R,P,E,N:R-P-E}}), lab=ps.map(p=>p.label||p.period), th=theory(b,c).rate;
+  let trend='';
+  if(ps.length>1){ const names=[...new Set(ps.flatMap(p=>p.purchases.map(x=>x.name)))];
+    const cat=names.map(n=>{const v=ps.map((p,i)=>((p.purchases.find(x=>x.name===n)||{}).amount||0)/M[i].R), avg=v.reduce((t,x)=>t+x,0)/v.length; return {n,v,avg,d:v[v.length-1]-avg}}).sort((x,y)=>y.v[y.v.length-1]-x.v[x.v.length-1]);
+    const top=[['營收',m=>$$(m.R,0)],['食材成本率',m=>pct(m.P/m.R)],['營業費用率',m=>pct(m.E/m.R)],['營業淨利',m=>$$(m.N,0)],['淨利率',m=>pct(m.N/m.R)]];
+    trend=`<h2>多期趨勢（${lab[0]}～${lab[lab.length-1]}）</h2><div class="scroll" style="padding:8px">${lineChart(lab,[{name:'食材成本率',vals:M.map(m=>m.P/m.R*100),color:'var(--accent)'},{name:'淨利率',vals:M.map(m=>m.N/m.R*100),color:'var(--bad)'}],v=>nf(v,0)+'%')}</div>
+<div class="scroll"><table><thead><tr><th>項目</th>${lab.map(l=>`<th class="n">${esc(l)}</th>`).join('')}</tr></thead><tbody>${top.map(r=>`<tr><td>${r[0]}</td>${M.map(m=>`<td class="n">${r[1](m)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+<h2>各類食材占營收比例</h2><p class="note">數字是「這類食材的進貨金額 ÷ 當月營收」。最新一期比平均高 1 個百分點以上標為偏高，值得追原因。</p>
+<div class="scroll"><table><thead><tr><th>進貨科目</th>${lab.map(l=>`<th class="n">${esc(l)}</th>`).join('')}<th class="n">平均</th><th class="n">最新 − 平均</th><th>狀態</th></tr></thead><tbody>${cat.map(r=>`<tr><td>${esc(r.n)}</td>${r.v.map(x=>`<td class="n">${pct(x,2)}</td>`).join('')}<td class="n">${pct(r.avg,2)}</td><td class="n">${r.d>0?'+':''}${nf(r.d*100,2)}</td><td>${r.d>=.01?'<span class="pill warn">偏高</span>':r.d<=-.01?'<span class="pill good">改善</span>':'<span class="pill puz">持平</span>'}</td></tr>`).join('')}</tbody></table></div>`; }
+  const m=M[si], mx=Math.max(1,...a.purchases.map(r=>r.amount));
+  const tbl=(key,rows,base,l)=>`<div class="scroll"><table><thead><tr><th>${l}</th><th class="n">金額</th><th class="n">占營收</th>${key==='purchases'?'<th class="n">占食材成本</th><th></th>':''}</tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${esc(r.name)}</td><td class="n">${num(`periods.${si}.${key}.${i}.amount`,r.amount,{label:r.name})}</td><td class="n">${pct(r.amount/m.R)}</td>${key==='purchases'?`<td class="n">${pct(r.amount/m.P)}</td><td><span class="bar" style="width:${Math.max(2,Math.round(r.amount/mx*90))}px"></span></td>`:''}</tr>`).join('')}</tbody><tfoot><tr><td>合計</td><td class="n">${$$(base,0)}</td><td class="n">${pct(base/m.R)}</td>${key==='purchases'?'<td></td><td></td>':''}</tr></tfoot></table></div>`;
+  return head+trend+`<h2>單期明細</h2><div class="params"><label for="psel">查看期間 <select id="psel" data-ui="period" data-p="ui.period">${ps.map((p,i)=>`<option value="${i}" ${i===si?'selected':''}>${esc(p.period)}</option>`).join('')}</select></label><span class="note">來源：${esc(a.source||'')}</span>${del('periods.'+si)}</div>
+<div class="tiles"><div class="tile"><span>當月營收</span><b>${$$(m.R,0)}</b></div><div class="tile"><span>實際食材成本</span><b>${$$(m.P,0)}</b><span>實際成本率 ${pct(m.P/m.R)}</span></div><div class="tile"><span>配方理論成本率</span><b>${isFinite(th)?pct(th):'尚未建立'}</b><span>${isFinite(th)?'與實際相差 '+nf((m.P/m.R-th)*100,1)+' 個百分點':'補上配方與月銷量後自動出現'}</span></div><div class="tile"><span>營業淨利</span><b>${$$(m.N,0)}</b><span>淨利率 ${pct(m.N/m.R)}</span></div></div>
+<h2>營收來源</h2>${tbl('revenue',a.revenue,m.R,'通路')}<h2>食材進貨（依損益表科目）</h2>${tbl('purchases',a.purchases,m.P,'進貨科目')}<h2>營業費用</h2>${tbl('expenses',a.expenses,m.E,'費用科目')}` };
+
+/* ---- 損益兩平 ---- */
+V.be=(b,c)=>{ const f=foodRate(b,c), F=sumA(b.fixed), v=b.be.varPct/100, cm=1-f.r-v, be=F/cm, lp=b.periods[b.periods.length-1], R=lp?sumA(lp.revenue):0, d=b.settings.daysPerMonth||30;
+  const sc=[['現況',f.r,v,F],['食材成本率降 2 個百分點',f.r-.02,v,F],['其他變動費用率降 5 個百分點',f.r,Math.max(0,v-.05),F],['固定費用降 10%',f.r,v,F*.9],['三項一起做',f.r-.02,Math.max(0,v-.05),F*.9]];
+  return `<div class="head"><div><h2>損益兩平試算</h2><p class="sub">每個月要做多少營收才不賠錢。原理像水桶：每賣 100 元，先被食材和平台抽成舀走一部分，剩下的才能用來裝滿人事、房租這些固定開銷。</p></div>${lp?`<button class="pri" data-act="befill">從最新一期損益表帶入費用</button>`:''}</div>
+<div class="params">${P2('be.varPct',b.be.varPct,'其他變動費用率 %（平台抽成、免洗餐具等）')}<label for="f-be.foodMode">食材成本率來源 ${sel('be.foodMode',b.be.foodMode,[['auto','自動'],['manual','手動輸入']],'來源')}</label>${b.be.foodMode==='manual'?P2('be.foodPct',b.be.foodPct,'食材成本率 %'):''}${P2('be.ticket',b.be.ticket,'平均客單價')}${P2('be.target',b.be.target,'目標月淨利')}</div>
+<div class="tiles"><div class="tile"><span>損益兩平月營收</span><b>${cm>0?$$(be,0):'無法打平'}</b><span>${cm>0?'每日約 '+$$(be/d,0):'每賣 100 元剩不到錢，需先降成本率'}</span></div><div class="tile"><span>每 100 元營收可留下</span><b>${nf(cm*100,1)} 元</b><span>食材 ${pct(f.r)}（${f.src}）＋其他變動 ${pct(v)}</span></div><div class="tile"><span>每月固定費用</span><b>${$$(F,0)}</b><span>${b.fixed.length} 項</span></div>${R&&cm>0?`<div class="tile"><span>與最新一期營收相比</span><b>${R>=be?'已超過':'還差 '+$$(be-R,0)}</b><span>${R>=be?'高出兩平點 '+pct(R/be-1):'營收需成長 '+pct(be/R-1)}</span></div>`:''}${b.be.ticket>0&&cm>0?`<div class="tile"><span>每日需要來客數</span><b>${nf(be/d/b.be.ticket,0)} 人</b><span>客單價 ${$$(b.be.ticket,0)}</span></div>`:''}${b.be.target>0&&cm>0?`<div class="tile"><span>達成目標淨利需月營收</span><b>${$$((F+b.be.target)/cm,0)}</b><span>目標 ${$$(b.be.target,0)}</span></div>`:''}</div>
+<h2>改善情境比較</h2><div class="scroll"><table><thead><tr><th>情境</th><th class="n">食材成本率</th><th class="n">其他變動費用率</th><th class="n">固定費用</th><th class="n">兩平月營收</th><th class="n">比現況少</th></tr></thead><tbody>${sc.map(s=>{const x=s[3]/(1-s[1]-s[2]);return `<tr><td>${s[0]}</td><td class="n">${pct(s[1])}</td><td class="n">${pct(s[2])}</td><td class="n">${$$(s[3],0)}</td><td class="n">${1-s[1]-s[2]>0?$$(x,0):'無法打平'}</td><td class="n">${cm>0&&1-s[1]-s[2]>0?$$(be-x,0):'–'}</td></tr>`}).join('')}</tbody></table></div>
+<div class="head"><div><h2>每月固定費用</h2><p class="sub">不管生意好壞都要付的錢，例如薪資、房租、水電。</p></div><button data-add="fixed">新增費用</button></div>
+<div class="scroll"><table><thead><tr><th>費用項目</th><th class="n">每月金額</th><th></th></tr></thead><tbody>${b.fixed.map((r,i)=>`<tr><td>${txt(`fixed.${i}.name`,r.name,'費用項目')}</td><td class="n">${num(`fixed.${i}.amount`,r.amount,{label:'金額'})}</td><td>${del('fixed.'+i)}</td></tr>`).join('')||'<tr><td colspan="3">尚未填寫。可按右上角從損益表帶入，或自行新增。</td></tr>'}</tbody><tfoot><tr><td>合計</td><td class="n">${$$(F,0)}</td><td></td></tr></tfoot></table></div>
+<p class="note">從損益表帶入時，科目名稱含「服務費、促銷、廣告費、上架費、退款、免洗餐具、手續費」的算變動費用，其餘算固定費用。薪資其實會隨排班略有變動，這裡簡化視為固定。</p>` };
+
+/* ---- 外送通路定價 ---- */
+V.channel=(b,c)=>{ const ch=b.channels, fee=x=>(x.comm+x.extra)/100, base=ch[0];
+  const calc=(it,x)=>{const cost=itemCalc(it,c).fr,p=it.price*(1+x.up/100),net=p*(1-fee(x))-x.pack;return{cost,p,net,gm:net-cost}};
+  return `<div class="head"><div><h2>外送通路定價</h2><p class="sub">同一道菜在不同通路賣，扣掉平台抽成後實際賺多少，以及外送價要加幾成才能賺得跟內用一樣。第一列當作比較基準（通常是內用）。</p></div><button class="pri" data-add="channel">新增通路</button></div>
+<div class="scroll"><table><thead><tr><th>通路</th><th class="n">抽成 %</th><th class="n">促銷與廣告 %</th><th class="n">每單包材費</th><th class="n">通路加價 %</th><th class="n">每賣 100 元實收</th><th></th></tr></thead><tbody>${ch.map((x,i)=>`<tr><td>${txt(`channels.${i}.name`,x.name,'通路')}</td><td class="n">${num(`channels.${i}.comm`,x.comm,{label:'抽成'})}</td><td class="n">${num(`channels.${i}.extra`,x.extra,{label:'促銷廣告'})}</td><td class="n">${num(`channels.${i}.pack`,x.pack,{label:'包材'})}</td><td class="n">${num(`channels.${i}.up`,x.up,{label:'加價'})}</td><td class="n">${nf(100*(1-fee(x)),1)} 元</td><td>${i?del('channels.'+i):''}</td></tr>`).join('')}</tbody></table></div>
+${b.items.length?`<h2>各通路實賺比較</h2><div class="scroll"><table><thead><tr><th rowspan="2">品項</th><th class="n" rowspan="2">食材成本</th>${ch.map(x=>`<th colspan="3" style="text-align:center">${esc(x.name)}</th>`).join('')}</tr><tr>${ch.map(()=>'<th class="n">售價</th><th class="n">一份實賺</th><th class="n">毛利率</th>').join('')}</tr></thead><tbody>${b.items.map(it=>`<tr><td>${esc(it.name)}</td><td class="n">${$$(itemCalc(it,c).fr)}</td>${ch.map(x=>{const k=calc(it,x);return `<td class="n">${$$(k.p,0)}</td><td class="n">${$$(k.gm)}</td><td class="n"><span class="pill ${k.gm<=0?'bad':k.gm<calc(it,base).gm*.7?'warn':'good'}">${pct(k.gm/k.p)}</span></td>`}).join('')}</tr>`).join('')}</tbody></table></div>
+<h2>要賺得跟「${esc(base.name)}」一樣，該訂多少</h2><div class="scroll"><table><thead><tr><th>品項</th><th class="n">${esc(base.name)}一份實賺</th>${ch.slice(1).map(x=>`<th class="n">${esc(x.name)} 建議售價</th><th class="n">需加價</th>`).join('')}</tr></thead><tbody>${b.items.map(it=>{const g0=calc(it,base);return `<tr><td>${esc(it.name)}</td><td class="n">${$$(g0.gm)}</td>${ch.slice(1).map(x=>{const need=(g0.gm+g0.cost+x.pack)/(1-fee(x));return `<td class="n">${$$(Math.ceil(need/5)*5,0)}</td><td class="n">+${pct(need/it.price-1,0)}</td>`}).join('')}</tr>`}).join('')}</tbody></table></div><p class="note">燈號：紅色代表賣一份倒賠，黃色代表實賺不到基準通路的七成。建議售價取整到 5 元。</p>`:EMPTY('通路費率已可設定。補上品項的售價與配方後，這裡會列出每道菜在各通路的實賺金額與建議外送價。')}` };
+
+/* ---- 套餐組合 ---- */
+V.combo=(b,c)=>{ if(!b.combos.find(s=>s.id===selCombo)) selCombo=b.combos[0]?.id||null; const x=b.combos.findIndex(s=>s.id===selCombo), s=b.combos[x], t=b.settings.targetRate/100;
+  const k=s&&s.lines.reduce((a,l)=>{const it=b.items.find(i=>i.id===l.item); if(it){a.orig+=it.price*l.qty; a.cost+=itemCalc(it,c).fr*l.qty} return a},{orig:0,cost:0});
+  return `<div class="head"><div><h2>套餐組合試算</h2><p class="sub">把幾個單品綁成套餐，看折扣後的成本率和毛利還撐不撐得住。常用來帶動賺得多但賣不動的品項。</p></div><button class="pri" data-add="combo">新增套餐</button></div>
+<div class="split"><div class="list">${b.combos.map(t=>`<button data-pick-combo="${t.id}" aria-current="${t.id===selCombo}"><span>${esc(t.name)}</span><span>${$$(t.price,0)}</span></button>`).join('')||'<p class="note">尚無套餐</p>'}</div>
+${s?`<div class="col"><div class="params"><label>套餐名稱 ${txt(`combos.${x}.name`,s.name,'套餐名稱')}</label>${P2(`combos.${x}.price`,s.price,'套餐售價')}${del('combos.'+x)}</div>
+<div class="tiles"><div class="tile"><span>單點原價合計</span><b>${$$(k.orig,0)}</b><span>套餐讓利 ${$$(k.orig-s.price,0)}（${k.orig?pct(1-s.price/k.orig,0):'–'}）</span></div><div class="tile"><span>套餐成本</span><b>${$$(k.cost)}</b><span>成本率 <span class="pill ${k.cost/s.price<=t?'good':k.cost/s.price<=t+.03?'warn':'bad'}">${pct(k.cost/s.price)}</span></span></div><div class="tile"><span>套餐一份毛利</span><b>${$$(s.price-k.cost)}</b><span>單點合計毛利 ${$$(k.orig-k.cost)}</span></div></div>
+<div class="scroll"><table><thead><tr><th>品項</th><th class="n">數量</th><th class="n">單價</th><th class="n">成本小計</th><th></th></tr></thead><tbody>${s.lines.map((l,y)=>{const it=b.items.find(i=>i.id===l.item);return `<tr><td>${sel(`combos.${x}.lines.${y}.item`,l.item,b.items.map(i=>[i.id,i.name]),'品項')}</td><td class="n">${num(`combos.${x}.lines.${y}.qty`,l.qty,{label:'數量'})}</td><td class="n">${it?$$(it.price,0):'已刪除'}</td><td class="n">${it?$$(itemCalc(it,c).fr*l.qty):''}</td><td>${del(`combos.${x}.lines.${y}`)}</td></tr>`}).join('')}</tbody></table></div>
+<div><button data-add="comboline">加一個品項</button></div></div>`:EMPTY(b.items.length?'新增一個套餐，再把品項加進去。':'請先到「品項配方」建立品項，才能組套餐。')}</div>` };
+
+/* ---- 加盟主單店損益 ---- */
+V.frsim=(b,c)=>{ const f=b.fr, s=b.settings, t0=theory(b,c), rev=f.revenue>0?f.revenue:t0.sales, has=isFinite(t0.rate), scale=t0.sales?rev/t0.sales:0;
+  const run=cc=>{ const t=theory(b,cc), food=has?t.rate:f.foodPct/100; let sup=0,srev=0; b.items.forEach(it=>{const k=itemCalc(it,cc),q=it.monthlySales||0; sup+=(k.rev-k.cogs)*q; srev+=k.rev*q});
+    const L=[['食材成本',rev*food],['人事費用',rev*f.laborPct/100],['房租',f.rent],['水電瓦斯',rev*f.utilPct/100],['權利金',rev*f.royaltyPct/100],['行銷基金',rev*f.mktPct/100],['其他固定費用',f.otherFixed]], net=rev-L.reduce((a,r)=>a+r[1],0);
+    return {food,L,net,hq:(sup-srev*s.logisticsPct/100)*scale+rev*f.royaltyPct/100} };
+  const cur=run(c);
+  return `<div class="head"><div><h2>加盟主單店損益模擬</h2><p class="sub">站在加盟主的角度算一家店每月賺多少、多久回本，同時看總部從這家店收到多少。疊價訂太高，總部多賺但加盟主撐不住，這頁讓兩邊一起看。</p></div></div>
+<div class="params">${P2('fr.revenue',f.revenue,'單店月營收（填 0 則用配方月銷量推算）')}${has?'':P2('fr.foodPct',f.foodPct,'食材成本率 %')}${P2('fr.laborPct',f.laborPct,'人事 %')}${P2('fr.rent',f.rent,'月租金')}${P2('fr.utilPct',f.utilPct,'水電瓦斯 %')}${P2('fr.royaltyPct',f.royaltyPct,'權利金 %')}${P2('fr.mktPct',f.mktPct,'行銷基金 %')}${P2('fr.otherFixed',f.otherFixed,'其他固定費用')}${P2('fr.invest',f.invest,'加盟總投資額')}</div>
+${rev>0?`<div class="tiles"><div class="tile"><span>加盟主月淨利</span><b>${$$(cur.net,0)}</b><span>淨利率 ${pct(cur.net/rev)}</span></div><div class="tile"><span>回本期</span><b>${cur.net>0?nf(f.invest/cur.net,1)+' 個月':'無法回本'}</b><span>投資額 ${$$(f.invest,0)}</span></div><div class="tile"><span>總部從這家店的月收入</span><b>${$$(cur.hq,0)}</b><span>供貨淨利＋權利金</span></div></div>
+<div class="scroll"><table><thead><tr><th>項目</th><th class="n">金額</th><th class="n">占營收</th></tr></thead><tbody><tr><td>月營收</td><td class="n">${$$(rev,0)}</td><td class="n">100.0%</td></tr>${cur.L.map(r=>`<tr><td>${r[0]}</td><td class="n">${$$(r[1],0)}</td><td class="n">${pct(r[1]/rev)}</td></tr>`).join('')}</tbody><tfoot><tr><td>月淨利</td><td class="n">${$$(cur.net,0)}</td><td class="n">${pct(cur.net/rev)}</td></tr></tfoot></table></div>
+${has?`<h2>預設疊價調整對兩邊的影響</h2><div class="scroll"><table><thead><tr><th>預設疊價</th><th class="n">加盟主食材成本率</th><th class="n">加盟主月淨利</th><th class="n">淨利率</th><th class="n">回本月數</th><th class="n">總部月收入</th><th></th></tr></thead><tbody>${[0,5,10,15,20,25,30].map(m=>{const r=run(ctx({...b,settings:{...s,defaultMarkup:m}}));return `<tr><td>${m}%</td><td class="n">${pct(r.food)}</td><td class="n">${$$(r.net,0)}</td><td class="n">${pct(r.net/rev)}</td><td class="n">${r.net>0?nf(f.invest/r.net,1):'無法回本'}</td><td class="n">${$$(r.hq,0)}</td><td>${m===s.defaultMarkup?'<span class="tag">目前設定</span>':''}</td></tr>`}).join('')}</tbody></table></div><p class="note">此表只調整「預設疊價」；在疊價設定頁個別指定成數的品項不受影響。行銷基金專款專用，不計入總部收入。</p>`:'<p class="note">補上配方與月銷量後，會多出一張「疊價調整對兩邊的影響」比較表。</p>'}`:EMPTY('請填入單店月營收，或先在「品項配方」填好售價與月銷量。')}` };
+
+/* ---- 食材價格紀錄 ---- */
+V.pricelog=(b,c)=>{ const lg=b.priceLog, by={}; lg.forEach(r=>{(by[r.id]=by[r.id]||[]).push(r)});
+  const sm=Object.keys(by).map(id=>{const a=by[id],g=b.ingredients.find(i=>i.id===id),first=a.find(r=>r.from>0)||a[0],base=first.from>0?first.from:first.to,now=g?g.buyPrice:a[a.length-1].to;return{name:g?g.name:a[0].name,n:a.length,base,now,ch:base?now/base-1:NaN,since:a[0].date}}).sort((x,y)=>(y.ch||0)-(x.ch||0));
+  return `<div class="head"><div><h2>食材價格紀錄</h2><p class="sub">每次在食材主檔修改進貨價，系統都會自動記下日期與前後價格，方便看出哪些食材一直在漲。</p></div></div>
+${lg.length?`<h2>累計漲跌</h2><div class="scroll"><table><thead><tr><th>食材</th><th>起始日期</th><th class="n">起始價</th><th class="n">現價</th><th class="n">累計漲跌</th><th class="n">調整次數</th></tr></thead><tbody>${sm.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.since}</td><td class="n">${$$(r.base,1)}</td><td class="n">${$$(r.now,1)}</td><td class="n"><span class="pill ${r.ch>.05?'bad':r.ch>0?'warn':'good'}">${r.ch>0?'+':''}${pct(r.ch)}</span></td><td class="n">${r.n}</td></tr>`).join('')}</tbody></table></div>
+<h2>異動明細</h2><div class="scroll"><table><thead><tr><th>日期</th><th>食材</th><th class="n">原價</th><th class="n">新價</th><th class="n">漲跌</th></tr></thead><tbody>${lg.slice().reverse().map(r=>`<tr><td>${r.date}</td><td>${esc(r.name)}</td><td class="n">${r.from>0?$$(r.from,1):'首次填價'}</td><td class="n">${$$(r.to,1)}</td><td class="n">${r.from>0?(r.to>r.from?'+':'')+pct(r.to/r.from-1):'–'}</td></tr>`).join('')}</tbody></table></div>`:EMPTY('目前還沒有價格異動。之後在「食材主檔」修改進貨價，這裡會自動留下紀錄。')}` };
+
+/* ---- 匯出 Excel ---- */
+async function exportXlsx(){ const b=B(); if(!b||!dl||!window.XLSX) return; setStatus('產生檔案中…');
+  const cell=td=>{const i=td.querySelector('input,select'); if(i) return i.tagName==='SELECT'?(i.options[i.selectedIndex]||{}).text||'':(i.type==='number'&&i.value!==''?+i.value:i.value); const t=td.textContent.trim(), n=t.replace(/[$,]/g,''); return /^-?\d+(\.\d+)?$/.test(n)?+n:t};
+  const wb=XLSX.utils.book_new(), c=ctx(b), keep=[selItem,selSemi,selCombo];
+  TABS.forEach(g=>g[2].forEach(([id,lab])=>{ let html;
+    if(id==='recipe'&&b.items.length) html=b.items.map(x=>{selItem=x.id;return V.recipe(b,c)}).join('');
+    else if(id==='semi'&&b.semis.length) html=b.semis.map(x=>{selSemi=x.id;return V.semi(b,c)}).join('');
+    else if(id==='combo'&&b.combos.length) html=b.combos.map(x=>{selCombo=x.id;return V.combo(b,c)}).join('');
+    else html=V[id](b,c);
+    const d=document.createElement('div'); d.innerHTML=html; const aoa=[[b.name+'｜'+lab]];
+    d.querySelectorAll('h2,.tile,table,.params').forEach(el=>{
+      if(el.tagName==='H2') aoa.push([],[el.textContent.trim()]);
+      else if(el.classList.contains('tile')) aoa.push([...el.children].map(x=>x.textContent.trim()));
+      else if(el.classList.contains('params')) el.querySelectorAll('label').forEach(l=>aoa.push([(l.firstChild.textContent||'').trim(),cell(l)]));
+      else { aoa.push([]); el.querySelectorAll('tr').forEach(tr=>aoa.push([...tr.children].map(cell))) } });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),lab.slice(0,28)) }));
+  [selItem,selSemi,selCombo]=keep;
+  try{ await dl.save({filename:b.name.replace(/[\\/:*?"<>|]/g,'_')+'_BOM_'+new Date().toISOString().slice(0,10)+'.xlsx',data:XLSX.write(wb,{type:'array',bookType:'xlsx'})}); setStatus('已匯出') }
+  catch(e){ setStatus(e&&e.code==='declined'?'已取消匯出':'這個畫面目前無法匯出檔案') } }
+
+V.matrix=(b,c)=>{ const QD={star:['明星','good','var(--good)','賣得好又賺得多。維持品質與曝光，放在菜單最顯眼處，可小幅調漲測試。'],horse:['耕馬','warn','var(--warn)','賣得好但賺得少。小幅調價、微調份量或換較便宜的配料，並搭配高毛利加點。'],puzzle:['謎題','puz','var(--accent)','賺得多但賣不動。改名字、換菜單位置、請店員推薦，或包進套餐帶動。'],dog:['瘦狗','bad','var(--bad)','賣不動也不賺。考慮下架或重新設計；若是帶客用的招牌才保留。']};
+const cats=[...new Set(b.items.map(i=>i.cat||'未分類'))]; if(mxCat&&!cats.includes(mxCat)) mxCat='';
+const its=b.items.filter(i=>!mxCat||(i.cat||'未分類')===mxCat).map(it=>({it,q:it.monthlySales||0,cm:it.price-itemCalc(it,c).fr}));
+const Q=its.reduce((t,r)=>t+r.q,0), n=its.length;
+const head='<div class="head"><div><h2>產品四象限分析</h2><p class="sub">把每道菜依「賣得好不好」和「一份賺多少」分成四類，決定哪些要主推、調價、重新包裝或下架。建議一次只看同一個分類，主餐跟加點放在一起比並不公平。</p></div></div><div class="params"><label for="mxsel">分析範圍 <select id="mxsel" data-mx="1" data-p="mx"><option value="">全部品項</option>'+cats.map(x=>'<option '+(x===mxCat?'selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label></div>';
+if(!n||!Q) return head+'<div class="empty"><p class="sub">需要先在「品項配方」建立品項，並填入售價、配方與單店月銷量，才能分析。</p></div>';
+const popT=0.7/n, avg=its.reduce((t,r)=>t+r.cm*r.q,0)/Q, GP=its.reduce((t,r)=>t+r.cm*r.q,0);
+its.forEach(r=>{r.s=r.q/Q; r.k=r.s>=popT?(r.cm>=avg?'star':'horse'):(r.cm>=avg?'puzzle':'dog')});
+const W=640,H=340,L=56,R=16,T=16,Bm=40, xm=Math.max(popT,...its.map(r=>r.s))*1.15, y0=Math.min(0,...its.map(r=>r.cm)), y1=Math.max(avg,...its.map(r=>r.cm))*1.15||1;
+const X=v=>L+v/xm*(W-L-R), Y=v=>H-Bm-(v-y0)/(y1-y0)*(H-T-Bm);
+const svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="產品四象限散布圖" style="width:100%;max-width:720px;height:auto"><rect x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(H-T-Bm)+'" fill="var(--field)" stroke="var(--line)"/>'
++'<line x1="'+X(popT)+'" y1="'+T+'" x2="'+X(popT)+'" y2="'+(H-Bm)+'" stroke="var(--mute)" stroke-dasharray="4 4"/><line x1="'+L+'" y1="'+Y(avg)+'" x2="'+(W-R)+'" y2="'+Y(avg)+'" stroke="var(--mute)" stroke-dasharray="4 4"/>'
++[['謎題',L+8,T+16,'start'],['明星',W-R-8,T+16,'end'],['瘦狗',L+8,H-Bm-8,'start'],['耕馬',W-R-8,H-Bm-8,'end']].map(q=>'<text x="'+q[1]+'" y="'+q[2]+'" text-anchor="'+q[3]+'" font-size="13" font-weight="700" fill="var(--mute)">'+q[0]+'</text>').join('')
++its.map(r=>{const x=X(r.s),y=Y(r.cm),e=x>W-150;return '<circle cx="'+x+'" cy="'+y+'" r="6" fill="'+QD[r.k][2]+'" stroke="var(--panel)" stroke-width="1.5"/><text x="'+(e?x-10:x+10)+'" y="'+(y+4)+'" text-anchor="'+(e?'end':'start')+'" font-size="12" fill="var(--fg)">'+esc(r.it.name)+'</text>'}).join('')
++'<text x="'+(L+(W-L-R)/2)+'" y="'+(H-10)+'" text-anchor="middle" font-size="12" fill="var(--mute)">銷量占比（門檻 '+pct(popT)+'）→ 越右邊賣越好</text><text x="14" y="'+(T+(H-T-Bm)/2)+'" text-anchor="middle" font-size="12" fill="var(--mute)" transform="rotate(-90 14 '+(T+(H-T-Bm)/2)+')">一份毛利（平均 '+$$(avg)+'）</text>'
++'<text x="'+(L-6)+'" y="'+(Y(y1)+10)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+nf(y1,0)+'</text><text x="'+(L-6)+'" y="'+Y(y0)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+nf(y0,0)+'</text><text x="'+(W-R)+'" y="'+(H-Bm+14)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+pct(xm,0)+'</text></svg>';
+const tiles=Object.keys(QD).map(k=>{const g=its.filter(r=>r.k===k);return '<div class="tile"><span><span class="pill '+QD[k][1]+'">'+QD[k][0]+'</span> '+g.length+' 項</span><b>'+pct(g.reduce((t,r)=>t+r.cm*r.q,0)/GP,0)+'</b><span>占月毛利</span></div>'}).join('');
+const rows=its.slice().sort((a,z)=>z.cm*z.q-a.cm*a.q).map(r=>'<tr><td>'+esc(r.it.name)+'</td><td><span class="pill '+QD[r.k][1]+'">'+QD[r.k][0]+'</span></td><td class="n">'+nf(r.q,0)+'</td><td class="n">'+pct(r.s)+'</td><td class="n">'+$$(r.cm)+'</td><td class="n">'+pct(r.cm/r.it.price)+'</td><td class="n">'+$$(r.cm*r.q,0)+'</td><td style="white-space:normal;min-width:240px">'+QD[r.k][3]+'</td></tr>').join('');
+return head+'<div class="tiles">'+tiles+'</div><div class="scroll" style="padding:8px">'+svg+'</div><div class="scroll"><table><thead><tr><th>品項</th><th>象限</th><th class="n">月銷量</th><th class="n">銷量占比</th><th class="n">一份毛利</th><th class="n">毛利率</th><th class="n">月毛利</th><th>建議做法</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">判定方式（業界通用的菜單工程法）：銷量占比達「平均占比的 7 成」算賣得好，即 70% ÷ 品項數；一份毛利高於「依銷量加權的平均毛利」算賺得多。毛利 = 售價 − 加盟主食材成本。</p>' };
+
+/* ---------- 版本與資料庫備份 ---------- */
+const APP_VER=5, APP_LABEL='版本存檔點與資料庫備份', SB='Supabase', SB_PROJECT='thxqncpkkzmpktwuvzvz';
+let mcp=null, versions=[], sbTimer=null; const sb={msg:'尚未備份',list:null,auto:false,busy:false,app:false}, sbDirty=new Set();
+const dq=s=>{ s=String(s==null?'':s); let t; do{ t='$b'+Math.random().toString(36).slice(2,8)+'$' }while(s.includes(t)); return t+s+t };
+const tm=s=>{ const d=new Date(s); return isNaN(d)?String(s||''):d.toLocaleString('zh-TW',{hour12:false}) };
+async function sql(query){ const r=await mcp.callTool(SB,'execute_sql',{project_id:SB_PROJECT,query},{cache:false}); let p=r&&r.payload;
+  if(p&&typeof p==='object'&&!Array.isArray(p)&&'result' in p) p=p.result;
+  if(typeof p==='string'){ const m=p.match(/<untrusted-data-[^>]+>\s*(\[[\s\S]*\])\s*<\/untrusted-data/); try{ return JSON.parse(m?m[1]:p) }catch(e){ return [] } }
+  return Array.isArray(p)?p:[] }
+const brandSql=(id,b)=>`insert into public.bom_brands(id,name,data,updated_at) values (${dq(id)},${dq(b.name)},${dq(JSON.stringify(b))}::jsonb,now()) on conflict (id) do update set name=excluded.name,data=excluded.data,updated_at=now() where public.bom_brands.edited_on_site = false;`;
+const snapSql=v=>`insert into public.bom_snapshots(id,brand_id,brand_name,note,data,created_at) values (${dq(v.id)},${dq(v.brandId)},${dq(v.brandName)},${dq(v.note)},${dq(JSON.stringify(v.data))}::jsonb,${dq(v.at)}::timestamptz) on conflict (id) do nothing;`;
+function sbErr(e){ const c=e&&e.code;
+  if(c==='server_not_connected') return '找不到 Supabase 連接器。請到 Claude 的設定 → 連接器加入 Supabase 後再按一次。';
+  if(c==='needs_reauth') return 'Supabase 的連結已過期。請到 Claude 的設定 → 連接器重新連結。';
+  if(c==='not_in_manifest'||c==='approval_required'||c==='consent_required'||c==='not_granted'||c==='blocked_by_policy') return '這個頁面尚未獲准使用 Supabase。請再按一次，並在跳出的詢問選擇允許。';
+  if(c==='tool_error') return '資料庫回報錯誤：'+(e.message||'').slice(0,160);
+  if(c==='server_unavailable'||c==='rate_limited') return '資料庫暫時連不上，可能已寫入也可能沒有。請稍後按「讀取資料庫中的存檔點」確認，再決定是否重按。';
+  return '備份未完成，請稍後再按一次。' }
+function reVer(){ if(tab==='ver') render() }
+async function markSynced(v){ v.synced=true; try{ if(db) await db.doc('versions/'+v.id).update({synced:true}); else saveLocalVers() }catch(e){} }
+function saveLocalVers(){ try{localStorage.setItem('bom-versions',JSON.stringify(versions))}catch(e){} }
+async function sbPush(ids,manual){ if(!mcp){ sb.msg='這個畫面無法連到資料庫（需在 Claude 內開啟此頁）。'; reVer(); return } if(sb.busy) return; sb.busy=true; sb.msg='備份中…'; reVer();
+  try{ for(const id of ids){ if(brands[id]) await sql(brandSql(id,JSON.parse(JSON.stringify(brands[id])))); sbDirty.delete(id) }
+    for(const v of versions.filter(x=>!x.synced)){ await sql(snapSql(v)); await markSynced(v) }
+    if(!sb.app){ let html=null; try{ const r=await fetch(location.href); if(r.ok) html=await r.text() }catch(e){}
+      await sql(`insert into public.bom_app_versions(version,label,html) values (${APP_VER},${dq(APP_LABEL)},${html?dq(html):'null'}) on conflict (version) do update set label=excluded.label,html=coalesce(excluded.html,public.bom_app_versions.html);`); sb.app=true }
+    sb.auto=true; sb.msg='已備份到資料庫（'+tm(new Date())+'）' }
+  catch(e){ sb.auto=false; sb.msg=sbErr(e) }
+  sb.busy=false; reVer() }
+function sbQueue(id){ if(!id) return; sbDirty.add(id); if(!sb.auto||!mcp) return; clearTimeout(sbTimer); sbTimer=setTimeout(()=>sbPush([...sbDirty],false),30000) }
+async function verCreate(brandId,note){ const b=brands[brandId]; if(!b) return null;
+  const v={id:uid('v')+Date.now().toString(36),brandId,brandName:b.name,note:note||'手動存檔',at:new Date().toISOString(),data:JSON.parse(JSON.stringify(b)),synced:false};
+  if(db){ try{ const {id,...body}=v; await db.doc('versions/'+v.id).set(body) }catch(e){ setStatus('存檔點建立失敗'); return null } } versions.unshift(v); if(!db) saveLocalVers();
+  if(mcp&&sb.auto){ try{ await sql(snapSql(v)); await markSynced(v) }catch(e){ sb.msg=sbErr(e) } }
+  return v }
+async function verRestore(brandId,data){ if(brands[brandId]) await verCreate(brandId,'還原前自動備份');
+  brands[brandId]=norm(JSON.parse(JSON.stringify(data))); cur=brandId; selItem=selSemi=selCombo=null; touch(); render() }
+async function sbLoad(){ if(!mcp){ sb.msg='這個畫面無法連到資料庫（需在 Claude 內開啟此頁）。'; reVer(); return } sb.msg='讀取中…'; reVer();
+  try{ sb.list=await sql('select id,brand_id,brand_name,note,created_at from public.bom_snapshots order by created_at desc limit 50'); sb.msg='已讀取資料庫中的 '+sb.list.length+' 個存檔點' }catch(e){ sb.msg=sbErr(e) } reVer() }
+async function sbRestore(id){ try{ const r=await sql(`select brand_id,data from public.bom_snapshots where id=${dq(id)}`); if(!r[0]){ sb.msg='資料庫中找不到這個存檔點'; reVer(); return }
+    const d=typeof r[0].data==='string'?JSON.parse(r[0].data):r[0].data; await verRestore(r[0].brand_id,d); sb.msg='已從資料庫還原' }catch(e){ sb.msg=sbErr(e) } reVer() }
+
+V.ver=(b,c)=>{ const mine=versions.filter(v=>v.brandId===cur);
+  const arm=(k,l,cls)=>`<button class="${cls||''} ${armed===k?'del armed':''}" data-arm="${k}">${armed===k?'確定'+l:l}</button>`;
+  return `<div class="head"><div><h2>版本與備份</h2><p class="sub">存檔點就像遊戲存檔：改壞了、試算完想回到之前的樣子，按還原就回去。存檔點同時備份到你的 Supabase 資料庫，就算這個頁面不見，資料還在。</p></div></div>
+<div class="params"><label for="verNote">這次存檔的說明 <input type="text" id="verNote" placeholder="例如：調整疊價前" style="min-width:220px"></label><button class="pri" data-act="vnew">建立存檔點</button></div>
+<div class="tiles"><div class="tile"><span>系統版本</span><b>v${APP_VER}</b><span>${APP_LABEL}</span></div><div class="tile"><span>此品牌的存檔點</span><b>${mine.length} 個</b><span>${mine[0]?'最新：'+tm(mine[0].at):'尚未建立'}</span></div><div class="tile"><span>資料庫備份狀態</span><b>${sb.auto?'自動備份中':'尚未啟用'}</b><span>${esc(sb.msg)}</span></div></div>
+<h2>「${esc(b.name)}」的存檔點</h2><div class="scroll"><table><thead><tr><th>時間</th><th>說明</th><th class="n">食材</th><th class="n">品項</th><th class="n">損益期數</th><th>資料庫</th><th></th></tr></thead><tbody>${mine.map(v=>`<tr><td>${tm(v.at)}</td><td>${esc(v.note)}</td><td class="n">${(v.data.ingredients||[]).length}</td><td class="n">${(v.data.items||[]).length}</td><td class="n">${(v.data.periods||[]).length}</td><td><span class="pill ${v.synced?'good':'warn'}">${v.synced?'已備份':'未備份'}</span></td><td>${arm('vres:'+v.id,'還原')} ${arm('vdel:'+v.id,'刪除','del')}</td></tr>`).join('')||'<tr><td colspan="7">還沒有存檔點。重要調整前先按上方「建立存檔點」。</td></tr>'}</tbody></table></div>
+<div class="head"><div><h2>我的資料庫（Supabase）</h2><p class="sub">第一次按備份時，Claude 會詢問是否允許這個頁面使用 Supabase，請選允許。之後每次修改資料，約 30 秒後會自動備份。</p></div><div class="brandbar"><button class="pri" data-act="sbpush">立即備份全部品牌</button><button data-act="sbload">讀取資料庫中的存檔點</button></div></div>
+<p class="note">${esc(sb.msg)}</p>
+${sb.list?`<div class="scroll"><table><thead><tr><th>時間</th><th>品牌</th><th>說明</th><th></th></tr></thead><tbody>${sb.list.map(r=>`<tr><td>${tm(r.created_at)}</td><td>${esc(r.brand_name)}</td><td>${esc(r.note)}</td><td>${arm('rres:'+r.id,'還原')}</td></tr>`).join('')||'<tr><td colspan="4">資料庫中還沒有存檔點。</td></tr>'}</tbody></table></div>`:''}
+<p class="note">資料庫裡有三張表：bom_brands（各品牌目前資料）、bom_snapshots（存檔點）、bom_app_versions（系統版本紀錄）。還原前會自動先替目前資料建一個存檔點，所以還原本身也可以反悔。</p>` };
+
+/* ---------- 畫面 ---------- */
+function renderApp(){
+  const keep=document.activeElement?.dataset?.p;
+  $('#nav').innerHTML=TABS.map(g=>`<div class="grp" role="tablist"><span>${g[1]}</span>${g[2].map(t=>`<button class="tab" role="tab" data-tab="${t[0]}" aria-selected="${tab===t[0]}">${t[1]}</button>`).join('')}</div>`).join('');
+  $('#brandSel').innerHTML=Object.keys(brands).map(id=>`<option value="${id}" ${id===cur?'selected':''}>${esc(brands[id].name)}</option>`).join('');
+  const b=B();
+  $('#btnCopy').hidden=!b; $('#btnExport').hidden=!b||!dl||!window.XLSX;
+  if(!b){ $('#banner').innerHTML=''; $('#main').innerHTML=`<div class="empty"><h2>還沒有任何品牌資料</h2><p class="sub">每個品牌各有一套食材、配方與疊價設定。按「新增品牌」建立第一個，之後可在上方切換。</p><button class="pri" data-newbrand="1">新增品牌</button></div>`; return }
+  $('#banner').innerHTML=(b.sample?`<div class="sample">目前顯示的是示範用的範例數字，不是真實資料。可直接改成你的數字，或按「新增品牌」從空白開始。 <label>品牌名稱 ${txt('name',b.name,'品牌名稱')}</label> <button data-unsample="1">改好了，移除此提示</button></div>`:`<div class="params"><label>品牌名稱 ${txt('name',b.name,'品牌名稱')}</label>${del('@brand')}</div>`);
+  $('#main').innerHTML=V[tab](b,ctx(b));
+  if(keep){const el=document.querySelector(`[data-p="${CSS.escape(keep)}"]`); if(el){el.focus(); el.select&&el.type!=='number'&&0}}
+}
+function setPath(o,path,v){const ks=path.split('.'); const last=ks.pop(); ks.forEach(k=>o=o[k]); o[last]=v}
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.id==='brandSel'){cur=el.value; selItem=selSemi=null; sim={}; render(); return}
+  if(el.dataset.ui){ ui[el.dataset.ui]=el.value; render(); return }
+  if(el.dataset.mx){ mxCat=el.value; render(); return }
+  if(el.dataset.sim){ sim[el.dataset.sim]=parseFloat(el.value)||0; setTimeout(render,0); return }
+  const p=el.dataset.p; if(!p||!B()) return;
+  let v=el.value;
+  if(el.dataset.t==='n'){ v=v===''?(el.dataset.nul?null:0):parseFloat(v); if(v!==null&&!isFinite(v)) v=0; if(v!==null&&v<0) v=0 }
+  {const m=p.match(/^ingredients\.(\d+)\.buyPrice$/); if(m){const g=B().ingredients[m[1]]; if(g.buyPrice!==v){B().priceLog.push({id:g.id,name:g.name,date:new Date().toISOString().slice(0,10),from:g.buyPrice,to:v}); if(B().priceLog.length>300) B().priceLog.shift()}}}
+  setPath(B(),p,v); touch(); setTimeout(render,0);
+});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button'); if(!t) return; const d=t.dataset, b=B();
+  if(d.tab){tab=d.tab; armed=null; try{history.replaceState(null,'','#'+tab)}catch(x){} render(); return}
+  if(t.id==='btnNew'||d.newbrand){ const id=uid('b'); brands[id]=norm(blank('新品牌 '+(Object.keys(brands).length+1))); cur=id; tab='ing'; touch(); render(); return }
+  if(t.id==='btnCopy'&&b){ const id=uid('b'); brands[id]=JSON.parse(JSON.stringify(b)); brands[id].name=b.name+'（複本）'; brands[id].sample=false; cur=id; touch(); render(); return }
+  if(!b) return;
+  if(d.unsample){b.sample=false; touch(); render(); return}
+  if(d.simclear){sim={}; render(); return}
+  if(t.id==='btnExport'){exportXlsx(); return}
+  if(d.act==='vnew'){ const n=$('#verNote'); verCreate(cur,n?n.value.trim():'').then(v=>{ if(v) setStatus('已建立存檔點'); render() }); return }
+  if(d.act==='sbpush'){ sbPush(Object.keys(brands),true); return }
+  if(d.act==='sbload'){ sbLoad(); return }
+  if(d.arm){ if(armed!==d.arm){armed=d.arm; render(); return} armed=null; const [k,id]=d.arm.split(':'), v=versions.find(x=>x.id===id);
+    if(k==='vres'&&v){ verRestore(v.brandId,v.data); return }
+    if(k==='vdel'&&v){ versions=versions.filter(x=>x.id!==id); if(db) db.doc('versions/'+id).delete().catch(()=>{}); else siteDeleteVer(id); render(); return }
+    if(k==='rres'){ sbRestore(id); return }
+    render(); return }
+  if(d.pickCombo){selCombo=d.pickCombo; render(); return}
+  if(d.act==='befill'){ const p=b.periods[b.periods.length-1], R=sumA(p.revenue); b.fixed=p.expenses.filter(x=>!VAR.test(x.name)).map(x=>({name:x.name,amount:x.amount})); b.be.varPct=Math.round(sumA(p.expenses.filter(x=>VAR.test(x.name)))/R*1000)/10; touch(); render(); return }
+  if(d.pickItem){selItem=d.pickItem; render(); return}
+  if(d.pickSemi){selSemi=d.pickSemi; render(); return}
+  if(d.add){ const first=b.ingredients[0]?'i:'+b.ingredients[0].id:null;
+    if(d.add==='ing') b.ingredients.push({id:uid('i'),name:'新食材',cat:'',unit:'g',packUnit:'公斤',packSize:1000,buyPrice:0,yield:100,supply:'hq',markup:null});
+    if(d.add==='semi'){const s={id:uid('s'),name:'新半成品',unit:'g',batchYield:1000,packSize:1000,packUnit:'包',supply:'self',markup:null,lines:[]}; b.semis.push(s); selSemi=s.id}
+    if(d.add==='item'){const s={id:uid('m'),name:'新品項',cat:'主餐',price:100,monthlySales:0,lines:[]}; b.items.push(s); selItem=s.id}
+    if(d.add==='fixed') b.fixed.push({name:'新費用',amount:0});
+    if(d.add==='channel') b.channels.push({name:'新通路',comm:30,extra:0,pack:0,up:0});
+    if(d.add==='combo'){const s={id:uid('k'),name:'新套餐',price:0,lines:[]}; b.combos.push(s); selCombo=s.id}
+    if(d.add==='comboline'&&b.items[0]) b.combos.find(s=>s.id===selCombo).lines.push({item:b.items[0].id,qty:1});
+    if(d.add==='semiline'&&first) b.semis.find(s=>s.id===selSemi).lines.push({ref:first,qty:0});
+    if(d.add==='itemline'&&first) b.items.find(s=>s.id===selItem).lines.push({ref:first,qty:0});
+    touch(); render(); return }
+  if(d.del){ if(armed!==d.del){armed=d.del; render(); return} armed=null;
+    if(d.del==='@brand'){ const id=cur; delete brands[cur]; dirty.delete(id); cur=null; pick();
+      if(db) chain=chain.then(()=>db.doc('brands/'+id).delete()).catch(()=>setStatus('刪除失敗')); else siteDeleteBrand(id);
+      render(); return }
+    const ks=d.del.split('.'), i=+ks.pop(); let o=b; ks.forEach(k=>o=o[k]); o.splice(i,1); touch(); render(); return }
+});
+/* ===== 網站版：登入、授權、資料存取（Supabase） ===== */
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+const LICENSOR='品牌加辣餐飲顧問工作室';
+const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['ing','semi','recipe','cost','price','order','ver'];
+let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false;
+const isAdmin=()=>!!prof&&prof.role==='admin';
+const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const expired=()=>!!prof&&!!prof.expires_on&&prof.expires_on<today();
+const RO=()=>!isAdmin()&&(!prof||prof.access!=='edit');
+const allowed=t=>isAdmin()||(prof&&prof.plan==='pro')||BASIC.includes(t);
+
+function touch(){ if(!cur||RO()) return; dirty.add(cur); setStatus('儲存中…'); clearTimeout(timer); timer=setTimeout(flush,900) }
+function flush(){ const ids=[...dirty]; dirty.clear();
+  ids.forEach(id=>{ const b=brands[id]; if(!b) return;
+    const row={name:b.name,data:JSON.parse(JSON.stringify(b)),updated_at:new Date().toISOString(),edited_on_site:true};
+    chain=chain.then(async()=>{ const q=isAdmin()?sbc.from('bom_brands').upsert({id,...row}).select('id'):sbc.from('bom_brands').update(row).eq('id',id).select('id');
+      const {data,error}=await q; if(error||!data||!data.length) throw error||new Error('denied'); if(!dirty.size) setStatus('已儲存') })
+    .catch(()=>setStatus('儲存失敗：權限不足或連線中斷，請重新整理後再試')) }) }
+function saveLocalVers(){}
+function sbQueue(){}
+async function markSynced(){}
+function siteDeleteBrand(id){ sbc.from('bom_brands').delete().eq('id',id).then(({error})=>{ if(error) setStatus('刪除失敗') }) }
+function siteDeleteVer(id){ sbc.from('bom_snapshots').delete().eq('id',id).then(({error})=>{ if(error) setStatus('刪除失敗：只有管理員可以刪除存檔點') }) }
+async function verCreate(brandId,note){ const b=brands[brandId]; if(!b||RO()) return null;
+  const v={id:uid('v')+Date.now().toString(36),brandId,brandName:b.name,note:note||'手動存檔',at:new Date().toISOString(),data:JSON.parse(JSON.stringify(b)),synced:true};
+  const {error}=await sbc.from('bom_snapshots').insert({id:v.id,brand_id:brandId,brand_name:b.name,note:v.note,data:v.data,created_at:v.at});
+  if(error){ setStatus('存檔點建立失敗'); return null } versions.unshift(v); return v }
+
+V.ver=(b,c)=>{ const mine=versions.filter(v=>v.brandId===cur);
+  const arm=(k,l,cls)=>`<button class="${cls||''} ${armed===k?'del armed':''}" data-arm="${k}">${armed===k?'確定'+l:l}</button>`;
+  return `<div class="head"><div><h2>版本存檔</h2><p class="sub">存檔點就像遊戲存檔：改壞了、試算完想回到之前的樣子，按還原就回去。還原前系統會先自動替目前資料存一個檔，所以還原也可以反悔。</p></div></div>
+<div class="params"><label for="verNote">這次存檔的說明 <input type="text" id="verNote" placeholder="例如：調整售價前" style="min-width:220px"></label><button class="pri" data-act="vnew">建立存檔點</button></div>
+<div class="scroll"><table><thead><tr><th>時間</th><th>說明</th><th class="n">食材</th><th class="n">品項</th><th class="n">損益期數</th><th></th></tr></thead><tbody>${mine.map(v=>`<tr><td>${tm(v.at)}</td><td>${esc(v.note)}</td><td class="n">${((v.data||{}).ingredients||[]).length}</td><td class="n">${((v.data||{}).items||[]).length}</td><td class="n">${((v.data||{}).periods||[]).length}</td><td>${arm('vres:'+v.id,'還原')} ${isAdmin()?arm('vdel:'+v.id,'刪除','del'):''}</td></tr>`).join('')||'<tr><td colspan="6">還沒有存檔點。重要調整前先按上方「建立存檔點」。</td></tr>'}</tbody></table></div>
+<p class="note">所有資料與存檔點都即時存在雲端資料庫，換電腦或手機登入都看得到。</p>` };
+
+/* ---- 授權管理（僅管理員） ---- */
+async function loadAdmin(){ const [p,a]=await Promise.all([sbc.from('bom_profiles').select('*').order('created_at',{ascending:false}),sbc.from('bom_brand_access').select('*')]); adm={profiles:p.data||[],access:a.data||[]} }
+V.admin=(b,c)=>{ const ps=adm.profiles.filter(p=>p.role!=='admin'), t=today(), soon=new Date(Date.now()+38*86400e3).toISOString().slice(0,10);
+  const opt=(uid,f,v,os)=>`<select data-adm="${uid}|${f}" aria-label="${f}">${os.map(o=>`<option value="${o[0]}" ${o[0]===v?'selected':''}>${o[1]}</option>`).join('')}</select>`;
+  return `<div class="head"><div><h2>授權管理</h2><p class="sub">業主自行在登入頁註冊後會出現在這裡，狀態是「待開通」。你替他選方案、權限、到期日並勾選可使用的品牌，確認收款後把狀態改成「使用中」，系統會自動寄開通通知信給他，信裡有一鍵登入的連結。</p></div><button data-act="admreload">重新整理名單</button></div>
+<div class="tiles"><div class="tile"><span>業主帳號</span><b>${ps.length}</b></div><div class="tile"><span>待開通</span><b>${ps.filter(p=>p.status==='pending').length}</b></div><div class="tile"><span>30 天內到期</span><b>${ps.filter(p=>p.status==='active'&&p.expires_on&&p.expires_on>=t&&p.expires_on<=soon).length}</b></div><div class="tile"><span>已到期或停權</span><b>${ps.filter(p=>p.status==='suspended'||(p.expires_on&&p.expires_on<t)).length}</b></div></div>
+<div class="scroll"><table><thead><tr><th>業主</th><th>狀態</th><th>方案</th><th>權限</th><th>到期日（留空為不限期）</th><th>可使用的品牌</th><th>備註（付款紀錄等）</th><th></th></tr></thead><tbody>${ps.map(p=>{const ex=p.expires_on&&p.expires_on<t;return `<tr><td style="white-space:normal"><b>${esc(p.display_name||'（未填名稱）')}</b><br><span class="note">${esc(p.email)}</span></td>
+<td>${opt(p.user_id,'status',p.status,[['pending','待開通'],['active','使用中'],['suspended','停權']])} ${ex?'<span class="pill bad">已到期</span>':''}</td>
+<td>${opt(p.user_id,'plan',p.plan,[['basic','基本版'],['pro','進階版']])}</td><td>${opt(p.user_id,'access',p.access,[['edit','可編輯'],['view','只能看']])}</td>
+<td><input type="date" data-adm="${p.user_id}|expires_on" value="${p.expires_on||''}" aria-label="到期日"></td>
+<td style="white-space:normal">${Object.keys(brands).map(id=>`<label style="display:inline-flex;gap:4px;margin-right:10px"><input type="checkbox" data-admb="${p.user_id}|${id}" ${adm.access.some(a=>a.user_id===p.user_id&&a.brand_id===id)?'checked':''}>${esc(brands[id].name)}</label>`).join('')||'<span class="note">請先新增品牌</span>'}</td>
+<td><input type="text" data-adm="${p.user_id}|note" value="${esc(p.note||'')}" placeholder="例如：10/10 已匯款年費" aria-label="備註" style="min-width:180px"></td><td>${p.status==='active'?`<button data-mail="${esc(p.email)}">重寄開通信</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="8">還沒有業主註冊。把網站網址傳給業主，請他按「註冊新帳號」。</td></tr>'}</tbody></table></div>
+<h2>方案差異</h2><div class="scroll"><table><thead><tr><th>方案</th><th>可用功能</th></tr></thead><tbody><tr><td>基本版</td><td style="white-space:normal">食材主檔、半成品、品項配方、成本毛利、定價漲價試算、叫貨推估、版本存檔</td></tr><tr><td>進階版</td><td style="white-space:normal">基本版全部，加上套餐組合、價格紀錄、產品四象限、外送通路定價、損益趨勢、損益兩平、總部試算四頁</td></tr></tbody></table></div>
+<p class="note">「只能看」的業主可以瀏覽所有數字與使用試算，但無法修改資料。到期日當天仍可使用，隔天起自動失效。品牌由你用上方「新增品牌」建立，業主不能自行新增或刪除品牌。</p>` };
+
+async function sendApproval(email){ const {error}=await sbc.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
+  return error?'通知信未寄出（'+((error.message||'').toLowerCase().includes('rate')||(error.message||'').includes('security')?'同一信箱一分鐘內只能寄一次，請稍後按「重寄開通信」':'請確認寄信服務已設定，再按「重寄開通信」')+'）':'已寄出開通通知信給 '+email }
+
+/* ---- 登入與狀態畫面 ---- */
+function gate(){ const box=h=>`<div class="col" style="max-width:400px;margin:24px auto;width:100%">${h}</div>`, msg=authMsg?`<p class="sample">${esc(authMsg)}</p>`:'';
+  if(G==='loading') return EMPTY('讀取中…');
+  if(G==='error') return EMPTY(esc(authMsg||'連線發生問題，請重新整理頁面。'));
+  if(G==='pending') return box(`<h2>帳號等待開通</h2><p class="sub">你的帳號（${esc(me&&me.email||'')}）已建立。本系統為付費授權服務，完成付款並經 ${LICENSOR} 審核開通後，你會收到一封開通通知信，即可登入使用。</p><div><button data-auth="reload">重新整理</button> <button data-auth="out">登出</button></div>`);
+  if(G==='blocked') return box(`<h2>${prof&&prof.status==='suspended'?'授權已停用':'授權已到期'}</h2><p class="sub">${prof&&prof.status==='suspended'?'這個帳號的使用授權目前已停用。':'這個帳號的使用授權已於 '+esc(prof&&prof.expires_on||'')+' 到期。'}你的資料仍完整保存，續約後即可繼續使用。請聯絡 ${LICENSOR}。</p><div><button data-auth="out">登出</button></div>`);
+  if(G==='recover') return box(`<h2>設定新密碼</h2><form id="authForm" class="col"><label for="auPass">新密碼（至少 8 個字）</label><input type="password" id="auPass" minlength="8" required autocomplete="new-password"><button class="pri" type="submit">儲存新密碼</button></form>${msg}`);
+  const up=authMode==='up', fg=authMode==='forgot';
+  return box(`<h2>${fg?'重設密碼':up?'註冊新帳號':'登入'}</h2><p class="sub">${fg?'輸入註冊時的 Email，我們會寄一封重設密碼的信給你。':up?'本系統為付費授權服務。註冊後需經 '+LICENSOR+' 審核開通才能使用，開通時會以 Email 通知。':'餐飲品牌的食材、配方、成本與獲利試算工具。'}</p>
+<form id="authForm" class="col">${up?'<label for="auName">店名或公司名稱</label><input type="text" id="auName" required maxlength="60" autocomplete="organization">':''}
+<label for="auEmail">Email</label><input type="email" id="auEmail" required autocomplete="username">
+${fg?'':`<label for="auPass">密碼${up?'（至少 8 個字）':''}</label><input type="password" id="auPass" minlength="8" required autocomplete="${up?'new-password':'current-password'}">`}
+<button class="pri" type="submit">${fg?'寄出重設信':up?'註冊':'登入'}</button></form>${msg}
+<div class="brandbar">${up||fg?'<button data-auth="in">已有帳號，回登入</button>':'<button data-auth="up">註冊新帳號</button><button data-auth="forgot">忘記密碼</button>'}</div>`) }
+const AUTH_ERR=e=>{ const m=(e&&e.message||'').toLowerCase();
+  if(m.includes('invalid login')) return 'Email 或密碼不正確。';
+  if(m.includes('not confirmed')) return '這個 Email 還沒完成驗證，請到信箱點擊確認信裡的連結。';
+  if(m.includes('already registered')||m.includes('already been registered')) return '這個 Email 已經註冊過，請直接登入。';
+  if(m.includes('rate limit')||m.includes('security purposes')) return '操作太頻繁，請稍等一分鐘再試。';
+  if(m.includes('password')) return '密碼不符合規定，請至少輸入 8 個字。';
+  return '無法完成，請檢查網路後再試一次。' };
+async function authSubmit(){ const v=id=>{const e=document.getElementById(id);return e?e.value.trim():''}; authMsg='處理中…'; render();
+  try{ if(G==='recover'){ const {error}=await sbc.auth.updateUser({password:v('auPass')}); if(error) throw error; authMsg=''; G='loading'; render(); return loadAll() }
+    if(authMode==='forgot'){ const {error}=await sbc.auth.resetPasswordForEmail(v('auEmail'),{redirectTo:location.origin+location.pathname}); if(error) throw error; authMsg='重設信已寄出，請到信箱收信。'; return render() }
+    if(authMode==='up'){ const {data,error}=await sbc.auth.signUp({email:v('auEmail'),password:v('auPass'),options:{data:{display_name:v('auName')},emailRedirectTo:location.origin+location.pathname}}); if(error) throw error;
+      if(!data.session){ authMode='in'; authMsg='註冊成功。請到信箱點擊確認信裡的連結，再回來登入。'; return render() } authMsg=''; return }
+    const {error}=await sbc.auth.signInWithPassword({email:v('auEmail'),password:v('auPass')}); if(error) throw error; authMsg='' }
+  catch(e){ authMsg=AUTH_ERR(e); render() } }
+
+async function loadAll(){ try{
+    const {data:p,error:pe}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(); if(pe) throw pe; prof=p;
+    if(!prof||prof.status==='pending'){ G='pending'; return render() }
+    if(prof.status==='suspended'||(!isAdmin()&&expired())){ G='blocked'; return render() }
+    const [bs,vs]=await Promise.all([sbc.from('bom_brands').select('id,name,data').order('name'),sbc.from('bom_snapshots').select('id,brand_id,brand_name,note,data,created_at').order('created_at',{ascending:false}).limit(100)]);
+    if(bs.error) throw bs.error;
+    brands={}; (bs.data||[]).forEach(r=>{ const d=r.data&&typeof r.data==='object'?r.data:{}; brands[r.id]=norm(Object.assign(blank(r.name),d,{name:r.name})) });
+    versions=(vs.data||[]).map(r=>({id:r.id,brandId:r.brand_id,brandName:r.brand_name,note:r.note,at:r.created_at,data:r.data,synced:true}));
+    if(isAdmin()){ if(!adminTab){ TABS[TABS.length-1][2].push(['admin','授權管理']); adminTab=true } await loadAdmin() }
+    cur=null; pick(); if(!allowed(tab)) tab='cost'; G='app'; setStatus('已連線'); render() }
+  catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
+
+function render(){ const app=G==='app', ub=$('#userbar'); $('#nav').hidden=!app; $('#brandbar').hidden=!app;
+  ub.innerHTML=me&&G!=='login'&&G!=='recover'?`<span class="status">${esc(me.email)}${prof&&app?' · '+(isAdmin()?'管理員':PLAN_NAME[prof.plan]+' · '+(RO()?'只能看':'可編輯')+(prof.expires_on?' · 到期 '+prof.expires_on:'')):''}</span><button data-auth="out">登出</button>`:'';
+  if(!app){ $('#nav').innerHTML=''; $('#banner').innerHTML=''; $('#main').innerHTML=gate(); return }
+  renderApp();
+  document.querySelectorAll('#nav [data-tab]').forEach(el=>{ if(!allowed(el.dataset.tab)){ el.insertAdjacentHTML('beforeend',' <span class="tag">進階</span>') } });
+  $('#btnNew').hidden=!isAdmin(); $('#btnCopy').hidden=!isAdmin()||!B();
+  if(!B()&&!isAdmin()){ $('#main').innerHTML=EMPTY('你的帳號還沒有被指派品牌。請聯絡 '+LICENSOR+'。'); return }
+  if(!isAdmin()) document.querySelectorAll('#banner [data-del],#banner [data-unsample]').forEach(el=>el.hidden=true);
+  if(B()&&!allowed(tab)){ $('#main').innerHTML=`<div class="empty"><h2>這是進階版功能</h2><p class="sub">你目前的方案是${PLAN_NAME[prof.plan]}。想使用這項分析，請聯絡 ${LICENSOR} 升級為進階版。</p></div>`; return }
+  if(RO()){ document.querySelectorAll('#main [data-p],#banner [data-p]').forEach(el=>{ if(!el.dataset.ui&&!el.dataset.mx&&!el.dataset.sim) el.disabled=true });
+    document.querySelectorAll('#main [data-add],#main [data-del],#main [data-act],#main [data-arm],#main #verNote').forEach(el=>el.hidden=true) } }
+
+document.addEventListener('submit',e=>{ if(e.target.id==='authForm'){ e.preventDefault(); authSubmit() } });
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const a=t.dataset.auth;
+  if(a==='up'||a==='in'||a==='forgot'){ authMode=a; authMsg=''; render(); return }
+  if(a==='out'){ sbc.auth.signOut(); return }
+  if(a==='reload'){ G='loading'; render(); loadAll(); return }
+  if(t.dataset.act==='admreload'&&isAdmin()){ loadAdmin().then(render) }
+  if(t.dataset.mail&&isAdmin()){ setStatus('寄送中…'); sendApproval(t.dataset.mail).then(setStatus) } });
+document.addEventListener('change',async e=>{ const el=e.target; if(!isAdmin()) return;
+  if(el.dataset.adm){ const [uidv,f]=el.dataset.adm.split('|'), was=adm.profiles.find(p=>p.user_id===uidv)||{}; const {error}=await sbc.from('bom_profiles').update({[f]:el.value===''?null:el.value}).eq('user_id',uidv); let m=error?'更新失敗':'授權已更新';
+    if(!error&&f==='status'&&el.value==='active'&&was.status!=='active'&&was.email) m='已開通。'+await sendApproval(was.email);
+    setStatus(m); await loadAdmin(); render() }
+  else if(el.dataset.admb){ const [uidv,bid]=el.dataset.admb.split('|'); const r=el.checked?await sbc.from('bom_brand_access').insert({user_id:uidv,brand_id:bid}):await sbc.from('bom_brand_access').delete().eq('user_id',uidv).eq('brand_id',bid); setStatus(r.error?'更新失敗':'品牌權限已更新'); await loadAdmin(); render() } });
+
+async function siteBoot(){ const h=location.hash.slice(1); if(TABIDS.includes(h)) tab=h;
+  if(!window.supabase){ G='error'; authMsg='無法載入登入元件，請檢查網路後重新整理。'; return render() }
+  sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  dl={save:async({filename,data})=>{ const u=URL.createObjectURL(new Blob([data])), a=document.createElement('a'); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000) }};
+  sbc.auth.onAuthStateChange((ev,s)=>{ setTimeout(()=>{
+    if(ev==='PASSWORD_RECOVERY'){ me=s&&s.user; G='recover'; authMsg=''; render(); return }
+    if(ev==='SIGNED_OUT'){ me=null; prof=null; brands={}; versions=[]; cur=null; G='login'; authMode='in'; render(); return }
+    if(ev==='SIGNED_IN'&&s&&G!=='recover'&&(!me||me.id!==s.user.id)){ me=s.user; G='loading'; render(); loadAll() } },0) });
+  const {data}=await sbc.auth.getSession();
+  if(data&&data.session){ if(!me){ me=data.session.user; G='loading'; render(); loadAll() } } else if(G==='loading'){ G='login'; render() } }
+siteBoot();
+
+</script>
+
+</html>
