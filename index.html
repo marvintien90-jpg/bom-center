@@ -604,13 +604,14 @@ const AUTH_ERR=e=>{ const m=(e&&e.message||'').toLowerCase();
   if(m.includes('rate limit')||m.includes('security purposes')) return '操作太頻繁，請稍等一分鐘再試。';
   if(m.includes('password')) return '密碼不符合規定，請至少輸入 8 個字。';
   return '無法完成，請檢查網路後再試一次。' };
-async function authSubmit(){ const v=id=>{const e=document.getElementById(id);return e?e.value.trim():''}; authMsg='處理中…'; render();
+async function authSubmit(){ const F={}; ['auName','auEmail','auPass'].forEach(id=>{const e=document.getElementById(id); F[id]=e?(id==='auPass'?e.value:e.value.trim()):''}); const v=id=>F[id];
+  const keep=()=>{['auName','auEmail'].forEach(id=>{const e=document.getElementById(id); if(e) e.value=F[id]})}; authMsg='處理中…'; render(); keep();
   try{ if(G==='recover'){ const {error}=await sbc.auth.updateUser({password:v('auPass')}); if(error) throw error; authMsg=''; G='loading'; render(); return loadAll() }
     if(authMode==='forgot'){ const {error}=await sbc.auth.resetPasswordForEmail(v('auEmail'),{redirectTo:location.origin+location.pathname}); if(error) throw error; authMsg='重設信已寄出，請到信箱收信。'; return render() }
     if(authMode==='up'){ const {data,error}=await sbc.auth.signUp({email:v('auEmail'),password:v('auPass'),options:{data:{display_name:v('auName')},emailRedirectTo:location.origin+location.pathname}}); if(error) throw error;
       if(!data.session){ authMode='in'; authMsg='註冊成功。請到信箱點擊確認信裡的連結，再回來登入。'; return render() } authMsg=''; return }
     const {error}=await sbc.auth.signInWithPassword({email:v('auEmail'),password:v('auPass')}); if(error) throw error; authMsg='' }
-  catch(e){ authMsg=AUTH_ERR(e); render() } }
+  catch(e){ authMsg=AUTH_ERR(e); render(); keep() } }
 
 async function loadAll(){ try{
     const {data:p,error:pe}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(); if(pe) throw pe; prof=p;
