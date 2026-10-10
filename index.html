@@ -533,8 +533,9 @@ document.addEventListener('click',e=>{
 const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
 const LICENSOR='品牌加辣餐飲顧問工作室';
-const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['ing','semi','recipe','cost','price','order','ver'];
-let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false;
+const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['ing','semi','recipe','cost','price','order','ver','log'];
+let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
+TABS[TABS.length-1][2].push(['log','修改紀錄']);
 const isAdmin=()=>!!prof&&prof.role==='admin';
 const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
 const expired=()=>!!prof&&!!prof.expires_on&&prof.expires_on<today();
@@ -543,18 +544,44 @@ const allowed=t=>isAdmin()||(prof&&prof.plan==='pro')||BASIC.includes(t);
 
 function touch(){ if(!cur||RO()) return; dirty.add(cur); setStatus('儲存中…'); clearTimeout(timer); timer=setTimeout(flush,900) }
 function flush(){ const ids=[...dirty]; dirty.clear();
-  ids.forEach(id=>{ const b=brands[id]; if(!b) return;
-    const row={name:b.name,data:JSON.parse(JSON.stringify(b)),updated_at:new Date().toISOString(),edited_on_site:true};
-    chain=chain.then(async()=>{ const q=isAdmin()?sbc.from('bom_brands').upsert({id,...row}).select('id'):sbc.from('bom_brands').update(row).eq('id',id).select('id');
-      const {data,error}=await q; if(error||!data||!data.length) throw error||new Error('denied'); if(!dirty.size) setStatus('已儲存') })
-    .catch(()=>setStatus('儲存失敗：權限不足或連線中斷，請重新整理後再試')) }) }
+  ids.forEach(id=>{ chain=chain.then(()=>saveBrand(id)).catch(()=>{ saving.delete(id); setStatus('儲存失敗：連線中斷，請重新整理後再試') }) }) }
+/* 每次存檔都帶著「我手上是第幾版」；資料庫裡的版本若已被別人往前推，這次就不寫入 */
+async function saveBrand(id){ const b=brands[id]; if(!b) return; const body=JSON.parse(JSON.stringify(b)), base=revs[id]; saving.add(id);
+  const res=base===undefined
+    ? await sbc.from('bom_brands').insert({id,name:b.name,data:body,edited_on_site:true}).select('id,rev')
+    : await sbc.from('bom_brands').update({name:b.name,data:body,edited_on_site:true,rev:base+1}).eq('id',id).eq('rev',base).select('id,rev');
+  saving.delete(id);
+  if(res.error&&!/BOM_CONFLICT/.test(res.error.message||'')) throw res.error;
+  if(res.data&&res.data.length){ revs[id]=res.data[0].rev; if(!dirty.size) setStatus('已儲存'); return }
+  await resolveConflict(id) }
+function applyRemote(r){ const d=r.data&&typeof r.data==='object'?r.data:{}; brands[r.id]=norm(Object.assign(blank(r.name),d,{name:r.name})); revs[r.id]=r.rev }
+async function loadVersions(){ const vs=await sbc.from('bom_snapshots').select('id,brand_id,brand_name,note,data,created_at,created_by_email,auto').order('created_at',{ascending:false}).limit(150);
+  versions=(vs.data||[]).map(r=>({id:r.id,brandId:r.brand_id,brandName:r.brand_name,note:r.note,at:r.created_at,data:r.data,by:r.created_by_email,auto:r.auto,synced:true})) }
+async function resolveConflict(id){ const mine=JSON.parse(JSON.stringify(brands[id])); dirty.delete(id);
+  const {data:r}=await sbc.from('bom_brands').select('id,name,data,rev,updated_by_email').eq('id',id).maybeSingle();
+  if(!r||r.rev===revs[id]){ setStatus('儲存失敗：你沒有修改這個品牌的權限'); return }
+  const {error}=await sbc.from('bom_snapshots').insert({id:uid('c')+Date.now().toString(36),brand_id:id,brand_name:mine.name,note:'衝突保留：我未存入的修改',data:mine});
+  applyRemote(r); await loadVersions();
+  notice='「'+r.name+'」剛被 '+(r.updated_by_email||'其他人')+' 更新。為了避免互相覆蓋，你剛才的修改沒有存入，畫面已換成最新版本。'+(error?'':'你的修改沒有遺失，已另存到「版本存檔」，名稱是「衝突保留：我未存入的修改」，可以前往查看或還原。');
+  setStatus('已載入最新版本'); render() }
+/* 定期與回到分頁時檢查：別人有沒有更新、品牌清單有沒有變 */
+async function checkRemote(){ if(G!=='app'||!sbc) return; const {data,error}=await sbc.from('bom_brands').select('id,rev,name,updated_by_email'); if(error||!data||G!=='app') return;
+  const need=data.filter(r=>!dirty.has(r.id)&&!saving.has(r.id)&&(revs[r.id]===undefined?!brands[r.id]:r.rev>revs[r.id])), seen=new Set(data.map(r=>r.id)); let changed=false, msg='';
+  if(need.length){ const full=await sbc.from('bom_brands').select('id,name,data,rev,updated_by_email').in('id',need.map(r=>r.id));
+    (full.data||[]).forEach(r=>{ if(dirty.has(r.id)||saving.has(r.id)) return; const isNew=revs[r.id]===undefined; applyRemote(r); changed=true;
+      if(r.id===cur&&!isNew) msg='「'+r.name+'」已由 '+(r.updated_by_email||'其他人')+' 更新，畫面已同步為最新版本。' }) }
+  Object.keys(brands).forEach(id=>{ if(!seen.has(id)&&revs[id]!==undefined&&!dirty.has(id)){ delete brands[id]; delete revs[id]; changed=true; if(id===cur) msg='你原本開啟的品牌已無法使用，可能已被移除或取消授權。' } });
+  if(changed){ if(msg) notice=msg; pick(); await loadVersions(); render() } }
+function startWatch(){ if(watchOn) return; watchOn=true; setInterval(checkRemote,60000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkRemote() });
+  try{ sbc.channel('bom-brands').on('postgres_changes',{event:'*',schema:'public',table:'bom_brands'},()=>{ clearTimeout(rtT); rtT=setTimeout(checkRemote,500) }).subscribe() }catch(e){} }
 function saveLocalVers(){}
 function sbQueue(){}
 async function markSynced(){}
-function siteDeleteBrand(id){ sbc.from('bom_brands').delete().eq('id',id).then(({error})=>{ if(error) setStatus('刪除失敗') }) }
+function siteDeleteBrand(id){ delete revs[id]; sbc.from('bom_brands').delete().eq('id',id).then(({error})=>{ if(error) setStatus('刪除失敗'); else loadVersions() }) }
 function siteDeleteVer(id){ sbc.from('bom_snapshots').delete().eq('id',id).then(({error})=>{ if(error) setStatus('刪除失敗：只有管理員可以刪除存檔點') }) }
 async function verCreate(brandId,note){ const b=brands[brandId]; if(!b||RO()) return null;
-  const v={id:uid('v')+Date.now().toString(36),brandId,brandName:b.name,note:note||'手動存檔',at:new Date().toISOString(),data:JSON.parse(JSON.stringify(b)),synced:true};
+  const v={id:uid('v')+Date.now().toString(36),brandId,brandName:b.name,note:note||'手動存檔',at:new Date().toISOString(),data:JSON.parse(JSON.stringify(b)),by:me&&me.email,auto:false,synced:true};
   const {error}=await sbc.from('bom_snapshots').insert({id:v.id,brand_id:brandId,brand_name:b.name,note:v.note,data:v.data,created_at:v.at});
   if(error){ setStatus('存檔點建立失敗'); return null } versions.unshift(v); return v }
 
@@ -562,8 +589,16 @@ V.ver=(b,c)=>{ const mine=versions.filter(v=>v.brandId===cur);
   const arm=(k,l,cls)=>`<button class="${cls||''} ${armed===k?'del armed':''}" data-arm="${k}">${armed===k?'確定'+l:l}</button>`;
   return `<div class="head"><div><h2>版本存檔</h2><p class="sub">存檔點就像遊戲存檔：改壞了、試算完想回到之前的樣子，按還原就回去。還原前系統會先自動替目前資料存一個檔，所以還原也可以反悔。</p></div></div>
 <div class="params"><label for="verNote">這次存檔的說明 <input type="text" id="verNote" placeholder="例如：調整售價前" style="min-width:220px"></label><button class="pri" data-act="vnew">建立存檔點</button></div>
-<div class="scroll"><table><thead><tr><th>時間</th><th>說明</th><th class="n">食材</th><th class="n">品項</th><th class="n">損益期數</th><th></th></tr></thead><tbody>${mine.map(v=>`<tr><td>${tm(v.at)}</td><td>${esc(v.note)}</td><td class="n">${((v.data||{}).ingredients||[]).length}</td><td class="n">${((v.data||{}).items||[]).length}</td><td class="n">${((v.data||{}).periods||[]).length}</td><td>${arm('vres:'+v.id,'還原')} ${isAdmin()?arm('vdel:'+v.id,'刪除','del'):''}</td></tr>`).join('')||'<tr><td colspan="6">還沒有存檔點。重要調整前先按上方「建立存檔點」。</td></tr>'}</tbody></table></div>
-<p class="note">所有資料與存檔點都即時存在雲端資料庫，換電腦或手機登入都看得到。</p>` };
+<div class="scroll"><table><thead><tr><th>時間</th><th>說明</th><th>建立者</th><th class="n">食材</th><th class="n">品項</th><th class="n">損益期數</th><th></th></tr></thead><tbody>${mine.map(v=>`<tr><td>${tm(v.at)}</td><td>${v.auto?'<span class="tag">自動</span> ':''}${esc(v.note)}</td><td>${esc(v.by||'')}</td><td class="n">${((v.data||{}).ingredients||[]).length}</td><td class="n">${((v.data||{}).items||[]).length}</td><td class="n">${((v.data||{}).periods||[]).length}</td><td>${arm('vres:'+v.id,'還原')} ${isAdmin()?arm('vdel:'+v.id,'刪除','del'):''}</td></tr>`).join('')||'<tr><td colspan="7">還沒有存檔點。重要調整前先按上方「建立存檔點」。</td></tr>'}</tbody></table></div>
+<p class="note">每個人每天第一次修改前，系統會自動先存一份，並標示是誰改的。所有資料與存檔點都即時存在雲端資料庫，換電腦或手機登入都看得到。存檔點只有管理員能刪除。</p>` };
+
+/* ---- 修改紀錄 ---- */
+const SEC={ingredients:'食材',semis:'半成品',items:'品項配方',settings:'參數設定',periods:'損益資料',combos:'套餐',channels:'外送通路',fixed:'固定費用',be:'損益兩平設定',fr:'加盟主試算設定',priceLog:'價格紀錄',name:'品牌名稱',sample:'範例標記'};
+async function loadLog(){ const r=await sbc.from('bom_change_log').select('*').order('at',{ascending:false}).limit(300); logRows=r.error?[]:(r.data||[]) }
+V.log=(b,c)=>{ const all=isAdmin()&&ui.logAll==='1', rows=(logRows||[]).filter(r=>all||r.brand_id===cur), who={admin:'顧問',client:'業主',system:'系統'}, act={create:'建立品牌',delete:'刪除品牌',update:'修改'};
+  return `<div class="head"><div><h2>修改紀錄</h2><p class="sub">誰在什麼時候改了哪些資料，都會自動記下來。同一個人十分鐘內連續修改會合併成一筆。這份紀錄由系統寫入，任何人都無法修改或刪除。</p></div><button data-act="logreload">重新整理</button></div>
+${isAdmin()?`<div class="params"><label for="logsel">顯示範圍 <select id="logsel" data-ui="logAll" data-p="ui.logAll"><option value="0" ${all?'':'selected'}>目前這個品牌</option><option value="1" ${all?'selected':''}>全部品牌</option></select></label></div>`:''}
+<div class="scroll"><table><thead><tr><th>時間</th>${all?'<th>品牌</th>':''}<th>誰</th><th>身分</th><th>動作</th><th>改了哪些</th><th class="n">儲存次數</th></tr></thead><tbody>${logRows===null?'<tr><td colspan="7">讀取中…</td></tr>':rows.map(r=>`<tr><td>${tm(r.at)}</td>${all?'<td>'+esc(r.brand_name||r.brand_id)+'</td>':''}<td>${esc(r.actor_email||'')}</td><td><span class="pill ${r.actor_role==='admin'?'puz':r.actor_role==='client'?'good':'warn'}">${who[r.actor_role]||r.actor_role}</span></td><td>${act[r.action]||r.action}</td><td style="white-space:normal">${(r.sections||[]).map(s=>SEC[s]||s).join('、')}</td><td class="n">${r.edits}</td></tr>`).join('')||'<tr><td colspan="7">目前沒有修改紀錄。</td></tr>'}</tbody></table></div>` };
 
 /* ---- 授權管理（僅管理員） ---- */
 async function loadAdmin(){ const [p,a]=await Promise.all([sbc.from('bom_profiles').select('*').order('created_at',{ascending:false}),sbc.from('bom_brand_access').select('*')]); adm={profiles:p.data||[],access:a.data||[]} }
@@ -617,18 +652,19 @@ async function loadAll(){ try{
     const {data:p,error:pe}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(); if(pe) throw pe; prof=p;
     if(!prof||prof.status==='pending'){ G='pending'; return render() }
     if(prof.status==='suspended'||(!isAdmin()&&expired())){ G='blocked'; return render() }
-    const [bs,vs]=await Promise.all([sbc.from('bom_brands').select('id,name,data').order('name'),sbc.from('bom_snapshots').select('id,brand_id,brand_name,note,data,created_at').order('created_at',{ascending:false}).limit(100)]);
+    const bs=await sbc.from('bom_brands').select('id,name,data,rev').order('name');
     if(bs.error) throw bs.error;
-    brands={}; (bs.data||[]).forEach(r=>{ const d=r.data&&typeof r.data==='object'?r.data:{}; brands[r.id]=norm(Object.assign(blank(r.name),d,{name:r.name})) });
-    versions=(vs.data||[]).map(r=>({id:r.id,brandId:r.brand_id,brandName:r.brand_name,note:r.note,at:r.created_at,data:r.data,synced:true}));
+    brands={}; Object.keys(revs).forEach(k=>delete revs[k]); (bs.data||[]).forEach(applyRemote);
+    await loadVersions();
     if(isAdmin()){ if(!adminTab){ TABS[TABS.length-1][2].push(['admin','授權管理']); adminTab=true } await loadAdmin() }
-    cur=null; pick(); if(!allowed(tab)) tab='cost'; G='app'; setStatus('已連線'); render() }
+    cur=null; pick(); if(!allowed(tab)) tab='cost'; G='app'; setStatus('已連線'); startWatch(); render() }
   catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
 
 function render(){ const app=G==='app', ub=$('#userbar'); $('#nav').hidden=!app; $('#brandbar').hidden=!app;
   ub.innerHTML=me&&G!=='login'&&G!=='recover'?`<span class="status">${esc(me.email)}${prof&&app?' · '+(isAdmin()?'管理員':PLAN_NAME[prof.plan]+' · '+(RO()?'只能看':'可編輯')+(prof.expires_on?' · 到期 '+prof.expires_on:'')):''}</span><button data-auth="out">登出</button>`:'';
   if(!app){ $('#nav').innerHTML=''; $('#banner').innerHTML=''; $('#main').innerHTML=gate(); return }
   renderApp();
+  if(notice) $('#banner').insertAdjacentHTML('afterbegin','<div class="sample" role="status" style="margin-bottom:10px">'+esc(notice)+' <button data-notice="1">知道了</button></div>');
   document.querySelectorAll('#nav [data-tab]').forEach(el=>{ if(!allowed(el.dataset.tab)){ el.insertAdjacentHTML('beforeend',' <span class="tag">進階</span>') } });
   $('#btnNew').hidden=!isAdmin(); $('#btnCopy').hidden=!isAdmin()||!B();
   if(!B()&&!isAdmin()){ $('#main').innerHTML=EMPTY('你的帳號還沒有被指派品牌。請聯絡 '+LICENSOR+'。'); return }
@@ -639,6 +675,8 @@ function render(){ const app=G==='app', ub=$('#userbar'); $('#nav').hidden=!app;
 
 document.addEventListener('submit',e=>{ if(e.target.id==='authForm'){ e.preventDefault(); authSubmit() } });
 document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const a=t.dataset.auth;
+  if(t.dataset.notice){ notice=''; render(); return }
+  if(t.dataset.tab==='log'||t.dataset.act==='logreload'){ loadLog().then(()=>{ if(tab==='log') render() }) }
   if(a==='up'||a==='in'||a==='forgot'){ authMode=a; authMsg=''; render(); return }
   if(a==='out'){ sbc.auth.signOut(); return }
   if(a==='reload'){ G='loading'; render(); loadAll(); return }
@@ -656,7 +694,7 @@ async function siteBoot(){ const h=location.hash.slice(1); if(TABIDS.includes(h)
   dl={save:async({filename,data})=>{ const u=URL.createObjectURL(new Blob([data])), a=document.createElement('a'); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000) }};
   sbc.auth.onAuthStateChange((ev,s)=>{ setTimeout(()=>{
     if(ev==='PASSWORD_RECOVERY'){ me=s&&s.user; G='recover'; authMsg=''; render(); return }
-    if(ev==='SIGNED_OUT'){ me=null; prof=null; brands={}; versions=[]; cur=null; G='login'; authMode='in'; render(); return }
+    if(ev==='SIGNED_OUT'){ me=null; prof=null; brands={}; versions=[]; notice=''; logRows=null; cur=null; G='login'; authMode='in'; render(); return }
     if(ev==='SIGNED_IN'&&s&&G!=='recover'&&(!me||me.id!==s.user.id)){ me=s.user; G='loading'; render(); loadAll() } },0) });
   const {data}=await sbc.auth.getSession();
   if(data&&data.session){ if(!me){ me=data.session.user; G='loading'; render(); loadAll() } } else if(G==='loading'){ G='login'; render() } }

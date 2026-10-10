@@ -1,0 +1,14 @@
+const fs=require('fs');let h=fs.readFileSync('bom-center.html','utf8');
+const rep=(a,b)=>{if(!h.includes(a))throw new Error('miss '+a.slice(0,60));h=h.split(a).join(b)};
+rep("function render(){","function renderApp(){");
+rep("else { try{localStorage.setItem('bom-brands',JSON.stringify(brands))}catch(x){} }","else siteDeleteBrand(id);");
+rep("else saveLocalVers(); render(); return }","else siteDeleteVer(id); render(); return }");
+rep('<div class="brandbar">\n      <label for="brandSel">','<div class="brandbar" id="brandbar">\n      <label for="brandSel">');
+rep('<span class="status" id="status">載入中…</span>\n    </div>','<span class="status" id="status"></span>\n    </div>\n    <div class="brandbar" id="userbar"></div>');
+rep('<main id="main"><div class="empty"><p class="sub">正在讀取資料…</p></div></main>','<main id="main"><div class="empty"><p class="sub">讀取中…</p></div></main>\n  <footer class="note" style="text-align:center">BOM 運算中心 · 品牌加辣餐飲顧問工作室 授權使用</footer>');
+rep('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>','<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>\n<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>');
+rep("</style>","body{margin:0}[hidden]{display:none!important}img{max-width:100%}\ninput[type=email],input[type=password],input[type=date]{background:var(--field);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font:inherit;color:inherit;min-width:0}\n:disabled{opacity:.75;cursor:not-allowed}\n</style>");
+const i=h.lastIndexOf("boot();"); h=h.slice(0,i)+fs.readFileSync('sitecode.js','utf8')+h.slice(i+7);
+h='<!doctype html>\n<html lang="zh-Hant">\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<meta name="robots" content="noindex">\n'+h+'\n</html>\n';
+fs.mkdirSync('site',{recursive:true});fs.writeFileSync('site/index.html',h);
+const js=h.split("<script>")[1].split("</script>")[0];new Function(js);console.log('syntax ok',h.length);
