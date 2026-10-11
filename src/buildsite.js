@@ -3,6 +3,7 @@ const rep=(a,b)=>{if(!h.includes(a))throw new Error('miss '+a.slice(0,60));h=h.s
 rep("function render(){","function renderApp(){");
 rep("else { try{localStorage.setItem('bom-brands',JSON.stringify(brands))}catch(x){} }","else siteDeleteBrand(id);");
 rep("else saveLocalVers(); render(); return }","else siteDeleteVer(id); render(); return }");
+/* btnNew 改走品牌管理 */ rep("if(t.id==='btnNew'||d.newbrand){ const id=uid('b'); brands[id]=norm(blank('新品牌 '+(Object.keys(brands).length+1))); cur=id; tab='ing'; touch(); render(); return }","if(t.id==='btnNew'||d.newbrand){ tab='brands'; armed=null; render(); const f=document.getElementById('nbName'); if(f) f.focus(); return }");
 { const a=h.indexOf('<div class="wrap">'), b=h.indexOf('<script src="https://cdnjs'); if(a<0||b<0) throw new Error('layout');
 h=h.slice(0,a)+`<div class="shell bare" id="shell">
   <aside id="side" aria-label="主選單">

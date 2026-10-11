@@ -525,7 +525,7 @@ document.addEventListener('change',e=>{
 document.addEventListener('click',e=>{
   const t=e.target.closest('button'); if(!t) return; const d=t.dataset, b=B();
   if(d.tab){tab=d.tab; armed=null; try{history.replaceState(null,'','#'+tab)}catch(x){} render(); return}
-  if(t.id==='btnNew'||d.newbrand){ const id=uid('b'); brands[id]=norm(blank('新品牌 '+(Object.keys(brands).length+1))); cur=id; tab='ing'; touch(); render(); return }
+  if(t.id==='btnNew'||d.newbrand){ tab='brands'; armed=null; render(); const f=document.getElementById('nbName'); if(f) f.focus(); return }
   if(t.id==='btnCopy'&&b){ const id=uid('b'); brands[id]=JSON.parse(JSON.stringify(b)); brands[id].name=b.name+'（複本）'; brands[id].sample=false; cur=id; touch(); render(); return }
   if(!b) return;
   if(d.unsample){b.sample=false; touch(); render(); return}
@@ -568,8 +568,8 @@ const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','account','he
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','admin']]];
-const LAB={io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','admin']]];
+const LAB={brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
 const TIP={ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['要先在品項配方填每道菜的月銷量，分類才會準。','price'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
@@ -577,7 +577,7 @@ const TIP={ing:['從這裡開始。每樣食材填名稱、進貨價和一包的
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
 let wantAdmin=false, imp=null, impMode='update', ups=null, upMsg='', navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
 function navHtml(){ const it=id=>`<button class="navi" data-tab="${id}" ${tab===id?'aria-current="page"':''}><span>${LAB[id]}</span>${allowed(id)?'':'<span class="tag">進階</span>'}</button>`;
-  return it('home')+NAV.map(g=>{ const ids=g[2].filter(id=>id!=='admin'||isAdmin()), open=!navShut[g[0]]||ids.includes(tab);
+  return it('home')+NAV.map(g=>{ const ids=g[2].filter(id=>(id!=='admin'&&id!=='brands')||isAdmin()), open=!navShut[g[0]]||ids.includes(tab);
     return `<button class="navi navg" data-grp="${g[0]}" aria-expanded="${open}"><span>${g[1]}</span><span aria-hidden="true">${open?'−':'+'}</span></button>${open?`<div class="navsub">${ids.map(it).join('')}</div>`:''}` }).join('') }
 const pwField=(id,label,ac,hint)=>`<label for="${id}">${label}</label><div class="pwrow"><input type="password" id="${id}" minlength="8" required autocomplete="${ac}"><button type="button" data-eye="${id}" aria-label="顯示或隱藏密碼">顯示</button></div>${hint?`<span class="note" data-pwhint="${id}">至少 8 個字，可以混合英文和數字。</span>`:''}`;
 const isAdmin=()=>!!prof&&prof.role==='admin';
@@ -609,7 +609,11 @@ async function resolveConflict(id){ const mine=JSON.parse(JSON.stringify(brands[
   notice='「'+r.name+'」剛被 '+(r.updated_by_email||'其他人')+' 更新。為了避免互相覆蓋，你剛才的修改沒有存入，畫面已換成最新版本。'+(error?'':'你的修改沒有遺失，已另存到「版本存檔」，名稱是「衝突保留：我未存入的修改」，可以前往查看或還原。');
   setStatus('已載入最新版本'); render() }
 /* 定期與回到分頁時檢查：別人有沒有更新、品牌清單有沒有變 */
-async function checkRemote(){ if(G!=='app'||!sbc) return; const {data,error}=await sbc.from('bom_brands').select('id,rev,name,updated_by_email'); if(error||!data||G!=='app') return;
+async function checkRemote(){ if(G!=='app'||!sbc) return;
+  { const {data:p}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(); if(G!=='app') return;
+    if(p&&prof){ const was=prof; prof=p;
+      if(p.status!=='active'||(!isAdmin()&&expired())){ G=p.status==='pending'?'pending':'blocked'; return render() }
+      if(!isAdmin()&&(was.plan!==p.plan||was.access!==p.access||was.expires_on!==p.expires_on)){ notice='你的使用內容剛剛由顧問更新：'+PLAN_NAME[p.plan]+'、'+(p.access==='edit'?'可編輯':'只能看')+'、使用期限 '+(p.expires_on||'不限期')+'。畫面已套用新的設定。'; if(!allowed(tab)) tab='home'; render() } } } const {data,error}=await sbc.from('bom_brands').select('id,rev,name,updated_by_email'); if(error||!data||G!=='app') return;
   const need=data.filter(r=>!dirty.has(r.id)&&!saving.has(r.id)&&(revs[r.id]===undefined?!brands[r.id]:r.rev>revs[r.id])), seen=new Set(data.map(r=>r.id)); let changed=false, msg='';
   if(need.length){ const full=await sbc.from('bom_brands').select('id,name,data,rev,updated_by_email').in('id',need.map(r=>r.id));
     (full.data||[]).forEach(r=>{ if(dirty.has(r.id)||saving.has(r.id)) return; const isNew=revs[r.id]===undefined; applyRemote(r); changed=true;
@@ -756,18 +760,27 @@ document.addEventListener('change',e=>{ if(e.target.id==='impFile'&&!RO()) impRe
 document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; if(t.dataset.tab==='io'){ upMsg=''; loadUps().then(()=>{ if(tab==='io') render() }) } const a=t.dataset.io; if(!a) return;
   if(a==='tpl') tplXlsx(false); else if(a==='tpld') tplXlsx(true); else if(a==='cancel'){ imp=null; render() } else if(a==='apply') impApply(); else if(a==='send') sendFile(); else if(a.startsWith('get:')) getFile(a.slice(4)); else if(a.startsWith('done:')&&isAdmin()) doneFile(a.slice(5)) });
 
+/* ---- 品牌管理（僅管理員） ---- */
+function touchId(id){ dirty.add(id); setStatus('儲存中…'); clearTimeout(timer); timer=setTimeout(flush,900) }
+function makeBrand(name,from){ const id=uid('b'), src=from&&brands[from]; brands[id]=src?norm(Object.assign(JSON.parse(JSON.stringify(src)),{name,sample:false})):norm(blank(name)); return id }
+V.brands=()=>{ const ids=Object.keys(brands), owners=id=>adm.access.filter(a=>a.brand_id===id).map(a=>(adm.profiles.find(p=>p.user_id===a.user_id)||{})).filter(p=>p.email);
+  return `<div class="head"><div><h2>品牌管理</h2><p class="sub">每個品牌是一套獨立的食材、配方和損益資料。先在這裡建立品牌，再到「授權管理」指派給業主。品牌名稱可以隨時直接修改。</p></div></div>
+<h2>新增品牌</h2><form id="nbForm" class="params"><label for="nbName">品牌名稱 <input type="text" id="nbName" required maxlength="60" placeholder="例如：嗑肉石鍋" style="min-width:200px"></label><label for="nbFrom">起始內容 <select id="nbFrom"><option value="">空白（從頭建立）</option>${ids.map(id=>`<option value="${id}">複製「${esc(brands[id].name)}」的資料</option>`).join('')}</select></label><button class="pri" type="submit">建立品牌</button></form>
+<h2>所有品牌</h2><div class="scroll"><table><thead><tr><th>品牌名稱（可直接修改）</th><th class="n">食材</th><th class="n">品項</th><th class="n">損益期數</th><th>可使用的業主</th><th></th></tr></thead><tbody>${ids.map(id=>{ const b=brands[id], os=owners(id), k='bd:'+id; return `<tr><td><input type="text" data-bname="${id}" value="${esc(b.name)}" maxlength="60" aria-label="品牌名稱"></td><td class="n">${b.ingredients.length}</td><td class="n">${b.items.length}</td><td class="n">${(b.periods||[]).length}</td><td style="white-space:normal">${os.map(p=>esc(p.display_name||p.email)+(p.status==='active'?'':'（'+({pending:'待開通',suspended:'停權'}[p.status]||'')+'）')).join('、')||'<span class="pill warn">尚未指派</span>'}</td><td><button data-bopen="${id}">開啟</button> <button class="del ${armed===k?'armed':''}" data-bdel="${id}">${armed===k?'確定刪除':'刪除'}</button></td></tr>` }).join('')||'<tr><td colspan="6">還沒有品牌。請用上方表單建立第一個。</td></tr>'}</tbody></table></div>
+<p class="note">刪除品牌前系統會自動保留一份備份。刪除後，原本被指派的業主就看不到這個品牌。</p>` };
+
 /* ---- 授權管理（僅管理員） ---- */
 async function loadAdmin(){ const [p,a]=await Promise.all([sbc.from('bom_profiles').select('*').order('created_at',{ascending:false}),sbc.from('bom_brand_access').select('*')]); adm={profiles:p.data||[],access:a.data||[]} }
 V.admin=(b,c)=>{ const ps=adm.profiles.filter(p=>p.role!=='admin'), t=today(), soon=new Date(Date.now()+38*86400e3).toISOString().slice(0,10);
   const opt=(uid,f,v,os)=>`<select data-adm="${uid}|${f}" aria-label="${f}">${os.map(o=>`<option value="${o[0]}" ${o[0]===v?'selected':''}>${o[1]}</option>`).join('')}</select>`;
-  return `<div class="head"><div><h2>授權管理</h2><p class="sub">業主自行在登入頁註冊後會出現在這裡，狀態是「待開通」。你替他選方案、權限、到期日並勾選可使用的品牌，確認收款後把狀態改成「使用中」，系統會自動寄開通通知信給他，信裡有一鍵登入的連結。</p></div><button data-act="admreload">重新整理名單</button></div>
+  return `<div class="head"><div><h2>授權管理</h2><p class="sub">業主在登入頁註冊並完成 Email 驗證後會出現在這裡。請由左到右設定，最後才改狀態。</p><ol class="sub" style="padding-left:20px;margin:0"><li>選<b>方案</b>、<b>權限</b>、<b>到期日</b></li><li>勾選<b>可使用的品牌</b>；還沒有品牌就按「建立品牌並指派」</li><li>確認收款後把<b>狀態</b>改成「使用中」，系統會自動寄開通信</li><li>之後調整方案、權限或到期日會立刻生效；要通知業主請按「寄異動通知」</li><li>解約或欠費時把狀態改成「停權」，業主無法登入但資料保留，系統會寄信告知</li></ol></div><button data-act="admreload">重新整理名單</button></div>
 <div class="tiles"><div class="tile"><span>業主帳號</span><b>${ps.length}</b></div><div class="tile"><span>待開通</span><b>${ps.filter(p=>p.status==='pending').length}</b></div><div class="tile"><span>30 天內到期</span><b>${ps.filter(p=>p.status==='active'&&p.expires_on&&p.expires_on>=t&&p.expires_on<=soon).length}</b></div><div class="tile"><span>已到期或停權</span><b>${ps.filter(p=>p.status==='suspended'||(p.expires_on&&p.expires_on<t)).length}</b></div></div>
 <div class="scroll"><table><thead><tr><th>業主</th><th>狀態</th><th>方案</th><th>權限</th><th>到期日（留空為不限期）</th><th>可使用的品牌</th><th>備註（付款紀錄等）</th><th></th></tr></thead><tbody>${ps.map(p=>{const ex=p.expires_on&&p.expires_on<t;return `<tr><td style="white-space:normal"><b>${esc(p.display_name||'（未填名稱）')}</b><br><span class="note">${esc(p.email)}</span></td>
 <td>${opt(p.user_id,'status',p.status,[['pending','待開通'],['active','使用中'],['suspended','停權']])} ${ex?'<span class="pill bad">已到期</span>':''}</td>
 <td>${opt(p.user_id,'plan',p.plan,[['basic','基本版'],['pro','進階版']])}</td><td>${opt(p.user_id,'access',p.access,[['edit','可編輯'],['view','只能看']])}</td>
 <td><input type="date" data-adm="${p.user_id}|expires_on" value="${p.expires_on||''}" aria-label="到期日"></td>
-<td style="white-space:normal">${Object.keys(brands).map(id=>`<label style="display:inline-flex;gap:4px;margin-right:10px"><input type="checkbox" data-admb="${p.user_id}|${id}" ${adm.access.some(a=>a.user_id===p.user_id&&a.brand_id===id)?'checked':''}>${esc(brands[id].name)}</label>`).join('')||'<span class="note">請先新增品牌</span>'}</td>
-<td><input type="text" data-adm="${p.user_id}|note" value="${esc(p.note||'')}" placeholder="例如：10/10 已匯款年費" aria-label="備註" style="min-width:180px"></td><td>${p.status==='active'?`<button data-mail="${p.user_id}">重寄開通信</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="8">還沒有業主註冊。把網站網址傳給業主，請他按「註冊新帳號」。</td></tr>'}</tbody></table></div>
+<td style="white-space:normal">${Object.keys(brands).map(id=>`<label style="display:inline-flex;gap:4px;margin-right:10px"><input type="checkbox" data-admb="${p.user_id}|${id}" ${adm.access.some(a=>a.user_id===p.user_id&&a.brand_id===id)?'checked':''}>${esc(brands[id].name)}</label>`).join('')}${adm.access.some(a=>a.user_id===p.user_id)?'':` <span class="pill warn">尚未指派品牌</span> <button data-mkbrand="${p.user_id}">建立品牌並指派</button>`}</td>
+<td><input type="text" data-adm="${p.user_id}|note" value="${esc(p.note||'')}" placeholder="例如：10/10 已匯款年費" aria-label="備註" style="min-width:180px"></td><td>${p.status==='active'?`<button data-mail="${p.user_id}">重寄開通信</button> <button data-chg="${p.user_id}">寄異動通知</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="8">還沒有業主註冊。把網站網址傳給業主，請他按「註冊新帳號」。</td></tr>'}</tbody></table></div>
 <h2>方案差異</h2><div class="scroll"><table><thead><tr><th>方案</th><th>可用功能</th></tr></thead><tbody><tr><td>基本版</td><td style="white-space:normal">食材主檔、半成品、品項配方、成本毛利、定價漲價試算、叫貨推估、版本存檔</td></tr><tr><td>進階版</td><td style="white-space:normal">基本版全部，加上套餐組合、價格紀錄、產品四象限、外送通路定價、損益趨勢、損益兩平、總部試算四頁</td></tr></tbody></table></div>
 <p class="note">「只能看」的業主可以瀏覽所有數字與使用試算，但無法修改資料。到期日當天仍可使用，隔天起自動失效。品牌由你用上方「新增品牌」建立，業主不能自行新增或刪除品牌。</p>` };
 
@@ -832,7 +845,7 @@ async function loadAll(){ try{
     brands={}; Object.keys(revs).forEach(k=>delete revs[k]); (bs.data||[]).forEach(applyRemote);
     await loadVersions();
     if(isAdmin()){ if(!adminTab){ TABS[TABS.length-1][2].push(['admin','授權管理']); adminTab=true } await loadAdmin() }
-    cur=null; pick(); if(wantAdmin&&!isAdmin()) notice='你開的是管理員專用的連結，但目前登入的是業主帳號 '+me.email+'。要進授權管理，請先登出，再用管理員帳號登入。'; if(isAdmin()) wantAdmin=false; if(!V[tab]||!allowed(tab)||(tab==='admin'&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }); loadUps().then(()=>{ if(tab==='home'||tab==='io') render() }) }
+    cur=null; pick(); if(wantAdmin&&!isAdmin()) notice='你開的是管理員專用的連結，但目前登入的是業主帳號 '+me.email+'。要進授權管理，請先登出，再用管理員帳號登入。'; if(isAdmin()) wantAdmin=false; if(!V[tab]||!allowed(tab)||((tab==='admin'||tab==='brands')&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }); loadUps().then(()=>{ if(tab==='home'||tab==='io') render() }) }
   catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
 
 function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.classList.toggle('bare',!app); if(!app) sh.classList.remove('open');
@@ -843,8 +856,8 @@ function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.cla
   $('#nav').innerHTML=navHtml(); const g=NAV.find(x=>x[2].includes(tab)); $('#crumb').textContent=(g?g[1]+' › ':'')+LAB[tab]; document.title=LAB[tab]+'｜BOM 運算中心';
   if(tab!=='home'){ const p=$('#banner .params'); if(p) p.remove() }
   if(notice) $('#banner').insertAdjacentHTML('afterbegin','<div class="sample" role="status" style="margin-bottom:10px">'+esc(notice)+' <button data-notice="1">知道了</button></div>');
-  $('#btnNew').hidden=!isAdmin(); $('#btnCopy').hidden=!isAdmin()||!B();
-  if(tab==='account'||tab==='help'){ $('#main').innerHTML=V[tab](); return }
+  $('#btnNew').hidden=!isAdmin(); $('#btnCopy').hidden=true;
+  if(tab==='account'||tab==='help'||((tab==='brands'||tab==='admin')&&isAdmin())){ $('#main').innerHTML=V[tab](); return }
   if(!B()&&!isAdmin()){ $('#main').innerHTML=EMPTY('你的帳號還沒有被指派品牌。請聯絡 '+LICENSOR+'。'); return }
   if(!B()) return;
   if(!isAdmin()) document.querySelectorAll('#banner [data-del],#banner [data-unsample]').forEach(el=>el.hidden=true);
@@ -853,7 +866,8 @@ function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.cla
   if(RO()){ document.querySelectorAll('#main [data-p],#banner [data-p]').forEach(el=>{ if(!el.dataset.ui&&!el.dataset.mx&&!el.dataset.sim) el.disabled=true });
     document.querySelectorAll('#main [data-add],#main [data-del],#main [data-act],#main [data-arm],#main #verNote').forEach(el=>el.hidden=true) } }
 
-document.addEventListener('submit',e=>{ if(e.target.id==='authForm'){ e.preventDefault(); authSubmit() } if(e.target.id==='pwForm'){ e.preventDefault(); pwSubmit() } });
+document.addEventListener('submit',e=>{ if(e.target.id==='nbForm'&&isAdmin()){ e.preventDefault(); const n=$('#nbName').value.trim(); if(!n) return; const id=makeBrand(n,$('#nbFrom').value); cur=id; selItem=selSemi=null; touchId(id); tab='home'; notice='已建立品牌「'+n+'」。下一步：到「授權管理」把它指派給業主，或直接開始建立食材。'; window.scrollTo(0,0); render(); return }
+  if(e.target.id==='authForm'){ e.preventDefault(); authSubmit() } if(e.target.id==='pwForm'){ e.preventDefault(); pwSubmit() } });
 document.addEventListener('input',e=>{ const h=document.querySelector('[data-pwhint="'+e.target.id+'"]'); if(!h) return; const n=e.target.value.length; h.textContent=n>=8?'長度足夠。':'還差 '+(8-n)+' 個字。' });
 document.addEventListener('click',e=>{ if(e.target.id==='scrim') $('#shell').classList.remove('open') });
 document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const a=t.dataset.auth;
@@ -868,9 +882,17 @@ document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t
   if(a==='out'){ sbc.auth.signOut(); return }
   if(a==='reload'){ G='loading'; render(); loadAll(); return }
   if(t.dataset.act==='admreload'&&isAdmin()){ loadAdmin().then(render) }
+  if(t.dataset.chg&&isAdmin()){ setStatus('寄送中…'); sbc.rpc('bom_send_change',{target:t.dataset.chg}).then(({data,error})=>setStatus(error?'通知信未寄出，請稍後再試':data==='sent'?'已寄出異動通知信':'通知信未寄出')) }
+  if(t.dataset.mkbrand&&isAdmin()){ const p=adm.profiles.find(x=>x.user_id===t.dataset.mkbrand); if(!p) return; const id=makeBrand((p.display_name||p.email.split('@')[0]).slice(0,60)); setStatus('建立中…');
+    saveBrand(id).then(()=>sbc.from('bom_brand_access').insert({user_id:p.user_id,brand_id:id})).then(r=>{ setStatus(r&&r.error?'品牌已建立，但指派失敗，請手動勾選':'已建立品牌並指派'); notice='已建立品牌「'+brands[id].name+'」並指派給 '+(p.display_name||p.email)+'。品牌名稱可以到「品牌管理」修改。'; return loadAdmin() }).then(render).catch(()=>{ setStatus('建立失敗，請重新整理後再試') }); return }
+  if(t.dataset.bopen&&brands[t.dataset.bopen]){ cur=t.dataset.bopen; selItem=selSemi=null; tab='home'; window.scrollTo(0,0); render(); return }
+  if(t.dataset.bdel&&isAdmin()){ const id=t.dataset.bdel, k='bd:'+id; if(armed!==k){ armed=k; render(); return } armed=null; delete brands[id]; dirty.delete(id); if(cur===id){ cur=null; pick() } siteDeleteBrand(id); loadAdmin().then(render); render(); return }
   if(t.dataset.mail&&isAdmin()){ setStatus('寄送中…'); sendApproval(t.dataset.mail).then(setStatus) } });
 document.addEventListener('change',async e=>{ const el=e.target; if(!isAdmin()) return;
+  if(el.dataset.bname){ const id=el.dataset.bname, n=el.value.trim(); if(!brands[id]) return; if(!n){ el.value=brands[id].name; return } brands[id].name=n; touchId(id); render(); return }
   if(el.dataset.adm){ const [uidv,f]=el.dataset.adm.split('|'), was=adm.profiles.find(p=>p.user_id===uidv)||{}; const {error}=await sbc.from('bom_profiles').update({[f]:el.value===''?null:el.value}).eq('user_id',uidv); let m=error?'更新失敗':'授權已更新';
+    if(!error&&f==='status'&&el.value==='suspended'&&was.status==='active') m='已停權，系統已寄信告知 '+was.email+'。資料仍完整保留，改回「使用中」即可恢復。';
+    if(!error&&f==='status'&&el.value==='active'&&!adm.access.some(a=>a.user_id===uidv)) notice='注意：'+(was.display_name||was.email)+' 已開通，但還沒有指派任何品牌，他登入後會看不到資料。請在「可使用的品牌」勾選，或按「建立品牌並指派」。';
     if(!error&&f==='status'&&el.value==='active'&&was.status!=='active'&&was.email) m=(await approvalSent(was.email))?'已開通，並已自動寄出開通通知信給 '+was.email:'已開通。通知信未寄出：寄信服務尚未設定完成，設定後可按「重寄開通信」';
     setStatus(m); await loadAdmin(); render() }
   else if(el.dataset.admb){ const [uidv,bid]=el.dataset.admb.split('|'); const r=el.checked?await sbc.from('bom_brand_access').insert({user_id:uidv,brand_id:bid}):await sbc.from('bom_brand_access').delete().eq('user_id',uidv).eq('brand_id',bid); setStatus(r.error?'更新失敗':'品牌權限已更新'); await loadAdmin(); render() } });
