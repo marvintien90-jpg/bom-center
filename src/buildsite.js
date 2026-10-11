@@ -56,6 +56,18 @@ details{border:1px solid var(--line);border-radius:8px;padding:8px 12px}summary{
 .btnlink{display:inline-block;background:#047d3a;color:#fff;border-radius:6px;padding:6px 14px;text-decoration:none;font-weight:500}.btnlink:hover{filter:brightness(.95)}
 .board{border:1px solid var(--accent);border-left-width:4px;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;font-size:13px}.board b{color:var(--accent)}
 textarea{font:inherit;color:inherit;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;resize:vertical}
+.ticker{display:flex;width:100%;align-items:center;gap:10px;text-align:left;border:1px solid var(--accent);border-left-width:4px;border-radius:8px;padding:6px 12px;background:var(--panel);overflow:hidden;min-width:0}
+.ticker>b{color:var(--accent);flex:none}.ticker>.tag,.ticker>span[aria-hidden]{flex:none;font-size:12px}
+.tk{flex:1;overflow:hidden;white-space:nowrap;min-width:0}.tkin{display:inline-block;padding-left:100%;animation:tk linear infinite}
+.ticker:hover .tkin,.ticker:focus-visible .tkin{animation-play-state:paused}
+@keyframes tk{to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.tkin{animation:none;padding-left:0;display:block;overflow:hidden;text-overflow:ellipsis}}
+#annDlg{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--fg);padding:18px;width:min(560px,92vw);max-height:84vh}
+#annDlg::backdrop{background:rgba(0,0,0,.45)}
+.ann summary{display:flex;justify-content:space-between;gap:10px;align-items:baseline;list-style:none}.ann summary::-webkit-details-marker{display:none}
+.ann[open] summary{margin-bottom:6px}.annbody{white-space:pre-line;font-size:13px;overflow-wrap:anywhere}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:6px}
+input[type=datetime-local]{background:var(--field);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;color:inherit}
 .pwrow{display:flex;gap:6px}.pwrow input{flex:1}
 main tbody th{width:140px}
 @media (max-width:860px){.shell{grid-template-columns:minmax(0,1fr)}
