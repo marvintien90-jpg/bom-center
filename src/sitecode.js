@@ -2,9 +2,22 @@
 const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
 const LICENSOR='品牌加辣餐飲顧問工作室';
-const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['ing','semi','recipe','cost','price','order','ver','log'];
+const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','account','help','ing','semi','recipe','cost','price','order','ver','log'];
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
+/* 左側選單：照業主的工作順序分層 */
+const NAV=[['data','資料建立',['ing','semi','recipe','combo']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','admin']]];
+const LAB={home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+/* 每頁一句話：這頁要先做什麼、做完去哪 */
+const TIP={ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
+ cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['要先在品項配方填每道菜的月銷量，分類才會準。','price'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
+ order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
+ markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
+let navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
+function navHtml(){ const it=id=>`<button class="navi" data-tab="${id}" ${tab===id?'aria-current="page"':''}><span>${LAB[id]}</span>${allowed(id)?'':'<span class="tag">進階</span>'}</button>`;
+  return it('home')+NAV.map(g=>{ const ids=g[2].filter(id=>id!=='admin'||isAdmin()), open=!navShut[g[0]]||ids.includes(tab);
+    return `<button class="navi navg" data-grp="${g[0]}" aria-expanded="${open}"><span>${g[1]}</span><span aria-hidden="true">${open?'−':'+'}</span></button>${open?`<div class="navsub">${ids.map(it).join('')}</div>`:''}` }).join('') }
+const pwField=(id,label,ac,hint)=>`<label for="${id}">${label}</label><div class="pwrow"><input type="password" id="${id}" minlength="8" required autocomplete="${ac}"><button type="button" data-eye="${id}" aria-label="顯示或隱藏密碼">顯示</button></div>${hint?`<span class="note" data-pwhint="${id}">至少 8 個字，可以混合英文和數字。</span>`:''}`;
 const isAdmin=()=>!!prof&&prof.role==='admin';
 const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
 const expired=()=>!!prof&&!!prof.expires_on&&prof.expires_on<today();
@@ -70,6 +83,45 @@ V.log=(b,c)=>{ const all=isAdmin()&&ui.logAll==='1', rows=(logRows||[]).filter(r
 ${isAdmin()?`<div class="params"><label for="logsel">顯示範圍 <select id="logsel" data-ui="logAll" data-p="ui.logAll"><option value="0" ${all?'':'selected'}>目前這個品牌</option><option value="1" ${all?'selected':''}>全部品牌</option></select></label></div>`:''}
 <div class="scroll"><table><thead><tr><th>時間</th>${all?'<th>品牌</th>':''}<th>誰</th><th>身分</th><th>動作</th><th>改了哪些</th><th class="n">儲存次數</th></tr></thead><tbody>${logRows===null?'<tr><td colspan="7">讀取中…</td></tr>':rows.map(r=>`<tr><td>${tm(r.at)}</td>${all?'<td>'+esc(r.brand_name||r.brand_id)+'</td>':''}<td>${esc(r.actor_email||'')}</td><td><span class="pill ${r.actor_role==='admin'?'puz':r.actor_role==='client'?'good':'warn'}">${who[r.actor_role]||r.actor_role}</span></td><td>${act[r.action]||r.action}</td><td style="white-space:normal">${(r.sections||[]).map(s=>SEC[s]||s).join('、')}</td><td class="n">${r.edits}</td></tr>`).join('')||'<tr><td colspan="7">目前沒有修改紀錄。</td></tr>'}</tbody></table></div>` };
 
+/* ---- 首頁、我的帳號、使用說明 ---- */
+const LOGIN_FAQ=()=>`<details><summary>忘記密碼</summary><p class="sub">在登入頁按「忘記密碼」，輸入註冊的 Email。幾分鐘內會收到一封信，點信裡的連結就能設定新密碼。連結一小時內有效，而且只能用一次。</p></details>
+<details><summary>註冊後沒收到驗證信</summary><p class="sub">先看垃圾信匣或「促銷內容」分類，寄件人是 no-reply@mail.spicesupbrand.com。還是沒有的話，回到登入頁填好 Email，按「重寄驗證信」。</p></details>
+<details><summary>顯示「Email 或密碼不正確」</summary><p class="sub">最常見是大小寫或多打了空白。按密碼欄旁的「顯示」可以看到自己打了什麼。確定記不得就用「忘記密碼」。</p></details>
+<details><summary>登入後顯示「帳號等待開通」</summary><p class="sub">這是正常的。本系統是付費授權服務，註冊後要等 ${LICENSOR} 確認並開通。開通後你會收到通知信，再回來登入即可。</p></details>
+<details><summary>顯示「授權已到期」或「已停用」</summary><p class="sub">你的資料都還在，沒有被刪除。聯絡 ${LICENSOR} 續約後，登入就能繼續使用。</p></details>
+<details><summary>點了信裡的連結卻說連結失效</summary><p class="sub">每個連結只能用一次，而且有時間限制。有些信箱會先自動「預覽」連結，也會讓它失效。重新操作一次（忘記密碼或重寄驗證信），收到新信後直接點最新那一封。</p></details>`;
+V.home=(b,c)=>{ const t=b.settings.targetRate/100; let sales=0,cost=0,over=0; b.items.forEach(it=>{ const k=itemCalc(it,c),q=it.monthlySales||0; sales+=it.price*q; cost+=k.fr*q; if(it.price>0&&k.fr/it.price>t+0.03) over++ });
+  const s1=b.ingredients.length>0, s2=b.items.length>0, s3=sales>0, done=s1&&s2&&s3;
+  const step=(n,ok,title,desc,to,btn)=>`<div class="step ${ok?'done':''}"><b>${ok?'✓':n} ${title}</b><span class="sub">${desc}</span>${allowed(to)?`<button data-tab="${to}" class="${ok?'':'pri'}">${btn}</button>`:''}</div>`;
+  const left=prof&&prof.expires_on?Math.round((new Date(prof.expires_on)-new Date(today()))/86400e3):null;
+  const pend=isAdmin()?adm.profiles.filter(p=>p.role!=='admin'&&p.status==='pending').length:0;
+  const rows=(logRows||[]).filter(r=>r.brand_id===cur).slice(0,5), who={admin:'顧問',client:'業主',system:'系統'};
+  return `<div class="head"><div><h2>${esc(b.name)}</h2><p class="sub">${done?'資料已經建好，下面是目前的重點數字。':'照下面的順序做，三步就能看到每道菜的成本和毛利。'}</p></div></div>
+${!isAdmin()&&left!==null&&left<=30?`<p class="sample">你的使用授權將在 ${left} 天後（${esc(prof.expires_on)}）到期。到期後資料會保留，但需要續約才能繼續使用，請聯絡 ${LICENSOR}。</p>`:''}
+${pend?`<p class="sample">有 ${pend} 位業主註冊後在等你開通。 <button data-tab="admin">前往授權管理</button></p>`:''}
+${RO()?'<p class="note">你的帳號是「只能看」權限，可以瀏覽數字和使用試算，但不能修改資料。</p>':''}
+<div class="steps">${step('①',s1,'建立食材','目前 '+b.ingredients.length+' 樣。填名稱、進貨價、一包的量。','ing',s1?'查看食材':'開始建立食材')}
+${step('②',s2,'建立品項配方','目前 '+b.items.length+' 道。每道菜用了哪些食材、各多少。','recipe',s2?'查看配方':'開始建立配方')}
+${step('③',s3,'填售價和月銷量','有了銷量才能算整體成本率和該叫多少貨。','recipe',s3?'調整銷量':'去填月銷量')}
+${step('④',false,'看成本與毛利','哪道菜賺、哪道菜成本超標，一眼看出來。','cost','看成本毛利')}</div>
+${s2?`<div class="tiles"><div class="tile"><span>食材</span><b>${b.ingredients.length}</b></div><div class="tile"><span>品項</span><b>${b.items.length}</b></div><div class="tile"><span>整體食材成本率</span><b>${pct(cost/sales)}</b><span>目標 ${nf(b.settings.targetRate,0)}%</span></div><div class="tile"><span>成本超標的品項</span><b>${over}</b><span>超過目標 3 個百分點以上</span></div></div>`:''}
+<h2>最近的修改</h2><div class="scroll"><table><thead><tr><th>時間</th><th>誰</th><th>改了哪些</th></tr></thead><tbody>${logRows===null?'<tr><td colspan="3">讀取中…</td></tr>':rows.map(r=>`<tr><td>${tm(r.at)}</td><td>${esc(r.actor_email||'')}（${who[r.actor_role]||''}）</td><td style="white-space:normal">${(r.sections||[]).map(x=>SEC[x]||x).join('、')||'建立或刪除'}</td></tr>`).join('')||'<tr><td colspan="3">這個品牌還沒有修改紀錄。</td></tr>'}</tbody></table></div>
+<p class="note">資料會自動儲存，不需要按存檔。每個人每天第一次修改前，系統會先自動備份一份，可以在「版本與備份」還原。</p>` };
+V.account=()=>`<div class="head"><div><h2>我的帳號</h2><p class="sub">查看你的方案和到期日，或修改登入密碼。</p></div></div>
+<div class="scroll"><table><tbody><tr><th>登入 Email</th><td>${esc(me&&me.email||'')}</td></tr><tr><th>名稱</th><td>${esc(prof&&prof.display_name||'')}</td></tr><tr><th>身分</th><td>${isAdmin()?'管理員（顧問）':'業主'}</td></tr>${isAdmin()?'':`<tr><th>方案</th><td>${PLAN_NAME[prof.plan]}</td></tr><tr><th>權限</th><td>${RO()?'只能看':'可編輯'}</td></tr><tr><th>到期日</th><td>${esc(prof.expires_on||'不限期')}</td></tr>`}</tbody></table></div>
+<h2>修改密碼</h2><form id="pwForm" class="col" style="max-width:380px">${pwField('npw','新密碼','new-password',true)}<div><button class="pri" type="submit">儲存新密碼</button></div></form>
+${acctMsg?`<p class="sample" role="status">${esc(acctMsg)}</p>`:''}
+<p class="note">想變更方案、權限或登入 Email，請聯絡 ${LICENSOR}。</p>`;
+V.help=()=>`<div class="head"><div><h2>使用說明</h2><p class="sub">常見問題整理在這裡。點問題可以展開答案。</p></div></div>
+<h2>操作</h2>
+<details><summary>要從哪裡開始？</summary><p class="sub">照首頁的順序：先建食材，再建品項配方並填售價和月銷量，最後看成本毛利。左側選單也是照這個順序由上往下排。</p></details>
+<details><summary>改了資料要按存檔嗎？</summary><p class="sub">不用。離開輸入格後約一秒會自動儲存，畫面右上角會顯示「已儲存」。如果顯示「儲存失敗」，請檢查網路後重新整理頁面。</p></details>
+<details><summary>改錯了可以救回來嗎？</summary><p class="sub">可以。到「版本與備份」找到之前的存檔點按「還原」。系統每天在你第一次修改前會自動存一份；重要調整前也可以自己按「建立存檔點」。</p></details>
+<details><summary>我和顧問同時改會不會互相蓋掉？</summary><p class="sub">不會。系統發現別人剛改過，就不會把你的版本蓋上去，而是把你的修改另存成一個存檔點，並在畫面上方通知你。</p></details>
+<details><summary>選單上有「進階」標記的是什麼？</summary><p class="sub">那是進階版才有的功能。想使用請聯絡 ${LICENSOR} 升級方案。</p></details>
+<details><summary>可以在手機上用嗎？</summary><p class="sub">可以。手機上選單會收在左上角的「選單」按鈕裡。表格比較寬時可以左右滑動。</p></details>
+<h2>登入與帳號</h2>${LOGIN_FAQ()}`;
+
 /* ---- 授權管理（僅管理員） ---- */
 async function loadAdmin(){ const [p,a]=await Promise.all([sbc.from('bom_profiles').select('*').order('created_at',{ascending:false}),sbc.from('bom_brand_access').select('*')]); adm={profiles:p.data||[],access:a.data||[]} }
 V.admin=(b,c)=>{ const ps=adm.profiles.filter(p=>p.role!=='admin'), t=today(), soon=new Date(Date.now()+38*86400e3).toISOString().slice(0,10);
@@ -91,34 +143,50 @@ async function sendApproval(uidv){ const {data,error}=await sbc.rpc('bom_send_ap
 async function approvalSent(email){ const since=new Date(Date.now()-60000).toISOString(); const {data}=await sbc.from('bom_mail_log').select('id').eq('recipient',email).eq('kind','approval').gte('at',since).limit(1); return !!(data&&data.length) }
 
 /* ---- 登入與狀態畫面 ---- */
-function gate(){ const box=h=>`<div class="col" style="max-width:400px;margin:24px auto;width:100%">${h}</div>`, msg=authMsg?`<p class="sample">${esc(authMsg)}</p>`:'';
+function gate(){ const box=h=>`<div class="col" style="max-width:420px;margin:24px auto;width:100%"><div><h1>BOM 運算中心</h1><p class="sub">餐飲品牌的食材、配方、成本與獲利試算工具</p></div>${h}</div>`, msg=authMsg?`<p class="sample" role="status">${esc(authMsg)}</p>`:'';
+  const faq=`<details><summary>登不進去？常見狀況與解法</summary><div class="col" style="margin-top:8px">${LOGIN_FAQ()}</div></details>`;
+  const stepl=(a)=>`<ol class="sub" style="padding-left:20px">${a.map((x,i)=>`<li>${x}</li>`).join('')}</ol>`;
   if(G==='loading') return EMPTY('讀取中…');
-  if(G==='error') return EMPTY(esc(authMsg||'連線發生問題，請重新整理頁面。'));
-  if(G==='pending') return box(`<h2>帳號等待開通</h2><p class="sub">你的帳號（${esc(me&&me.email||'')}）已建立。本系統為付費授權服務，完成付款並經 ${LICENSOR} 審核開通後，你會收到一封開通通知信，即可登入使用。</p><div><button data-auth="reload">重新整理</button> <button data-auth="out">登出</button></div>`);
-  if(G==='blocked') return box(`<h2>${prof&&prof.status==='suspended'?'授權已停用':'授權已到期'}</h2><p class="sub">${prof&&prof.status==='suspended'?'這個帳號的使用授權目前已停用。':'這個帳號的使用授權已於 '+esc(prof&&prof.expires_on||'')+' 到期。'}你的資料仍完整保存，續約後即可繼續使用。請聯絡 ${LICENSOR}。</p><div><button data-auth="out">登出</button></div>`);
-  if(G==='recover') return box(`<h2>設定新密碼</h2><form id="authForm" class="col"><label for="auPass">新密碼（至少 8 個字）</label><input type="password" id="auPass" minlength="8" required autocomplete="new-password"><button class="pri" type="submit">儲存新密碼</button></form>${msg}`);
+  if(G==='error') return box(`<h2>連線發生問題</h2><p class="sub">${esc(authMsg||'請重新整理頁面。')}</p><div><button class="pri" data-auth="hard">重新整理</button>${me?' <button data-auth="out">登出</button>':''}</div>`);
+  if(G==='pending') return box(`<h2>帳號等待開通</h2><p class="sub">你的帳號（${esc(me&&me.email||'')}）已經建立，目前在等待審核。</p>${stepl(['註冊完成 ✓','Email 驗證完成 ✓','<b>等待 '+LICENSOR+' 確認付款並開通（目前在這一步）</b>','收到開通通知信後，回到這裡登入就能使用'])}<p class="note">已經收到開通信但還是看到這頁？按「重新檢查」。</p><div><button class="pri" data-auth="reload">重新檢查</button> <button data-auth="out">登出</button></div>`);
+  if(G==='blocked'){ const sus=prof&&prof.status==='suspended'; return box(`<h2>${sus?'授權已停用':'授權已到期'}</h2><p class="sub">${sus?'這個帳號的使用授權目前已停用。':'這個帳號的使用授權已於 '+esc(prof&&prof.expires_on||'')+' 到期。'}</p>${stepl(['你的資料都完整保存著，沒有被刪除','聯絡 '+LICENSOR+' 辦理'+(sus?'恢復':'續約'),'處理完成後回到這裡按「重新檢查」，就能繼續使用'])}<div><button class="pri" data-auth="reload">重新檢查</button> <button data-auth="out">登出</button></div>`) }
+  if(G==='recover') return box(`<h2>設定新密碼</h2><p class="sub">請輸入一組新的密碼，儲存後會直接登入。</p><form id="authForm" class="col">${pwField('auPass','新密碼','new-password',true)}<button class="pri" type="submit">儲存新密碼</button></form>${msg}`);
   const up=authMode==='up', fg=authMode==='forgot';
-  return box(`<h2>${fg?'重設密碼':up?'註冊新帳號':'登入'}</h2><p class="sub">${fg?'輸入註冊時的 Email，我們會寄一封重設密碼的信給你。':up?'本系統為付費授權服務。註冊後需經 '+LICENSOR+' 審核開通才能使用，開通時會以 Email 通知。':'餐飲品牌的食材、配方、成本與獲利試算工具。'}</p>
-<form id="authForm" class="col">${up?'<label for="auName">店名或公司名稱</label><input type="text" id="auName" required maxlength="60" autocomplete="organization">':''}
-<label for="auEmail">Email</label><input type="email" id="auEmail" required autocomplete="username">
-${fg?'':`<label for="auPass">密碼${up?'（至少 8 個字）':''}</label><input type="password" id="auPass" minlength="8" required autocomplete="${up?'new-password':'current-password'}">`}
+  return box(`<h2>${fg?'重設密碼':up?'註冊新帳號':'登入'}</h2><p class="sub">${fg?'輸入註冊時的 Email，我們會寄一封重設密碼的信給你。':up?'本系統為付費授權服務。註冊後需經 '+LICENSOR+' 審核開通才能使用，開通時會以 Email 通知。':'請輸入註冊時的 Email 和密碼。'}</p>
+<form id="authForm" class="col">${up?`<label for="auName">店名或公司名稱</label><input type="text" id="auName" required maxlength="60" autocomplete="organization" value="${esc(authF.name)}">`:''}
+<label for="auEmail">Email</label><input type="email" id="auEmail" required autocomplete="username" value="${esc(authF.email)}">
+${fg?'':pwField('auPass','密碼',up?'new-password':'current-password',up)}
 <button class="pri" type="submit">${fg?'寄出重設信':up?'註冊':'登入'}</button></form>${msg}
-<div class="brandbar">${up||fg?'<button data-auth="in">已有帳號，回登入</button>':'<button data-auth="up">註冊新帳號</button><button data-auth="forgot">忘記密碼</button>'}</div>`) }
-const AUTH_ERR=e=>{ const m=(e&&e.message||'').toLowerCase();
-  if(m.includes('invalid login')) return 'Email 或密碼不正確。';
-  if(m.includes('not confirmed')) return '這個 Email 還沒完成驗證，請到信箱點擊確認信裡的連結。';
-  if(m.includes('already registered')||m.includes('already been registered')) return '這個 Email 已經註冊過，請直接登入。';
-  if(m.includes('rate limit')||m.includes('security purposes')) return '操作太頻繁，請稍等一分鐘再試。';
+${needConfirm?'<div><button data-auth="resend">重寄驗證信</button></div>':''}
+<div class="brandbar">${up||fg?'<button data-auth="in">已有帳號，回登入</button>':'<button data-auth="up">註冊新帳號</button><button data-auth="forgot">忘記密碼</button>'}${needConfirm?'':'<button data-auth="resend">重寄驗證信</button>'}</div>
+${faq}`) }
+const AUTH_ERR=e=>{ const raw=(e&&e.message||''), m=raw.toLowerCase();
+  if(m.includes('failed to fetch')||m.includes('network')||m.includes('load failed')) return '連不上伺服器。請確認網路正常後再試一次；如果用的是公司網路，可以改用手機網路試試。';
+  if(m.includes('invalid login')) return 'Email 或密碼不正確。請檢查大小寫和有沒有多打空白（可按「顯示」看密碼）。忘記密碼請按下方「忘記密碼」；還沒註冊請按「註冊新帳號」。';
+  if(m.includes('not confirmed')){ needConfirm=true; return '這個 Email 還沒完成驗證。請到信箱點確認信裡的連結；找不到信的話，按下面的「重寄驗證信」。' }
+  if(m.includes('already registered')||m.includes('already been registered')) return '這個 Email 已經註冊過，請直接登入。忘記密碼可按「忘記密碼」。';
+  if(m.includes('email rate limit')) return '短時間內寄信次數太多。請等一小時後再試，或聯絡 '+LICENSOR+' 協助。';
+  if(m.includes('rate limit')||m.includes('security purposes')) return '操作太頻繁，請等一分鐘再試。';
+  if(m.includes('different from the old')) return '新密碼不能和原本的密碼一樣，請換一組。';
+  if(m.includes('session missing')||m.includes('expired')) return '這個連結已經失效。請回登入頁重新按「忘記密碼」，再點最新那封信裡的連結。';
+  if(m.includes('invalid')&&m.includes('email')) return 'Email 格式不正確，請檢查有沒有打錯。';
   if(m.includes('password')) return '密碼不符合規定，請至少輸入 8 個字。';
-  return '無法完成，請檢查網路後再試一次。' };
-async function authSubmit(){ const F={}; ['auName','auEmail','auPass'].forEach(id=>{const e=document.getElementById(id); F[id]=e?(id==='auPass'?e.value:e.value.trim()):''}); const v=id=>F[id];
-  const keep=()=>{['auName','auEmail'].forEach(id=>{const e=document.getElementById(id); if(e) e.value=F[id]})}; authMsg='處理中…'; render(); keep();
-  try{ if(G==='recover'){ const {error}=await sbc.auth.updateUser({password:v('auPass')}); if(error) throw error; authMsg=''; G='loading'; render(); return loadAll() }
-    if(authMode==='forgot'){ const {error}=await sbc.auth.resetPasswordForEmail(v('auEmail'),{redirectTo:location.origin+location.pathname}); if(error) throw error; authMsg='重設信已寄出，請到信箱收信。'; return render() }
-    if(authMode==='up'){ const {data,error}=await sbc.auth.signUp({email:v('auEmail'),password:v('auPass'),options:{data:{display_name:v('auName')},emailRedirectTo:location.origin+location.pathname}}); if(error) throw error;
-      if(!data.session){ authMode='in'; authMsg='註冊成功。請到信箱點擊確認信裡的連結，再回來登入。'; return render() } authMsg=''; return }
-    const {error}=await sbc.auth.signInWithPassword({email:v('auEmail'),password:v('auPass')}); if(error) throw error; authMsg='' }
-  catch(e){ authMsg=AUTH_ERR(e); render(); keep() } }
+  return '無法完成（'+raw.slice(0,70)+'）。請稍後再試一次；還是不行的話，把這段訊息告訴 '+LICENSOR+'。' };
+const REDIR=()=>location.origin+location.pathname;
+function grab(){ const n=document.getElementById('auName'), e=document.getElementById('auEmail'); if(n) authF.name=n.value.trim(); if(e) authF.email=e.value.trim() }
+async function resendConfirm(){ grab(); if(!authF.email){ authMsg='請先在上面填入註冊用的 Email，再按「重寄驗證信」。'; return render() }
+  authMsg='處理中…'; render();
+  try{ const {error}=await sbc.auth.resend({type:'signup',email:authF.email,options:{emailRedirectTo:REDIR()}}); if(error) throw error; authMsg='如果 '+authF.email+' 是尚未驗證的帳號，驗證信已重新寄出。請到信箱點最新那封信的連結，也看一下垃圾信匣。' }catch(e){ authMsg=AUTH_ERR(e) } render() }
+async function authSubmit(){ grab(); const pe=document.getElementById('auPass'), pass=pe?pe.value:''; authMsg='處理中…'; render();
+  try{ if(G==='recover'){ const {error}=await sbc.auth.updateUser({password:pass}); if(error) throw error; authMsg=''; notice='密碼已更新，下次請用新密碼登入。'; G='loading'; render(); return loadAll() }
+    if(authMode==='forgot'){ const {error}=await sbc.auth.resetPasswordForEmail(authF.email,{redirectTo:REDIR()}); if(error) throw error; authMsg='如果這個 Email 有註冊過，重設信已經寄出。請在一小時內點信裡的連結；沒收到請看垃圾信匣。'; return render() }
+    if(authMode==='up'){ const {data,error}=await sbc.auth.signUp({email:authF.email,password:pass,options:{data:{display_name:authF.name},emailRedirectTo:REDIR()}}); if(error) throw error;
+      if(data.user&&data.user.identities&&!data.user.identities.length){ authMode='in'; authMsg='這個 Email 已經註冊過，請直接登入。忘記密碼可按「忘記密碼」。'; return render() }
+      if(!data.session){ authMode='in'; needConfirm=true; authMsg='註冊成功。我們寄了一封確認信到 '+authF.email+'，請點信裡的連結完成驗證，再回來登入。沒收到請看垃圾信匣，或按「重寄驗證信」。'; return render() } authMsg=''; return }
+    const {error}=await sbc.auth.signInWithPassword({email:authF.email,password:pass}); if(error) throw error; authMsg=''; needConfirm=false }
+  catch(e){ authMsg=AUTH_ERR(e); render() } }
+async function pwSubmit(){ const e=document.getElementById('npw'), p=e?e.value:''; acctMsg='處理中…'; render();
+  const {error}=await sbc.auth.updateUser({password:p}); acctMsg=error?AUTH_ERR(error):'密碼已更新，下次請用新密碼登入。'; render() }
 
 async function loadAll(){ try{
     const {data:p,error:pe}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(); if(pe) throw pe; prof=p;
@@ -129,27 +197,39 @@ async function loadAll(){ try{
     brands={}; Object.keys(revs).forEach(k=>delete revs[k]); (bs.data||[]).forEach(applyRemote);
     await loadVersions();
     if(isAdmin()){ if(!adminTab){ TABS[TABS.length-1][2].push(['admin','授權管理']); adminTab=true } await loadAdmin() }
-    cur=null; pick(); if(!allowed(tab)) tab='cost'; G='app'; setStatus('已連線'); startWatch(); render() }
+    cur=null; pick(); if(!V[tab]||!allowed(tab)||(tab==='admin'&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }) }
   catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
 
-function render(){ const app=G==='app', ub=$('#userbar'); $('#nav').hidden=!app; $('#brandbar').hidden=!app;
-  ub.innerHTML=me&&G!=='login'&&G!=='recover'?`<span class="status">${esc(me.email)}${prof&&app?' · '+(isAdmin()?'管理員':PLAN_NAME[prof.plan]+' · '+(RO()?'只能看':'可編輯')+(prof.expires_on?' · 到期 '+prof.expires_on:'')):''}</span><button data-auth="out">登出</button>`:'';
+function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.classList.toggle('bare',!app); if(!app) sh.classList.remove('open');
+  ub.innerHTML=me&&app?`<span>${esc(me.email)}</span><span class="status">${isAdmin()?'管理員':PLAN_NAME[prof.plan]+' · '+(RO()?'只能看':'可編輯')+(prof.expires_on?' · 到期 '+prof.expires_on:'')}</span><div class="brandbar"><button data-tab="account">我的帳號</button><button data-auth="out">登出</button></div>`:'';
   if(!app){ $('#nav').innerHTML=''; $('#banner').innerHTML=''; $('#main').innerHTML=gate(); return }
+  if(!V[tab]) tab='home';
   renderApp();
+  $('#nav').innerHTML=navHtml(); const g=NAV.find(x=>x[2].includes(tab)); $('#crumb').textContent=(g?g[1]+' › ':'')+LAB[tab]; document.title=LAB[tab]+'｜BOM 運算中心';
+  if(tab!=='home'){ const p=$('#banner .params'); if(p) p.remove() }
   if(notice) $('#banner').insertAdjacentHTML('afterbegin','<div class="sample" role="status" style="margin-bottom:10px">'+esc(notice)+' <button data-notice="1">知道了</button></div>');
-  document.querySelectorAll('#nav [data-tab]').forEach(el=>{ if(!allowed(el.dataset.tab)){ el.insertAdjacentHTML('beforeend',' <span class="tag">進階</span>') } });
   $('#btnNew').hidden=!isAdmin(); $('#btnCopy').hidden=!isAdmin()||!B();
+  if(tab==='account'||tab==='help'){ $('#main').innerHTML=V[tab](); return }
   if(!B()&&!isAdmin()){ $('#main').innerHTML=EMPTY('你的帳號還沒有被指派品牌。請聯絡 '+LICENSOR+'。'); return }
+  if(!B()) return;
   if(!isAdmin()) document.querySelectorAll('#banner [data-del],#banner [data-unsample]').forEach(el=>el.hidden=true);
-  if(B()&&!allowed(tab)){ $('#main').innerHTML=`<div class="empty"><h2>這是進階版功能</h2><p class="sub">你目前的方案是${PLAN_NAME[prof.plan]}。想使用這項分析，請聯絡 ${LICENSOR} 升級為進階版。</p></div>`; return }
+  if(!allowed(tab)){ $('#main').innerHTML=`<div class="empty"><h2>「${LAB[tab]}」是進階版功能</h2><p class="sub">你目前的方案是${PLAN_NAME[prof.plan]}。想使用這項分析，請聯絡 ${LICENSOR} 升級為進階版。升級後原本的資料會直接沿用。</p><button data-tab="home">回首頁</button></div>`; return }
+  if(TIP[tab]){ const n=TIP[tab][1]; $('#main').insertAdjacentHTML('afterbegin',`<div class="tip"><span><b>提示</b>　${TIP[tab][0]}</span>${n&&allowed(n)?`<button data-tab="${n}">下一步：${LAB[n]} →</button>`:''}</div>`) }
   if(RO()){ document.querySelectorAll('#main [data-p],#banner [data-p]').forEach(el=>{ if(!el.dataset.ui&&!el.dataset.mx&&!el.dataset.sim) el.disabled=true });
     document.querySelectorAll('#main [data-add],#main [data-del],#main [data-act],#main [data-arm],#main #verNote').forEach(el=>el.hidden=true) } }
 
-document.addEventListener('submit',e=>{ if(e.target.id==='authForm'){ e.preventDefault(); authSubmit() } });
+document.addEventListener('submit',e=>{ if(e.target.id==='authForm'){ e.preventDefault(); authSubmit() } if(e.target.id==='pwForm'){ e.preventDefault(); pwSubmit() } });
+document.addEventListener('input',e=>{ const h=document.querySelector('[data-pwhint="'+e.target.id+'"]'); if(!h) return; const n=e.target.value.length; h.textContent=n>=8?'長度足夠。':'還差 '+(8-n)+' 個字。' });
+document.addEventListener('click',e=>{ if(e.target.id==='scrim') $('#shell').classList.remove('open') });
 document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const a=t.dataset.auth;
   if(t.dataset.notice){ notice=''; render(); return }
+  if(t.id==='btnMenu'){ $('#shell').classList.add('open'); return } if(t.id==='btnClose'){ $('#shell').classList.remove('open'); return }
+  if(t.dataset.eye){ const i=document.getElementById(t.dataset.eye); if(i){ i.type=i.type==='password'?'text':'password'; t.textContent=i.type==='password'?'顯示':'隱藏' } return }
+  if(t.dataset.grp){ navShut[t.dataset.grp]=!navShut[t.dataset.grp]; try{localStorage.setItem('bom-nav',JSON.stringify(navShut))}catch(x){} $('#nav').innerHTML=navHtml(); return }
+  if(t.dataset.tab){ $('#shell').classList.remove('open'); acctMsg=''; window.scrollTo(0,0); if(t.dataset.tab==='home') loadLog().then(()=>{ if(tab==='home') render() }) }
+  if(a==='resend'){ resendConfirm(); return } if(a==='hard'){ location.reload(); return }
   if(t.dataset.tab==='log'||t.dataset.act==='logreload'){ loadLog().then(()=>{ if(tab==='log') render() }) }
-  if(a==='up'||a==='in'||a==='forgot'){ authMode=a; authMsg=''; render(); return }
+  if(a==='up'||a==='in'||a==='forgot'){ grab(); authMode=a; authMsg=''; render(); return }
   if(a==='out'){ sbc.auth.signOut(); return }
   if(a==='reload'){ G='loading'; render(); loadAll(); return }
   if(t.dataset.act==='admreload'&&isAdmin()){ loadAdmin().then(render) }
@@ -160,7 +240,8 @@ document.addEventListener('change',async e=>{ const el=e.target; if(!isAdmin()) 
     setStatus(m); await loadAdmin(); render() }
   else if(el.dataset.admb){ const [uidv,bid]=el.dataset.admb.split('|'); const r=el.checked?await sbc.from('bom_brand_access').insert({user_id:uidv,brand_id:bid}):await sbc.from('bom_brand_access').delete().eq('user_id',uidv).eq('brand_id',bid); setStatus(r.error?'更新失敗':'品牌權限已更新'); await loadAdmin(); render() } });
 
-async function siteBoot(){ const h=location.hash.slice(1); if(TABIDS.includes(h)) tab=h;
+async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home';
+  if(/error_code=|error=access_denied/.test(h)){ authMsg='這個連結已經過期或已經用過。請在下面重新操作一次（忘記密碼或重寄驗證信），再點最新那封信裡的連結。'; try{history.replaceState(null,'',location.pathname)}catch(x){} }
   if(!window.supabase){ G='error'; authMsg='無法載入登入元件，請檢查網路後重新整理。'; return render() }
   sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   dl={save:async({filename,data})=>{ const u=URL.createObjectURL(new Blob([data])), a=document.createElement('a'); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000) }};
