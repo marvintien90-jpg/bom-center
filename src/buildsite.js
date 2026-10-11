@@ -54,6 +54,8 @@ input[type=email],input[type=password],input[type=date]{background:var(--field);
 .step.done{border-color:var(--good);background:var(--good-bg)}.step.done b{color:var(--good)}
 details{border:1px solid var(--line);border-radius:8px;padding:8px 12px}summary{cursor:pointer;font-weight:500}details p{margin-top:6px}
 .btnlink{display:inline-block;background:#047d3a;color:#fff;border-radius:6px;padding:6px 14px;text-decoration:none;font-weight:500}.btnlink:hover{filter:brightness(.95)}
+.board{border:1px solid var(--accent);border-left-width:4px;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;font-size:13px}.board b{color:var(--accent)}
+textarea{font:inherit;color:inherit;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;resize:vertical}
 .pwrow{display:flex;gap:6px}.pwrow input{flex:1}
 main tbody th{width:140px}
 @media (max-width:860px){.shell{grid-template-columns:minmax(0,1fr)}

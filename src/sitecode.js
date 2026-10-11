@@ -13,7 +13,7 @@ const TIP={ing:['從這裡開始。每樣食材填名稱、進貨價和一包的
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['要先在品項配方填每道菜的月銷量，分類才會準。','price'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
-let pub={}, wantAdmin=false, imp=null, impMode='update', ups=null, upMsg='', navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
+let pubMsg='', pub={}, wantAdmin=false, imp=null, impMode='update', ups=null, upMsg='', navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
 function navHtml(){ const it=id=>`<button class="navi" data-tab="${id}" ${tab===id?'aria-current="page"':''}><span>${LAB[id]}</span>${allowed(id)?'':'<span class="tag">進階</span>'}</button>`;
   return it('home')+NAV.map(g=>{ const ids=g[2].filter(id=>(id!=='admin'&&id!=='brands')||isAdmin()), open=!navShut[g[0]]||ids.includes(tab);
     return `<button class="navi navg" data-grp="${g[0]}" aria-expanded="${open}"><span>${g[1]}</span><span aria-hidden="true">${open?'−':'+'}</span></button>${open?`<div class="navsub">${ids.map(it).join('')}</div>`:''}` }).join('') }
@@ -33,6 +33,7 @@ async function saveBrand(id){ const b=brands[id]; if(!b) return; const body=JSON
     ? await sbc.from('bom_brands').insert({id,name:b.name,data:body,edited_on_site:true}).select('id,rev')
     : await sbc.from('bom_brands').update({name:b.name,data:body,edited_on_site:true,rev:base+1}).eq('id',id).eq('rev',base).select('id,rev');
   saving.delete(id);
+  if(res.error&&/BOM_LIMIT/.test(res.error.message||'')){ notice='這次修改沒有存入：這個品牌的資料量已經超過系統上限。請刪掉一些不需要的資料，或聯絡顧問協助。'; setStatus('儲存失敗：資料量超過上限'); render(); return }
   if(res.error&&!/BOM_CONFLICT/.test(res.error.message||'')) throw res.error;
   if(res.data&&res.data.length){ revs[id]=res.data[0].rev; if(!dirty.size) setStatus('已儲存'); return }
   await resolveConflict(id) }
@@ -70,7 +71,7 @@ function siteDeleteVer(id){ sbc.from('bom_snapshots').delete().eq('id',id).then(
 async function verCreate(brandId,note){ const b=brands[brandId]; if(!b||RO()) return null;
   const v={id:uid('v')+Date.now().toString(36),brandId,brandName:b.name,note:note||'手動存檔',at:new Date().toISOString(),data:JSON.parse(JSON.stringify(b)),by:me&&me.email,auto:false,synced:true};
   const {error}=await sbc.from('bom_snapshots').insert({id:v.id,brand_id:brandId,brand_name:b.name,note:v.note,data:v.data,created_at:v.at});
-  if(error){ setStatus('存檔點建立失敗'); return null } versions.unshift(v); return v }
+  if(error){ setStatus(/BOM_LIMIT/.test(error.message||'')?'存檔點已達上限，請聯絡顧問清理舊的存檔點':'存檔點建立失敗'); return null } versions.unshift(v); return v }
 
 V.ver=(b,c)=>{ const mine=versions.filter(v=>v.brandId===cur);
   const arm=(k,l,cls)=>`<button class="${cls||''} ${armed===k?'del armed':''}" data-arm="${k}">${armed===k?'確定'+l:l}</button>`;
@@ -101,6 +102,7 @@ V.home=(b,c)=>{ const t=b.settings.targetRate/100; let sales=0,cost=0,over=0; b.
   const pend=isAdmin()?adm.profiles.filter(p=>p.role!=='admin'&&p.status==='pending').length:0;
   const rows=(logRows||[]).filter(r=>r.brand_id===cur).slice(0,5), who={admin:'顧問',client:'業主',system:'系統'};
   return `<div class="head"><div><h2>${esc(b.name)}</h2><p class="sub">${done?'資料已經建好，下面是目前的重點數字。':'照下面的順序做，三步就能看到每道菜的成本和毛利。'}</p></div></div>
+${board()}
 ${!isAdmin()&&left!==null&&left<=30?`<p class="sample">你的使用授權將在 ${left} 天後（${esc(prof.expires_on)}）到期。到期後資料會保留，但需要續約才能繼續使用，請聯絡 ${LICENSOR}。</p>`:''}
 ${pend?`<p class="sample">有 ${pend} 位業主註冊後在等你開通。 <button data-tab="admin">前往授權管理</button></p>`:''}
 ${isAdmin()&&(ups||[]).some(u=>u.status==='new')?`<p class="sample">有 ${(ups||[]).filter(u=>u.status==='new').length} 個業主上傳的檔案等你處理。 <button data-tab="io">前往查看</button></p>`:''}
@@ -174,7 +176,8 @@ async function sendFile(){ const f=($('#upFile').files||[])[0], note=$('#upNote'
   const ext=(f.name.split('.').pop()||'').toLowerCase(); if(!['pdf','xlsx','xls','csv','jpg','jpeg','png','doc','docx'].includes(ext)){ upMsg='這種檔案類型不能上傳。可以上傳 PDF、Excel、Word、CSV 或照片（JPG、PNG）。'; return render() }
   if(f.size>10*1024*1024){ upMsg='檔案超過 10MB，太大了。可以拆成幾個檔案分次上傳，或把照片縮小。'; return render() }
   upMsg='上傳中，請不要關閉頁面…'; render(); const path=cur+'/'+(crypto.randomUUID?crypto.randomUUID():uid('f')+Date.now())+'.'+ext;
-  const up=await sbc.storage.from('bom-uploads').upload(path,f,{contentType:f.type||'application/octet-stream'}); if(up.error){ upMsg='上傳沒有成功（'+(up.error.message||'').slice(0,70)+'）。請檢查網路後再試一次。'; return render() }
+  const up=await sbc.storage.from('bom-uploads').upload(path,f,{contentType:f.type||'application/octet-stream'}); if(up.error&&/row-level|policy|Unauthorized/i.test(up.error.message||'')){ upMsg='今天上傳的檔案數量已達上限（每天 20 個）。請明天再傳，或直接聯絡顧問。'; return render() }
+  if(up.error){ upMsg='上傳沒有成功（'+(up.error.message||'').slice(0,70)+'）。請檢查網路後再試一次。'; return render() }
   const ins=await sbc.from('bom_uploads').insert({brand_id:cur,filename:f.name,path,size:f.size,note:note||null}); if(ins.error){ upMsg='檔案已上傳，但登記時出了問題（'+(ins.error.message||'').slice(0,70)+'）。請再試一次或聯絡顧問。'; return render() }
   upMsg='「'+f.name+'」已經送出'+(isAdmin()?'。':'，顧問會收到通知。處理好之後，這裡的狀態會變成「已處理」。'); await loadUps(); render() }
 async function getFile(id){ const u=(ups||[]).find(x=>x.id===id); if(!u) return; setStatus('準備下載…'); const {data,error}=await sbc.storage.from('bom-uploads').createSignedUrl(u.path,120,{download:u.filename}); if(error||!data){ setStatus('下載失敗，請重新整理後再試'); return }
@@ -219,7 +222,7 @@ V.admin=(b,c)=>{ const ORD={pending:0,active:1,suspended:2,rejected:3}, ps=adm.p
 <td><input type="date" data-adm="${p.user_id}|expires_on" value="${p.expires_on||''}" aria-label="到期日"></td>
 <td style="white-space:normal">${Object.keys(brands).map(id=>`<label style="display:inline-flex;gap:4px;margin-right:10px"><input type="checkbox" data-admb="${p.user_id}|${id}" ${adm.access.some(a=>a.user_id===p.user_id&&a.brand_id===id)?'checked':''}>${esc(brands[id].name)}</label>`).join('')}${adm.access.some(a=>a.user_id===p.user_id)?'':` <span class="pill warn">尚未指派品牌</span> <button data-mkbrand="${p.user_id}">建立品牌並指派</button>`}</td>
 <td><input type="text" data-adm="${p.user_id}|note" value="${esc(p.note||'')}" placeholder="例如：10/10 已匯款年費" aria-label="備註" style="min-width:180px"></td><td>${p.status==='active'?`<button data-mail="${p.user_id}">重寄開通信</button> <button data-chg="${p.user_id}">寄異動通知</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="8">還沒有業主註冊。把網站網址傳給業主，請他按「註冊新帳號」。</td></tr>'}</tbody></table></div>
-<h2>登入頁顯示的內容</h2><p class="sub">這裡填的內容會顯示在登入頁的「方案與費用說明」，還沒登入的人也看得到。留空的費用會顯示「請洽詢」。</p><div class="params">${[['line_url','LINE 官方帳號連結','https://lin.ee/…'],['basic_price','基本版費用','例如：每月 NT$1,500'],['pro_price','進階版費用','例如：每月 NT$3,000'],['intro','補充說明','例如：年繳享 85 折']].map(f=>`<label for="pub-${f[0]}">${f[1]} <input type="text" id="pub-${f[0]}" data-pub="${f[0]}" value="${esc(pub&&pub[f[0]]||'')}" placeholder="${f[2]}" maxlength="200" style="min-width:220px"></label>`).join('')}</div>
+<h2>登入頁顯示的內容</h2><p class="sub">這裡填的內容會顯示在登入頁的「方案與費用說明」，還沒登入的人也看得到。留空的費用會顯示「請洽詢」。</p><form id="pubForm" class="col" style="max-width:640px">${[['line_url','LINE 官方帳號連結','https://lin.ee/…'],['basic_price','基本版費用','例如：每月 NT$2,500'],['pro_price','進階版費用','例如：每月 NT$3,500'],['intro','補充說明','例如：年繳享 9 折優惠']].map(f=>`<label for="pub-${f[0]}">${f[1]}</label><input type="text" id="pub-${f[0]}" value="${esc(pub&&pub[f[0]]||'')}" placeholder="${f[2]}" maxlength="200">`).join('')}<label for="pub-notice">公告欄（顯示在登入頁和業主首頁最上方，可換行；留空就不顯示）</label><textarea id="pub-notice" rows="4" maxlength="1500" placeholder="例如：10/20（一）凌晨 2–4 點系統維護，期間暫停使用。">${esc(pub&&pub.notice||'')}</textarea><div class="brandbar"><button class="pri" type="submit">儲存登入頁內容</button><span class="status" role="status">${esc(pubMsg||(pub&&pub.updated_at?'上次儲存：'+tm(pub.updated_at):''))}</span></div></form>
 <h2>方案差異</h2><div class="scroll"><table><thead><tr><th>方案</th><th>可用功能</th></tr></thead><tbody><tr><td>基本版</td><td style="white-space:normal">食材主檔、半成品、品項配方、成本毛利、定價漲價試算、叫貨推估、版本存檔</td></tr><tr><td>進階版</td><td style="white-space:normal">基本版全部，加上套餐組合、價格紀錄、產品四象限、外送通路定價、損益趨勢、損益兩平、總部試算四頁</td></tr></tbody></table></div>
 <p class="note">「只能看」的業主可以瀏覽所有數字與使用試算，但無法修改資料。到期日當天仍可使用，隔天起自動失效。品牌由你用上方「新增品牌」建立，業主不能自行新增或刪除品牌。</p>` };
 
@@ -229,9 +232,10 @@ async function sendApproval(uidv){ const {data,error}=await sbc.rpc('bom_send_ap
 async function approvalSent(email){ const since=new Date(Date.now()-60000).toISOString(); const {data}=await sbc.from('bom_mail_log').select('id').eq('recipient',email).eq('kind','approval').gte('at',since).limit(1); return !!(data&&data.length) }
 
 /* ---- 登入與狀態畫面 ---- */
+const board=()=>pub&&pub.notice?`<div class="board" role="note"><b>公告</b><div style="white-space:pre-line">${esc(pub.notice)}</div></div>`:'';
 const lineBtn=t=>pub&&/^https:\/\//.test(pub.line_url||'')?`<a class="btnlink" href="${esc(pub.line_url)}" target="_blank" rel="noopener">${t||'用 LINE 聯絡我們'}</a>`:'';
 const PLANS=()=>`<div class="scroll"><table><thead><tr><th>方案</th><th>可以做什麼</th><th>費用</th></tr></thead><tbody><tr><td><b>基本版</b></td><td style="white-space:normal">食材主檔、半成品、品項配方、成本毛利、定價與漲價試算、叫貨推估、Excel 匯入匯出、版本備份</td><td style="white-space:normal">${esc(pub&&pub.basic_price||'請洽詢')}</td></tr><tr><td><b>進階版</b></td><td style="white-space:normal">基本版全部，加上套餐組合、產品四象限、外送通路定價、損益趨勢、損益兩平、總部疊價與加盟主損益試算</td><td style="white-space:normal">${esc(pub&&pub.pro_price||'請洽詢')}</td></tr></tbody></table></div>${pub&&pub.intro?`<p class="sub">${esc(pub.intro)}</p>`:''}<p class="note">流程：註冊帳號 → 完成 Email 驗證 → 聯絡我們確認方案與付款 → 開通後收到通知信即可使用。</p>`;
-function gate(){ const box=h=>`<div class="col" style="max-width:420px;margin:24px auto;width:100%"><div><h1>BOM 運算中心</h1><p class="sub">餐飲品牌的食材、配方、成本與獲利試算工具</p></div>${h}</div>`, msg=authMsg?`<p class="sample" role="status">${esc(authMsg)}</p>`:'';
+function gate(){ const box=h=>`<div class="col" style="max-width:420px;margin:24px auto;width:100%"><div><h1>BOM 運算中心</h1><p class="sub">餐飲品牌的食材、配方、成本與獲利試算工具</p></div>${G==='login'||G==='pending'?board():''}${h}</div>`, msg=authMsg?`<p class="sample" role="status">${esc(authMsg)}</p>`:'';
   const faq=`<details><summary>登不進去？常見狀況與解法</summary><div class="col" style="margin-top:8px">${LOGIN_FAQ()}</div></details>`;
   const notAdm=wantAdmin&&me?`<p class="sample"><b>這個瀏覽器目前登入的是業主帳號 ${esc(me.email)}，不是管理員。</b><br>要開通業主，請先按下面的「登出」，再用管理員帳號登入，就會直接進到授權管理。</p>`:'';
   const stepl=(a)=>`<ol class="sub" style="padding-left:20px">${a.map((x,i)=>`<li>${x}</li>`).join('')}</ol>`;
@@ -309,7 +313,10 @@ function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.cla
   if(RO()){ document.querySelectorAll('#main [data-p],#banner [data-p]').forEach(el=>{ if(!el.dataset.ui&&!el.dataset.mx&&!el.dataset.sim) el.disabled=true });
     document.querySelectorAll('#main [data-add],#main [data-del],#main [data-act],#main [data-arm],#main #verNote').forEach(el=>el.hidden=true) } }
 
-document.addEventListener('submit',e=>{ if(e.target.id==='nbForm'&&isAdmin()){ e.preventDefault(); const n=$('#nbName').value.trim(); if(!n) return; const id=makeBrand(n,$('#nbFrom').value); cur=id; selItem=selSemi=null; touchId(id); tab='home'; notice='已建立品牌「'+n+'」。下一步：到「授權管理」把它指派給業主，或直接開始建立食材。'; window.scrollTo(0,0); render(); return }
+document.addEventListener('submit',e=>{ if(e.target.id==='pubForm'&&isAdmin()){ e.preventDefault(); const v={}; ['line_url','basic_price','pro_price','intro','notice'].forEach(f=>{ v[f]=(document.getElementById('pub-'+f).value||'').trim()||null });
+    if(v.line_url&&!/^https:\/\//.test(v.line_url)){ pubMsg='沒有儲存：LINE 連結要以 https:// 開頭'; return render() } v.updated_at=new Date().toISOString(); pubMsg='儲存中…'; render();
+    sbc.from('bom_public_settings').update(v).eq('id',1).select('id').then(({data,error})=>{ if(error||!data||!data.length) pubMsg='沒有儲存成功，請重新整理後再試'; else { Object.assign(pub,v); pubMsg='已儲存 ✓ '+tm(v.updated_at)+'，登入頁已更新' } render() }); return }
+  if(e.target.id==='nbForm'&&isAdmin()){ e.preventDefault(); const n=$('#nbName').value.trim(); if(!n) return; const id=makeBrand(n,$('#nbFrom').value); cur=id; selItem=selSemi=null; touchId(id); tab='home'; notice='已建立品牌「'+n+'」。下一步：到「授權管理」把它指派給業主，或直接開始建立食材。'; window.scrollTo(0,0); render(); return }
   if(e.target.id==='authForm'){ e.preventDefault(); authSubmit() } if(e.target.id==='pwForm'){ e.preventDefault(); pwSubmit() } });
 document.addEventListener('input',e=>{ const h=document.querySelector('[data-pwhint="'+e.target.id+'"]'); if(!h) return; const n=e.target.value.length; h.textContent=n>=8?'長度足夠。':'還差 '+(8-n)+' 個字。' });
 document.addEventListener('click',e=>{ if(e.target.id==='scrim') $('#shell').classList.remove('open') });
