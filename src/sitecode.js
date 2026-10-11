@@ -13,7 +13,7 @@ const TIP={ing:['從這裡開始。每樣食材填名稱、進貨價和一包的
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['要先在品項配方填每道菜的月銷量，分類才會準。','price'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
-let imp=null, impMode='update', ups=null, upMsg='', navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
+let wantAdmin=false, imp=null, impMode='update', ups=null, upMsg='', navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
 function navHtml(){ const it=id=>`<button class="navi" data-tab="${id}" ${tab===id?'aria-current="page"':''}><span>${LAB[id]}</span>${allowed(id)?'':'<span class="tag">進階</span>'}</button>`;
   return it('home')+NAV.map(g=>{ const ids=g[2].filter(id=>id!=='admin'||isAdmin()), open=!navShut[g[0]]||ids.includes(tab);
     return `<button class="navi navg" data-grp="${g[0]}" aria-expanded="${open}"><span>${g[1]}</span><span aria-hidden="true">${open?'−':'+'}</span></button>${open?`<div class="navsub">${ids.map(it).join('')}</div>`:''}` }).join('') }
@@ -217,10 +217,11 @@ async function approvalSent(email){ const since=new Date(Date.now()-60000).toISO
 /* ---- 登入與狀態畫面 ---- */
 function gate(){ const box=h=>`<div class="col" style="max-width:420px;margin:24px auto;width:100%"><div><h1>BOM 運算中心</h1><p class="sub">餐飲品牌的食材、配方、成本與獲利試算工具</p></div>${h}</div>`, msg=authMsg?`<p class="sample" role="status">${esc(authMsg)}</p>`:'';
   const faq=`<details><summary>登不進去？常見狀況與解法</summary><div class="col" style="margin-top:8px">${LOGIN_FAQ()}</div></details>`;
+  const notAdm=wantAdmin&&me?`<p class="sample"><b>這個瀏覽器目前登入的是業主帳號 ${esc(me.email)}，不是管理員。</b><br>要開通業主，請先按下面的「登出」，再用管理員帳號登入，就會直接進到授權管理。</p>`:'';
   const stepl=(a)=>`<ol class="sub" style="padding-left:20px">${a.map((x,i)=>`<li>${x}</li>`).join('')}</ol>`;
   if(G==='loading') return EMPTY('讀取中…');
   if(G==='error') return box(`<h2>連線發生問題</h2><p class="sub">${esc(authMsg||'請重新整理頁面。')}</p><div><button class="pri" data-auth="hard">重新整理</button>${me?' <button data-auth="out">登出</button>':''}</div>`);
-  if(G==='pending') return box(`<h2>帳號等待開通</h2><p class="sub">你的帳號（${esc(me&&me.email||'')}）已經建立，目前在等待審核。</p>${stepl(['註冊完成 ✓','Email 驗證完成 ✓','<b>等待 '+LICENSOR+' 確認付款並開通（目前在這一步）</b>','收到開通通知信後，回到這裡登入就能使用'])}<p class="note">已經收到開通信但還是看到這頁？按「重新檢查」。</p><div><button class="pri" data-auth="reload">重新檢查</button> <button data-auth="out">登出</button></div>`);
+  if(G==='pending') return box(`${notAdm}<h2>帳號等待開通</h2><p class="sub">你的帳號（${esc(me&&me.email||'')}）已經建立，目前在等待審核。</p>${stepl(['註冊完成 ✓','Email 驗證完成 ✓','<b>等待 '+LICENSOR+' 確認付款並開通（目前在這一步）</b>','收到開通通知信後，回到這裡登入就能使用'])}<p class="note">已經收到開通信但還是看到這頁？按「重新檢查」。</p><div><button class="pri" data-auth="reload">重新檢查</button> <button data-auth="out">登出</button></div>`);
   if(G==='blocked'){ const sus=prof&&prof.status==='suspended'; return box(`<h2>${sus?'授權已停用':'授權已到期'}</h2><p class="sub">${sus?'這個帳號的使用授權目前已停用。':'這個帳號的使用授權已於 '+esc(prof&&prof.expires_on||'')+' 到期。'}</p>${stepl(['你的資料都完整保存著，沒有被刪除','聯絡 '+LICENSOR+' 辦理'+(sus?'恢復':'續約'),'處理完成後回到這裡按「重新檢查」，就能繼續使用'])}<div><button class="pri" data-auth="reload">重新檢查</button> <button data-auth="out">登出</button></div>`) }
   if(G==='recover') return box(`<h2>設定新密碼</h2><p class="sub">請輸入一組新的密碼，儲存後會直接登入。</p><form id="authForm" class="col">${pwField('auPass','新密碼','new-password',true)}<button class="pri" type="submit">儲存新密碼</button></form>${msg}`);
   const up=authMode==='up', fg=authMode==='forgot';
@@ -269,7 +270,7 @@ async function loadAll(){ try{
     brands={}; Object.keys(revs).forEach(k=>delete revs[k]); (bs.data||[]).forEach(applyRemote);
     await loadVersions();
     if(isAdmin()){ if(!adminTab){ TABS[TABS.length-1][2].push(['admin','授權管理']); adminTab=true } await loadAdmin() }
-    cur=null; pick(); if(!V[tab]||!allowed(tab)||(tab==='admin'&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }); loadUps().then(()=>{ if(tab==='home'||tab==='io') render() }) }
+    cur=null; pick(); if(wantAdmin&&!isAdmin()) notice='你開的是管理員專用的連結，但目前登入的是業主帳號 '+me.email+'。要進授權管理，請先登出，再用管理員帳號登入。'; if(isAdmin()) wantAdmin=false; if(!V[tab]||!allowed(tab)||(tab==='admin'&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }); loadUps().then(()=>{ if(tab==='home'||tab==='io') render() }) }
   catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
 
 function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.classList.toggle('bare',!app); if(!app) sh.classList.remove('open');
@@ -312,14 +313,14 @@ document.addEventListener('change',async e=>{ const el=e.target; if(!isAdmin()) 
     setStatus(m); await loadAdmin(); render() }
   else if(el.dataset.admb){ const [uidv,bid]=el.dataset.admb.split('|'); const r=el.checked?await sbc.from('bom_brand_access').insert({user_id:uidv,brand_id:bid}):await sbc.from('bom_brand_access').delete().eq('user_id',uidv).eq('brand_id',bid); setStatus(r.error?'更新失敗':'品牌權限已更新'); await loadAdmin(); render() } });
 
-async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home';
+async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home'; wantAdmin=h==='admin';
   if(/error_code=|error=access_denied/.test(h)){ authMsg='這個連結已經過期或已經用過。請在下面重新操作一次（忘記密碼或重寄驗證信），再點最新那封信裡的連結。'; try{history.replaceState(null,'',location.pathname)}catch(x){} }
   if(!window.supabase){ G='error'; authMsg='無法載入登入元件，請檢查網路後重新整理。'; return render() }
   sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   dl={save:async({filename,data})=>{ const u=URL.createObjectURL(new Blob([data])), a=document.createElement('a'); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000) }};
   sbc.auth.onAuthStateChange((ev,s)=>{ setTimeout(()=>{
     if(ev==='PASSWORD_RECOVERY'){ me=s&&s.user; G='recover'; authMsg=''; render(); return }
-    if(ev==='SIGNED_OUT'){ me=null; prof=null; brands={}; versions=[]; notice=''; logRows=null; ups=null; imp=null; upMsg=''; cur=null; G='login'; authMode='in'; render(); return }
+    if(ev==='SIGNED_OUT'){ if(wantAdmin) tab='admin'; me=null; prof=null; brands={}; versions=[]; notice=''; logRows=null; ups=null; imp=null; upMsg=''; cur=null; G='login'; authMode='in'; render(); return }
     if(ev==='SIGNED_IN'&&s&&G!=='recover'&&(!me||me.id!==s.user.id)){ me=s.user; G='loading'; render(); loadAll() } },0) });
   const {data}=await sbc.auth.getSession();
   if(data&&data.session){ if(!me){ me=data.session.user; G='loading'; render(); loadAll() } } else if(G==='loading'){ G='login'; render() } }
