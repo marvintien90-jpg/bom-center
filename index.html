@@ -564,18 +564,18 @@ document.addEventListener('click',e=>{
 const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
 const LICENSOR='品牌加辣餐飲顧問工作室';
-const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','account','help','ing','semi','recipe','cost','price','order','ver','log'];
+const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','account','help','io','ing','semi','recipe','cost','price','order','ver','log'];
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','admin']]];
-const LAB={home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','admin']]];
+const LAB={io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
 const TIP={ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['要先在品項配方填每道菜的月銷量，分類才會準。','price'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
-let navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
+let imp=null, impMode='update', ups=null, upMsg='', navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
 function navHtml(){ const it=id=>`<button class="navi" data-tab="${id}" ${tab===id?'aria-current="page"':''}><span>${LAB[id]}</span>${allowed(id)?'':'<span class="tag">進階</span>'}</button>`;
   return it('home')+NAV.map(g=>{ const ids=g[2].filter(id=>id!=='admin'||isAdmin()), open=!navShut[g[0]]||ids.includes(tab);
     return `<button class="navi navg" data-grp="${g[0]}" aria-expanded="${open}"><span>${g[1]}</span><span aria-hidden="true">${open?'−':'+'}</span></button>${open?`<div class="navsub">${ids.map(it).join('')}</div>`:''}` }).join('') }
@@ -661,12 +661,14 @@ V.home=(b,c)=>{ const t=b.settings.targetRate/100; let sales=0,cost=0,over=0; b.
   return `<div class="head"><div><h2>${esc(b.name)}</h2><p class="sub">${done?'資料已經建好，下面是目前的重點數字。':'照下面的順序做，三步就能看到每道菜的成本和毛利。'}</p></div></div>
 ${!isAdmin()&&left!==null&&left<=30?`<p class="sample">你的使用授權將在 ${left} 天後（${esc(prof.expires_on)}）到期。到期後資料會保留，但需要續約才能繼續使用，請聯絡 ${LICENSOR}。</p>`:''}
 ${pend?`<p class="sample">有 ${pend} 位業主註冊後在等你開通。 <button data-tab="admin">前往授權管理</button></p>`:''}
+${isAdmin()&&(ups||[]).some(u=>u.status==='new')?`<p class="sample">有 ${(ups||[]).filter(u=>u.status==='new').length} 個業主上傳的檔案等你處理。 <button data-tab="io">前往查看</button></p>`:''}
 ${RO()?'<p class="note">你的帳號是「只能看」權限，可以瀏覽數字和使用試算，但不能修改資料。</p>':''}
 <div class="steps">${step('①',s1,'建立食材','目前 '+b.ingredients.length+' 樣。填名稱、進貨價、一包的量。','ing',s1?'查看食材':'開始建立食材')}
 ${step('②',s2,'建立品項配方','目前 '+b.items.length+' 道。每道菜用了哪些食材、各多少。','recipe',s2?'查看配方':'開始建立配方')}
 ${step('③',s3,'填售價和月銷量','有了銷量才能算整體成本率和該叫多少貨。','recipe',s3?'調整銷量':'去填月銷量')}
 ${step('④',false,'看成本與毛利','哪道菜賺、哪道菜成本超標，一眼看出來。','cost','看成本毛利')}</div>
 ${s2?`<div class="tiles"><div class="tile"><span>食材</span><b>${b.ingredients.length}</b></div><div class="tile"><span>品項</span><b>${b.items.length}</b></div><div class="tile"><span>整體食材成本率</span><b>${pct(cost/sales)}</b><span>目標 ${nf(b.settings.targetRate,0)}%</span></div><div class="tile"><span>成本超標的品項</span><b>${over}</b><span>超過目標 3 個百分點以上</span></div></div>`:''}
+<p class="note">手上已經有 Excel 或 PDF 資料？不用一筆一筆輸入。 <button data-tab="io">前往上傳與下載表單</button></p>
 <h2>最近的修改</h2><div class="scroll"><table><thead><tr><th>時間</th><th>誰</th><th>改了哪些</th></tr></thead><tbody>${logRows===null?'<tr><td colspan="3">讀取中…</td></tr>':rows.map(r=>`<tr><td>${tm(r.at)}</td><td>${esc(r.actor_email||'')}（${who[r.actor_role]||''}）</td><td style="white-space:normal">${(r.sections||[]).map(x=>SEC[x]||x).join('、')||'建立或刪除'}</td></tr>`).join('')||'<tr><td colspan="3">這個品牌還沒有修改紀錄。</td></tr>'}</tbody></table></div>
 <p class="note">資料會自動儲存，不需要按存檔。每個人每天第一次修改前，系統會先自動備份一份，可以在「版本與備份」還原。</p>` };
 V.account=()=>`<div class="head"><div><h2>我的帳號</h2><p class="sub">查看你的方案和到期日，或修改登入密碼。</p></div></div>
@@ -683,6 +685,76 @@ V.help=()=>`<div class="head"><div><h2>使用說明</h2><p class="sub">常見問
 <details><summary>選單上有「進階」標記的是什麼？</summary><p class="sub">那是進階版才有的功能。想使用請聯絡 ${LICENSOR} 升級方案。</p></details>
 <details><summary>可以在手機上用嗎？</summary><p class="sub">可以。手機上選單會收在左上角的「選單」按鈕裡。表格比較寬時可以左右滑動。</p></details>
 <h2>登入與帳號</h2>${LOGIN_FAQ()}`;
+
+/* ---- 上傳與下載表單 ---- */
+const SH={ing:['食材',['食材名稱*','分類','進貨單位','進貨價*','每單位含量*','用量單位*','可用率%','供貨方式'],[16,10,10,10,12,10,9,12]],semi:['半成品',['半成品名稱*','單位','一批做出總量','來源'],[16,8,14,14]],semiL:['半成品材料',['半成品名稱*','材料名稱*','一批用量*'],[16,16,10]],item:['品項',['品名*','分類','售價*','單店月銷量'],[18,10,8,12]],line:['配方',['品名*','用料名稱*','一份用量*'],[18,16,10]]};
+function tplXlsx(withData){ const b=B(), wb=XLSX.utils.book_new(), nm={}; if(b){ b.ingredients.forEach(i=>nm['i:'+i.id]=i.name); b.semis.forEach(x=>nm['s:'+x.id]=x.name) }
+  const add=(k,rows)=>{ const ws=XLSX.utils.aoa_to_sheet([SH[k][1],...rows]); ws['!cols']=SH[k][2].map(w=>({wch:w+4})); XLSX.utils.book_append_sheet(wb,ws,SH[k][0]) };
+  const g=XLSX.utils.aoa_to_sheet([['BOM 運算中心　資料填寫表'],[''],['怎麼填'],['1. 每個分頁是一種資料。請照「食材 → 半成品 → 品項 → 配方」的順序填。'],['2. 第一列是欄位名稱，請不要修改或刪除。有 * 的欄位一定要填。'],['3. 開頭是「（範例）」的那幾列只是示範，系統不會匯入，可以留著或刪掉。'],['4. 「配方」分頁：一道菜用了幾樣料就填幾列，品名要和「品項」分頁完全一樣，用料名稱要和「食材」或「半成品」的名稱完全一樣。'],['5. 沒有半成品（先煮好再用的醬料、高湯）可以不填那兩個分頁。'],['6. 填好後回到系統「上傳與下載表單」頁上傳，系統會先檢查並讓你預覽，確認後才會寫入。'],[''],['欄位說明'],['進貨單位','你跟廠商買的單位，例如：公斤、箱、包'],['進貨價','買一個進貨單位多少錢，只填數字'],['每單位含量','一個進貨單位等於多少「用量單位」。例如進貨單位是公斤、用量單位是克，就填 1000'],['用量單位','配方裡使用的單位，例如：克、毫升、顆'],['可用率%','去皮去骨後剩下的比例，不會損耗就填 100'],['供貨方式','填「總部供貨」或「門市自採」'],['來源（半成品）','填「門市自製」或「總部製作供貨」'],['一批做出總量','煮一鍋做出來的總量，例如一鍋醬 2000 克就填 2000'],['損益表','損益表格式每家不同，請直接在同一頁用「把檔案交給顧問」上傳 PDF 或 Excel']]); g['!cols']=[{wch:22},{wch:90}]; XLSX.utils.book_append_sheet(wb,g,'填寫說明');
+  const sup=v=>v==='hq'?'總部供貨':'門市自採', d=withData&&b;
+  add('ing',d?b.ingredients.map(i=>[i.name,i.cat,i.packUnit,i.buyPrice,i.packSize,i.unit,i.yield,sup(i.supply)]):[['（範例）牛五花','肉類','公斤',420,1000,'克',100,'門市自採'],['（範例）高麗菜','蔬菜','顆',45,1200,'克',85,'門市自採']]);
+  add('semi',d?b.semis.map(x=>[x.name,x.unit,x.batchYield,x.supply==='hq'?'總部製作供貨':'門市自製']):[['（範例）招牌醬','克',2000,'門市自製']]);
+  add('semiL',d?b.semis.flatMap(x=>x.lines.map(l=>[x.name,nm[l.ref]||'',l.qty])):[['（範例）招牌醬','（範例）醬油',1500]]);
+  add('item',d?b.items.map(x=>[x.name,x.cat,x.price,x.monthlySales||0]):[['（範例）牛五花石鍋','主餐',280,600]]);
+  add('line',d?b.items.flatMap(x=>x.lines.map(l=>[x.name,nm[l.ref]||'',l.qty])):[['（範例）牛五花石鍋','（範例）牛五花',120],['（範例）牛五花石鍋','（範例）高麗菜',80]]);
+  dl.save({filename:(d?b.name+'_目前資料':'BOM資料填寫表_空白')+'.xlsx',data:XLSX.write(wb,{type:'array',bookType:'xlsx'})}); setStatus('表單已下載') }
+async function impRead(file){ const b=B(); if(!b||!file) return; let wb; try{ wb=XLSX.read(await file.arrayBuffer()) }catch(e){ imp={fatal:'這個檔案打不開。請確認是用我們的表單填寫、另存成 .xlsx 的 Excel 檔。'}; return render() }
+  const P={file:file.name,ing:[],semi:[],semiL:[],item:[],line:[],errs:[]}, err=(k,n,m)=>P.errs.push({sheet:SH[k][0],row:n,msg:m});
+  const N=v=>{ if(v===''||v==null) return null; const x=typeof v==='number'?v:parseFloat(String(v).replace(/[,$\s]/g,'')); return isFinite(x)?x:NaN };
+  const rows=k=>{ const ws=wb.Sheets[SH[k][0]]; if(!ws) return []; return XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).slice(1).map((r,i)=>({r:r.map(x=>typeof x==='string'?x.trim():x),n:i+2})).filter(x=>x.r.some(v=>v!=='')&&!String(x.r[0]).startsWith('（範例）')) };
+  if(!['ing','semi','item','line'].some(k=>wb.Sheets[SH[k][0]])){ imp={fatal:'找不到「食材」「品項」這些分頁。請使用本頁下載的表單來填寫；如果是其他格式的檔案，請改用下方「把檔案交給顧問」。'}; return render() }
+  const dup=(k,set,name,n)=>{ if(set.has(name)){ err(k,n,'「'+name+'」在這個分頁重複出現，只會採用第一筆'); return true } set.add(name); return false };
+  let seen=new Set(); rows('ing').forEach(({r,n})=>{ const [name,cat,packUnit,bp,ps,unit,y,sp]=r; if(!name) return err('ing',n,'沒有填食材名稱'); if(dup('ing',seen,name,n)) return;
+    const buyPrice=N(bp), packSize=N(ps), yl=N(y); if(buyPrice===null||isNaN(buyPrice)||buyPrice<0) return err('ing',n,'「'+name+'」的進貨價要填數字'); if(isNaN(packSize)||(packSize!==null&&packSize<=0)) return err('ing',n,'「'+name+'」的每單位含量要填大於 0 的數字'); if(isNaN(yl)||(yl!==null&&(yl<=0||yl>100))) return err('ing',n,'「'+name+'」的可用率要填 1 到 100');
+    P.ing.push({name:String(name),cat:String(cat||''),packUnit:String(packUnit||''),buyPrice,packSize:packSize||1,unit:String(unit||packUnit||''),yield:yl||100,supply:/總部/.test(sp)?'hq':'self'}) });
+  seen=new Set(); rows('semi').forEach(({r,n})=>{ const [name,unit,by,src]=r; if(!name) return err('semi',n,'沒有填半成品名稱'); if(dup('semi',seen,name,n)) return; const y=N(by); if(isNaN(y)||(y!==null&&y<=0)) return err('semi',n,'「'+name+'」的一批做出總量要填大於 0 的數字');
+    P.semi.push({name:String(name),unit:String(unit||'份'),batchYield:y||1,supply:/總部/.test(src)?'hq':'self'}) });
+  const ingN=new Set([...b.ingredients.map(i=>i.name),...P.ing.map(i=>i.name)]), semiN=new Set([...b.semis.map(i=>i.name),...P.semi.map(i=>i.name)]);
+  rows('semiL').forEach(({r,n})=>{ const [sn,mat,q]=r, qty=N(q); if(!sn||!mat) return err('semiL',n,'半成品名稱和材料名稱都要填'); if(!semiN.has(sn)) return err('semiL',n,'找不到半成品「'+sn+'」，請先在「半成品」分頁建立'); if(!ingN.has(mat)) return err('semiL',n,'找不到食材「'+mat+'」，名稱要和「食材」分頁完全一樣'); if(!(qty>0)) return err('semiL',n,'「'+sn+'」的「'+mat+'」用量要填大於 0 的數字'); P.semiL.push({owner:String(sn),ref:String(mat),qty}) });
+  seen=new Set(); rows('item').forEach(({r,n})=>{ const [name,cat,pr,ms]=r; if(!name) return err('item',n,'沒有填品名'); if(dup('item',seen,name,n)) return; const price=N(pr), m=N(ms); if(price===null||isNaN(price)||price<0) return err('item',n,'「'+name+'」的售價要填數字'); if(isNaN(m)||(m!==null&&m<0)) return err('item',n,'「'+name+'」的月銷量要填數字');
+    P.item.push({name:String(name),cat:String(cat||''),price,monthlySales:m||0}) });
+  const itemN=new Set([...b.items.map(i=>i.name),...P.item.map(i=>i.name)]);
+  rows('line').forEach(({r,n})=>{ const [inm,mat,q]=r, qty=N(q); if(!inm||!mat) return err('line',n,'品名和用料名稱都要填'); if(!itemN.has(inm)) return err('line',n,'找不到品項「'+inm+'」，請先在「品項」分頁建立'); if(!ingN.has(mat)&&!semiN.has(mat)) return err('line',n,'找不到用料「'+mat+'」，名稱要和「食材」或「半成品」完全一樣'); if(!(qty>0)) return err('line',n,'「'+inm+'」的「'+mat+'」用量要填大於 0 的數字'); P.line.push({owner:String(inm),ref:String(mat),qty}) });
+  const cnt=(a,ex)=>{ const E=new Set(ex.map(x=>x.name)); return [a.filter(x=>!E.has(x.name)).length,a.filter(x=>E.has(x.name)).length] };
+  P.c={ing:cnt(P.ing,b.ingredients),semi:cnt(P.semi,b.semis),item:cnt(P.item,b.items)}; P.total=P.ing.length+P.semi.length+P.item.length+P.semiL.length+P.line.length; imp=P; render() }
+async function impApply(){ const b=B(), P=imp; if(!b||!P||P.fatal||RO()) return; const upd=impMode==='update'; setStatus('匯入中…');
+  const v=await verCreate(cur,'Excel 匯入前自動備份（'+P.file+'）'); if(!v){ notice='沒有匯入：匯入前的備份沒有建立成功，為了安全先停止。請檢查網路後再試一次。'; return render() }
+  const touched={semi:new Set(),item:new Set()};
+  P.ing.forEach(x=>{ const e=b.ingredients.find(i=>i.name===x.name); if(e){ if(!upd) return; if(e.buyPrice!==x.buyPrice){ b.priceLog.push({id:e.id,name:e.name,date:today(),from:e.buyPrice,to:x.buyPrice}); if(b.priceLog.length>300) b.priceLog.shift() } Object.assign(e,x) } else b.ingredients.push(Object.assign({id:uid('i')},x)) });
+  P.semi.forEach(x=>{ const e=b.semis.find(i=>i.name===x.name); if(e){ if(upd){ Object.assign(e,x); touched.semi.add(x.name) } } else { b.semis.push(Object.assign({id:uid('s'),packSize:1,packUnit:'',lines:[]},x)); touched.semi.add(x.name) } });
+  P.item.forEach(x=>{ const e=b.items.find(i=>i.name===x.name); if(e){ if(upd){ Object.assign(e,x); touched.item.add(x.name) } } else { b.items.push(Object.assign({id:uid('m'),lines:[]},x)); touched.item.add(x.name) } });
+  const ref=n=>{ const i=b.ingredients.find(x=>x.name===n); if(i) return 'i:'+i.id; const m=b.semis.find(x=>x.name===n); return m?'s:'+m.id:null };
+  const fill=(rows,list,T,onlyIng)=>{ const by={}; rows.forEach(l=>(by[l.owner]=by[l.owner]||[]).push(l)); Object.keys(by).forEach(n=>{ const o=list.find(x=>x.name===n); if(!o||(!upd&&!T.has(n))) return; o.lines=by[n].map(l=>({ref:onlyIng?('i:'+(b.ingredients.find(x=>x.name===l.ref)||{}).id):ref(l.ref),qty:l.qty})).filter(l=>l.ref&&!/undefined$/.test(l.ref)) }) };
+  fill(P.semiL,b.semis,touched.semi,true); fill(P.line,b.items,touched.item,false);
+  brands[cur]=norm(b); touch(); notice='匯入完成：食材 '+P.ing.length+' 筆、半成品 '+P.semi.length+' 筆、品項 '+P.item.length+' 筆、配方 '+P.line.length+' 列。匯入前的資料已自動備份，想反悔可以到「版本與備份」還原。'; imp=null; tab='cost'; render() }
+async function loadUps(){ const r=await sbc.from('bom_uploads').select('*').order('created_at',{ascending:false}).limit(100); ups=r.error?[]:(r.data||[]) }
+async function sendFile(){ const f=($('#upFile').files||[])[0], note=$('#upNote').value.trim(); if(!f){ upMsg='請先按「選擇檔案」挑一個檔案。'; return render() }
+  const ext=(f.name.split('.').pop()||'').toLowerCase(); if(!['pdf','xlsx','xls','csv','jpg','jpeg','png','doc','docx'].includes(ext)){ upMsg='這種檔案類型不能上傳。可以上傳 PDF、Excel、Word、CSV 或照片（JPG、PNG）。'; return render() }
+  if(f.size>10*1024*1024){ upMsg='檔案超過 10MB，太大了。可以拆成幾個檔案分次上傳，或把照片縮小。'; return render() }
+  upMsg='上傳中，請不要關閉頁面…'; render(); const path=cur+'/'+(crypto.randomUUID?crypto.randomUUID():uid('f')+Date.now())+'.'+ext;
+  const up=await sbc.storage.from('bom-uploads').upload(path,f,{contentType:f.type||'application/octet-stream'}); if(up.error){ upMsg='上傳沒有成功（'+(up.error.message||'').slice(0,70)+'）。請檢查網路後再試一次。'; return render() }
+  const ins=await sbc.from('bom_uploads').insert({brand_id:cur,filename:f.name,path,size:f.size,note:note||null}); if(ins.error){ upMsg='檔案已上傳，但登記時出了問題（'+(ins.error.message||'').slice(0,70)+'）。請再試一次或聯絡顧問。'; return render() }
+  upMsg='「'+f.name+'」已經送出'+(isAdmin()?'。':'，顧問會收到通知。處理好之後，這裡的狀態會變成「已處理」。'); await loadUps(); render() }
+async function getFile(id){ const u=(ups||[]).find(x=>x.id===id); if(!u) return; setStatus('準備下載…'); const {data,error}=await sbc.storage.from('bom-uploads').createSignedUrl(u.path,120,{download:u.filename}); if(error||!data){ setStatus('下載失敗，請重新整理後再試'); return }
+  const a=document.createElement('a'); a.href=data.signedUrl; a.download=u.filename; document.body.appendChild(a); a.click(); a.remove(); setStatus('已開始下載') }
+async function doneFile(id){ const i=document.getElementById('rp-'+id); const {error}=await sbc.from('bom_uploads').update({status:'done',reply:i&&i.value.trim()||null}).eq('id',id); setStatus(error?'更新失敗':'已標記為處理完成'); await loadUps(); render() }
+V.io=(b,c)=>{ const kb=n=>n>1048576?nf(n/1048576,1)+' MB':nf(n/1024,0)+' KB', mine=(ups||[]).filter(u=>isAdmin()||u.brand_id===cur);
+  const prev=!imp?'':imp.fatal?`<p class="sample">${esc(imp.fatal)} <button data-io="cancel">知道了</button></p>`:`<div class="col" style="border:1px solid var(--accent);border-radius:8px;padding:12px">
+<h2>檢查結果：${esc(imp.file)}</h2><p class="sub">還沒有寫入。請先看下面的數字對不對，確認後再按「確認匯入」。</p>
+<div class="tiles"><div class="tile"><span>食材</span><b>${imp.ing.length}</b><span>新增 ${imp.c.ing[0]}、同名 ${imp.c.ing[1]}</span></div><div class="tile"><span>半成品</span><b>${imp.semi.length}</b><span>新增 ${imp.c.semi[0]}、同名 ${imp.c.semi[1]}</span></div><div class="tile"><span>品項</span><b>${imp.item.length}</b><span>新增 ${imp.c.item[0]}、同名 ${imp.c.item[1]}</span></div><div class="tile"><span>配方用料</span><b>${imp.line.length}</b><span>列</span></div><div class="tile"><span>有問題的列</span><b>${imp.errs.length}</b><span>${imp.errs.length?'這些列不會匯入':'全部通過檢查'}</span></div></div>
+${imp.errs.length?`<div class="scroll"><table><thead><tr><th>分頁</th><th class="n">第幾列</th><th>問題</th></tr></thead><tbody>${imp.errs.slice(0,60).map(e=>`<tr><td>${e.sheet}</td><td class="n">${e.row}</td><td style="white-space:normal">${esc(e.msg)}</td></tr>`).join('')}</tbody></table></div><p class="note">可以先匯入沒問題的部分，或按「取消」回 Excel 修正後重新上傳。${imp.errs.length>60?'（只顯示前 60 筆）':''}</p>`:''}
+<div class="params"><label for="impMode">遇到同名的資料 <select id="impMode"><option value="update" ${impMode==='update'?'selected':''}>用檔案的內容更新（配方會整份換成檔案裡的）</option><option value="skip" ${impMode==='skip'?'selected':''}>略過，保留系統裡原本的</option></select></label></div>
+<div class="brandbar">${imp.total?'<button class="pri" data-io="apply">確認匯入</button>':''}<button data-io="cancel">取消</button></div><p class="note">匯入前系統會自動備份一份目前的資料，匯錯可以到「版本與備份」還原。</p></div>`;
+  return `<div class="head"><div><h2>上傳與下載表單</h2><p class="sub">不想一筆一筆輸入？下載空白表單，在 Excel 填好後一次上傳。手上只有 PDF 或其他格式的資料，可以直接交給顧問處理。</p></div></div>
+<h2>① 下載表單</h2><div class="brandbar"><button class="pri" data-io="tpl">下載空白表單</button>${b.ingredients.length||b.items.length?'<button data-io="tpld">下載含目前資料的表單</button>':''}</div><p class="note">表單裡有「填寫說明」分頁和範例。想大量改價時，可以下載含目前資料的表單，改完再上傳。</p>
+<h2>② 上傳填好的表單</h2>${RO()?'<p class="note">你的帳號是「只能看」權限，不能匯入資料。需要修改請聯絡顧問，或用下方把檔案交給顧問。</p>':prev||'<div class="params"><label for="impFile">選擇填好的 Excel 檔（.xlsx） <input type="file" id="impFile" accept=".xlsx,.xls"></label></div><p class="note">上傳後會先檢查並顯示預覽，不會馬上寫入。</p>'}
+<h2>③ 把檔案交給顧問</h2><p class="sub">損益表、廠商報價單、手寫配方的照片等等，不用自己整理，上傳後顧問會收到通知並協助轉成系統資料。</p>
+<div class="params"><label for="upFile">檔案 <input type="file" id="upFile" accept=".pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png,.doc,.docx"></label><label for="upNote">留言 <input type="text" id="upNote" maxlength="300" placeholder="例如：九月損益表" style="min-width:220px"></label><button class="pri" data-io="send">送出檔案</button></div>
+${upMsg?`<p class="sample" role="status">${esc(upMsg)}</p>`:''}<p class="note">可以上傳 PDF、Excel、Word、CSV、照片，每個檔案 10MB 以內。檔案只有你和顧問看得到。</p>
+<div class="scroll"><table><thead><tr><th>上傳時間</th>${isAdmin()?'<th>品牌</th><th>上傳者</th>':''}<th>檔名</th><th class="n">大小</th><th>留言</th><th>狀態</th><th></th></tr></thead><tbody>${ups===null?'<tr><td colspan="8">讀取中…</td></tr>':mine.map(u=>`<tr><td>${tm(u.created_at)}</td>${isAdmin()?`<td>${esc(u.brand_name||u.brand_id)}</td><td>${esc(u.email||'')}</td>`:''}<td style="white-space:normal">${esc(u.filename)}</td><td class="n">${kb(u.size||0)}</td><td style="white-space:normal">${esc(u.note||'')}</td><td style="white-space:normal">${u.status==='done'?'<span class="pill good">已處理</span>'+(u.reply?' '+esc(u.reply):''):'<span class="pill warn">待處理</span>'}</td><td><button data-io="get:${u.id}">下載</button>${isAdmin()&&u.status!=='done'?` <input type="text" id="rp-${u.id}" placeholder="回覆給業主（可不填）" aria-label="回覆" style="min-width:150px"> <button data-io="done:${u.id}">標記已處理</button>`:''}</td></tr>`).join('')||'<tr><td colspan="8">還沒有上傳過檔案。</td></tr>'}</tbody></table></div>` };
+document.addEventListener('change',e=>{ if(e.target.id==='impFile'&&!RO()) impRead(e.target.files[0]); if(e.target.id==='impMode') impMode=e.target.value });
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; if(t.dataset.tab==='io'){ upMsg=''; loadUps().then(()=>{ if(tab==='io') render() }) } const a=t.dataset.io; if(!a) return;
+  if(a==='tpl') tplXlsx(false); else if(a==='tpld') tplXlsx(true); else if(a==='cancel'){ imp=null; render() } else if(a==='apply') impApply(); else if(a==='send') sendFile(); else if(a.startsWith('get:')) getFile(a.slice(4)); else if(a.startsWith('done:')&&isAdmin()) doneFile(a.slice(5)) });
 
 /* ---- 授權管理（僅管理員） ---- */
 async function loadAdmin(){ const [p,a]=await Promise.all([sbc.from('bom_profiles').select('*').order('created_at',{ascending:false}),sbc.from('bom_brand_access').select('*')]); adm={profiles:p.data||[],access:a.data||[]} }
@@ -759,7 +831,7 @@ async function loadAll(){ try{
     brands={}; Object.keys(revs).forEach(k=>delete revs[k]); (bs.data||[]).forEach(applyRemote);
     await loadVersions();
     if(isAdmin()){ if(!adminTab){ TABS[TABS.length-1][2].push(['admin','授權管理']); adminTab=true } await loadAdmin() }
-    cur=null; pick(); if(!V[tab]||!allowed(tab)||(tab==='admin'&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }) }
+    cur=null; pick(); if(!V[tab]||!allowed(tab)||(tab==='admin'&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }); loadUps().then(()=>{ if(tab==='home'||tab==='io') render() }) }
   catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
 
 function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.classList.toggle('bare',!app); if(!app) sh.classList.remove('open');
@@ -809,7 +881,7 @@ async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home';
   dl={save:async({filename,data})=>{ const u=URL.createObjectURL(new Blob([data])), a=document.createElement('a'); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000) }};
   sbc.auth.onAuthStateChange((ev,s)=>{ setTimeout(()=>{
     if(ev==='PASSWORD_RECOVERY'){ me=s&&s.user; G='recover'; authMsg=''; render(); return }
-    if(ev==='SIGNED_OUT'){ me=null; prof=null; brands={}; versions=[]; notice=''; logRows=null; cur=null; G='login'; authMode='in'; render(); return }
+    if(ev==='SIGNED_OUT'){ me=null; prof=null; brands={}; versions=[]; notice=''; logRows=null; ups=null; imp=null; upMsg=''; cur=null; G='login'; authMode='in'; render(); return }
     if(ev==='SIGNED_IN'&&s&&G!=='recover'&&(!me||me.id!==s.user.id)){ me=s.user; G='loading'; render(); loadAll() } },0) });
   const {data}=await sbc.auth.getSession();
   if(data&&data.session){ if(!me){ me=data.session.user; G='loading'; render(); loadAll() } } else if(G==='loading'){ G='login'; render() } }
