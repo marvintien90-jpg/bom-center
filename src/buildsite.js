@@ -53,6 +53,7 @@ input[type=email],input[type=password],input[type=date]{background:var(--field);
 .step{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .step.done{border-color:var(--good);background:var(--good-bg)}.step.done b{color:var(--good)}
 details{border:1px solid var(--line);border-radius:8px;padding:8px 12px}summary{cursor:pointer;font-weight:500}details p{margin-top:6px}
+.btnlink{display:inline-block;background:#047d3a;color:#fff;border-radius:6px;padding:6px 14px;text-decoration:none;font-weight:500}.btnlink:hover{filter:brightness(.95)}
 .pwrow{display:flex;gap:6px}.pwrow input{flex:1}
 main tbody th{width:140px}
 @media (max-width:860px){.shell{grid-template-columns:minmax(0,1fr)}

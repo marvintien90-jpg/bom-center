@@ -13,7 +13,7 @@ const TIP={ing:['從這裡開始。每樣食材填名稱、進貨價和一包的
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['要先在品項配方填每道菜的月銷量，分類才會準。','price'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
-let wantAdmin=false, imp=null, impMode='update', ups=null, upMsg='', navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
+let pub={}, wantAdmin=false, imp=null, impMode='update', ups=null, upMsg='', navShut={}, acctMsg='', authF={name:'',email:''}, needConfirm=false; try{ navShut=JSON.parse(localStorage.getItem('bom-nav')||'{}')||{} }catch(e){}
 function navHtml(){ const it=id=>`<button class="navi" data-tab="${id}" ${tab===id?'aria-current="page"':''}><span>${LAB[id]}</span>${allowed(id)?'':'<span class="tag">進階</span>'}</button>`;
   return it('home')+NAV.map(g=>{ const ids=g[2].filter(id=>(id!=='admin'&&id!=='brands')||isAdmin()), open=!navShut[g[0]]||ids.includes(tab);
     return `<button class="navi navg" data-grp="${g[0]}" aria-expanded="${open}"><span>${g[1]}</span><span aria-hidden="true">${open?'−':'+'}</span></button>${open?`<div class="navsub">${ids.map(it).join('')}</div>`:''}` }).join('') }
@@ -204,21 +204,22 @@ function makeBrand(name,from){ const id=uid('b'), src=from&&brands[from]; brands
 V.brands=()=>{ const ids=Object.keys(brands), owners=id=>adm.access.filter(a=>a.brand_id===id).map(a=>(adm.profiles.find(p=>p.user_id===a.user_id)||{})).filter(p=>p.email);
   return `<div class="head"><div><h2>品牌管理</h2><p class="sub">每個品牌是一套獨立的食材、配方和損益資料。先在這裡建立品牌，再到「授權管理」指派給業主。品牌名稱可以隨時直接修改。</p></div></div>
 <h2>新增品牌</h2><form id="nbForm" class="params"><label for="nbName">品牌名稱 <input type="text" id="nbName" required maxlength="60" placeholder="例如：嗑肉石鍋" style="min-width:200px"></label><label for="nbFrom">起始內容 <select id="nbFrom"><option value="">空白（從頭建立）</option>${ids.map(id=>`<option value="${id}">複製「${esc(brands[id].name)}」的資料</option>`).join('')}</select></label><button class="pri" type="submit">建立品牌</button></form>
-<h2>所有品牌</h2><div class="scroll"><table><thead><tr><th>品牌名稱（可直接修改）</th><th class="n">食材</th><th class="n">品項</th><th class="n">損益期數</th><th>可使用的業主</th><th></th></tr></thead><tbody>${ids.map(id=>{ const b=brands[id], os=owners(id), k='bd:'+id; return `<tr><td><input type="text" data-bname="${id}" value="${esc(b.name)}" maxlength="60" aria-label="品牌名稱"></td><td class="n">${b.ingredients.length}</td><td class="n">${b.items.length}</td><td class="n">${(b.periods||[]).length}</td><td style="white-space:normal">${os.map(p=>esc(p.display_name||p.email)+(p.status==='active'?'':'（'+({pending:'待開通',suspended:'停權'}[p.status]||'')+'）')).join('、')||'<span class="pill warn">尚未指派</span>'}</td><td><button data-bopen="${id}">開啟</button> <button class="del ${armed===k?'armed':''}" data-bdel="${id}">${armed===k?'確定刪除':'刪除'}</button></td></tr>` }).join('')||'<tr><td colspan="6">還沒有品牌。請用上方表單建立第一個。</td></tr>'}</tbody></table></div>
-<p class="note">刪除品牌前系統會自動保留一份備份。刪除後，原本被指派的業主就看不到這個品牌。</p>` };
+<h2>所有品牌</h2><div class="scroll"><table><thead><tr><th>品牌名稱（可直接修改）</th><th class="n">食材</th><th class="n">品項</th><th class="n">損益期數</th><th>可使用的業主</th><th></th></tr></thead><tbody>${ids.map(id=>{ const b=brands[id], os=owners(id), k='bd:'+id; return `<tr><td><input type="text" data-bname="${id}" value="${esc(b.name)}" maxlength="60" aria-label="品牌名稱"></td><td class="n">${b.ingredients.length}</td><td class="n">${b.items.length}</td><td class="n">${(b.periods||[]).length}</td><td style="white-space:normal">${os.map(p=>esc(p.display_name||p.email)+(p.status==='active'?'':'（'+({pending:'待開通',suspended:'停權'}[p.status]||'')+'）')).join('、')||'<span class="pill warn">尚未指派</span>'}</td><td><button data-bopen="${id}">開啟</button> <button data-bexp="${id}">匯出 Excel</button> <button class="del ${armed===k?'armed':''}" data-bdel="${id}">${armed===k?'確定刪除':'刪除'}</button></td></tr>` }).join('')||'<tr><td colspan="6">還沒有品牌。請用上方表單建立第一個。</td></tr>'}</tbody></table></div>
+<p class="note">刪除品牌前系統會自動保留一份備份。刪除後，原本被指派的業主就看不到這個品牌。業主解約需要交接資料時，按「匯出 Excel」會下載這個品牌所有頁面的完整資料。</p>` };
 
 /* ---- 授權管理（僅管理員） ---- */
 async function loadAdmin(){ const [p,a]=await Promise.all([sbc.from('bom_profiles').select('*').order('created_at',{ascending:false}),sbc.from('bom_brand_access').select('*')]); adm={profiles:p.data||[],access:a.data||[]} }
-V.admin=(b,c)=>{ const ps=adm.profiles.filter(p=>p.role!=='admin'), t=today(), soon=new Date(Date.now()+38*86400e3).toISOString().slice(0,10);
+V.admin=(b,c)=>{ const ORD={pending:0,active:1,suspended:2,rejected:3}, ps=adm.profiles.filter(p=>p.role!=='admin').sort((a,z)=>(ORD[a.status]||0)-(ORD[z.status]||0)), t=today(), soon=new Date(Date.now()+38*86400e3).toISOString().slice(0,10);
   const opt=(uid,f,v,os)=>`<select data-adm="${uid}|${f}" aria-label="${f}">${os.map(o=>`<option value="${o[0]}" ${o[0]===v?'selected':''}>${o[1]}</option>`).join('')}</select>`;
-  return `<div class="head"><div><h2>授權管理</h2><p class="sub">業主在登入頁註冊並完成 Email 驗證後會出現在這裡。請由左到右設定，最後才改狀態。</p><ol class="sub" style="padding-left:20px;margin:0"><li>選<b>方案</b>、<b>權限</b>、<b>到期日</b></li><li>勾選<b>可使用的品牌</b>；還沒有品牌就按「建立品牌並指派」</li><li>確認收款後把<b>狀態</b>改成「使用中」，系統會自動寄開通信</li><li>之後調整方案、權限或到期日會立刻生效；要通知業主請按「寄異動通知」</li><li>解約或欠費時把狀態改成「停權」，業主無法登入但資料保留，系統會寄信告知</li></ol></div><button data-act="admreload">重新整理名單</button></div>
+  return `<div class="head"><div><h2>授權管理</h2><p class="sub">業主在登入頁註冊並完成 Email 驗證後會出現在這裡。請由左到右設定，最後才改狀態。</p><ol class="sub" style="padding-left:20px;margin:0"><li>選<b>方案</b>、<b>權限</b>、<b>到期日</b></li><li>勾選<b>可使用的品牌</b>；還沒有品牌就按「建立品牌並指派」</li><li>確認收款後把<b>狀態</b>改成「使用中」，系統會自動寄開通信</li><li>之後調整方案、權限或到期日會立刻生效；要通知業主請按「寄異動通知」</li><li>解約或欠費時把狀態改成「停權」，業主無法登入但資料保留，系統會寄信告知。需要交接資料，到「品牌管理」按「匯出 Excel」</li><li>不打算開通的申請改成「不開通」：不會寄信，也不會再算進待開通</li></ol></div><button data-act="admreload">重新整理名單</button></div>
 <div class="tiles"><div class="tile"><span>業主帳號</span><b>${ps.length}</b></div><div class="tile"><span>待開通</span><b>${ps.filter(p=>p.status==='pending').length}</b></div><div class="tile"><span>30 天內到期</span><b>${ps.filter(p=>p.status==='active'&&p.expires_on&&p.expires_on>=t&&p.expires_on<=soon).length}</b></div><div class="tile"><span>已到期或停權</span><b>${ps.filter(p=>p.status==='suspended'||(p.expires_on&&p.expires_on<t)).length}</b></div></div>
 <div class="scroll"><table><thead><tr><th>業主</th><th>狀態</th><th>方案</th><th>權限</th><th>到期日（留空為不限期）</th><th>可使用的品牌</th><th>備註（付款紀錄等）</th><th></th></tr></thead><tbody>${ps.map(p=>{const ex=p.expires_on&&p.expires_on<t;return `<tr><td style="white-space:normal"><b>${esc(p.display_name||'（未填名稱）')}</b><br><span class="note">${esc(p.email)}</span></td>
-<td>${opt(p.user_id,'status',p.status,[['pending','待開通'],['active','使用中'],['suspended','停權']])} ${ex?'<span class="pill bad">已到期</span>':''}</td>
+<td>${opt(p.user_id,'status',p.status,[['pending','待開通'],['active','使用中'],['suspended','停權'],['rejected','不開通']])} ${ex?'<span class="pill bad">已到期</span>':''}</td>
 <td>${opt(p.user_id,'plan',p.plan,[['basic','基本版'],['pro','進階版']])}</td><td>${opt(p.user_id,'access',p.access,[['edit','可編輯'],['view','只能看']])}</td>
 <td><input type="date" data-adm="${p.user_id}|expires_on" value="${p.expires_on||''}" aria-label="到期日"></td>
 <td style="white-space:normal">${Object.keys(brands).map(id=>`<label style="display:inline-flex;gap:4px;margin-right:10px"><input type="checkbox" data-admb="${p.user_id}|${id}" ${adm.access.some(a=>a.user_id===p.user_id&&a.brand_id===id)?'checked':''}>${esc(brands[id].name)}</label>`).join('')}${adm.access.some(a=>a.user_id===p.user_id)?'':` <span class="pill warn">尚未指派品牌</span> <button data-mkbrand="${p.user_id}">建立品牌並指派</button>`}</td>
 <td><input type="text" data-adm="${p.user_id}|note" value="${esc(p.note||'')}" placeholder="例如：10/10 已匯款年費" aria-label="備註" style="min-width:180px"></td><td>${p.status==='active'?`<button data-mail="${p.user_id}">重寄開通信</button> <button data-chg="${p.user_id}">寄異動通知</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="8">還沒有業主註冊。把網站網址傳給業主，請他按「註冊新帳號」。</td></tr>'}</tbody></table></div>
+<h2>登入頁顯示的內容</h2><p class="sub">這裡填的內容會顯示在登入頁的「方案與費用說明」，還沒登入的人也看得到。留空的費用會顯示「請洽詢」。</p><div class="params">${[['line_url','LINE 官方帳號連結','https://lin.ee/…'],['basic_price','基本版費用','例如：每月 NT$1,500'],['pro_price','進階版費用','例如：每月 NT$3,000'],['intro','補充說明','例如：年繳享 85 折']].map(f=>`<label for="pub-${f[0]}">${f[1]} <input type="text" id="pub-${f[0]}" data-pub="${f[0]}" value="${esc(pub&&pub[f[0]]||'')}" placeholder="${f[2]}" maxlength="200" style="min-width:220px"></label>`).join('')}</div>
 <h2>方案差異</h2><div class="scroll"><table><thead><tr><th>方案</th><th>可用功能</th></tr></thead><tbody><tr><td>基本版</td><td style="white-space:normal">食材主檔、半成品、品項配方、成本毛利、定價漲價試算、叫貨推估、版本存檔</td></tr><tr><td>進階版</td><td style="white-space:normal">基本版全部，加上套餐組合、價格紀錄、產品四象限、外送通路定價、損益趨勢、損益兩平、總部試算四頁</td></tr></tbody></table></div>
 <p class="note">「只能看」的業主可以瀏覽所有數字與使用試算，但無法修改資料。到期日當天仍可使用，隔天起自動失效。品牌由你用上方「新增品牌」建立，業主不能自行新增或刪除品牌。</p>` };
 
@@ -228,14 +229,17 @@ async function sendApproval(uidv){ const {data,error}=await sbc.rpc('bom_send_ap
 async function approvalSent(email){ const since=new Date(Date.now()-60000).toISOString(); const {data}=await sbc.from('bom_mail_log').select('id').eq('recipient',email).eq('kind','approval').gte('at',since).limit(1); return !!(data&&data.length) }
 
 /* ---- 登入與狀態畫面 ---- */
+const lineBtn=t=>pub&&/^https:\/\//.test(pub.line_url||'')?`<a class="btnlink" href="${esc(pub.line_url)}" target="_blank" rel="noopener">${t||'用 LINE 聯絡我們'}</a>`:'';
+const PLANS=()=>`<div class="scroll"><table><thead><tr><th>方案</th><th>可以做什麼</th><th>費用</th></tr></thead><tbody><tr><td><b>基本版</b></td><td style="white-space:normal">食材主檔、半成品、品項配方、成本毛利、定價與漲價試算、叫貨推估、Excel 匯入匯出、版本備份</td><td style="white-space:normal">${esc(pub&&pub.basic_price||'請洽詢')}</td></tr><tr><td><b>進階版</b></td><td style="white-space:normal">基本版全部，加上套餐組合、產品四象限、外送通路定價、損益趨勢、損益兩平、總部疊價與加盟主損益試算</td><td style="white-space:normal">${esc(pub&&pub.pro_price||'請洽詢')}</td></tr></tbody></table></div>${pub&&pub.intro?`<p class="sub">${esc(pub.intro)}</p>`:''}<p class="note">流程：註冊帳號 → 完成 Email 驗證 → 聯絡我們確認方案與付款 → 開通後收到通知信即可使用。</p>`;
 function gate(){ const box=h=>`<div class="col" style="max-width:420px;margin:24px auto;width:100%"><div><h1>BOM 運算中心</h1><p class="sub">餐飲品牌的食材、配方、成本與獲利試算工具</p></div>${h}</div>`, msg=authMsg?`<p class="sample" role="status">${esc(authMsg)}</p>`:'';
   const faq=`<details><summary>登不進去？常見狀況與解法</summary><div class="col" style="margin-top:8px">${LOGIN_FAQ()}</div></details>`;
   const notAdm=wantAdmin&&me?`<p class="sample"><b>這個瀏覽器目前登入的是業主帳號 ${esc(me.email)}，不是管理員。</b><br>要開通業主，請先按下面的「登出」，再用管理員帳號登入，就會直接進到授權管理。</p>`:'';
   const stepl=(a)=>`<ol class="sub" style="padding-left:20px">${a.map((x,i)=>`<li>${x}</li>`).join('')}</ol>`;
   if(G==='loading') return EMPTY('讀取中…');
   if(G==='error') return box(`<h2>連線發生問題</h2><p class="sub">${esc(authMsg||'請重新整理頁面。')}</p><div><button class="pri" data-auth="hard">重新整理</button>${me?' <button data-auth="out">登出</button>':''}</div>`);
-  if(G==='pending') return box(`${notAdm}<h2>帳號等待開通</h2><p class="sub">你的帳號（${esc(me&&me.email||'')}）已經建立，目前在等待審核。</p>${stepl(['註冊完成 ✓','Email 驗證完成 ✓','<b>等待 '+LICENSOR+' 確認付款並開通（目前在這一步）</b>','收到開通通知信後，回到這裡登入就能使用'])}<p class="note">已經收到開通信但還是看到這頁？按「重新檢查」。</p><div><button class="pri" data-auth="reload">重新檢查</button> <button data-auth="out">登出</button></div>`);
-  if(G==='blocked'){ const sus=prof&&prof.status==='suspended'; return box(`<h2>${sus?'授權已停用':'授權已到期'}</h2><p class="sub">${sus?'這個帳號的使用授權目前已停用。':'這個帳號的使用授權已於 '+esc(prof&&prof.expires_on||'')+' 到期。'}</p>${stepl(['你的資料都完整保存著，沒有被刪除','聯絡 '+LICENSOR+' 辦理'+(sus?'恢復':'續約'),'處理完成後回到這裡按「重新檢查」，就能繼續使用'])}<div><button class="pri" data-auth="reload">重新檢查</button> <button data-auth="out">登出</button></div>`) }
+  if(G==='pending') return box(`${notAdm}<h2>帳號等待開通</h2><p class="sub">你的帳號（${esc(me&&me.email||'')}）已經建立，目前在等待審核。</p>${stepl(['註冊完成 ✓','Email 驗證完成 ✓','<b>等待 '+LICENSOR+' 確認付款並開通（目前在這一步）</b>','收到開通通知信後，回到這裡登入就能使用'])}<p class="note">已經收到開通信但還是看到這頁？按「重新檢查」。</p><div class="brandbar"><button class="pri" data-auth="reload">重新檢查</button>${lineBtn('用 LINE 聯絡開通')}<button data-auth="out">登出</button></div><details><summary>方案與費用說明</summary><div class="col" style="margin-top:8px">${PLANS()}</div></details>`);
+  if(G==='blocked'&&prof&&prof.status==='rejected') return box(`<h2>帳號尚未開通</h2><p class="sub">這個帳號（${esc(me&&me.email||'')}）目前沒有開通使用。如果想了解方案，或認為這是誤會，歡迎和 ${LICENSOR} 聯絡。</p><div class="brandbar">${lineBtn()}<button data-auth="reload">重新檢查</button><button data-auth="out">登出</button></div>`);
+  if(G==='blocked'){ const sus=prof&&prof.status==='suspended'; return box(`<h2>${sus?'授權已停用':'授權已到期'}</h2><p class="sub">${sus?'這個帳號的使用授權目前已停用。':'這個帳號的使用授權已於 '+esc(prof&&prof.expires_on||'')+' 到期。'}</p>${stepl(['你的資料都完整保存著，沒有被刪除','聯絡 '+LICENSOR+' 辦理'+(sus?'恢復':'續約'),'處理完成後回到這裡按「重新檢查」，就能繼續使用'])}<div class="brandbar"><button class="pri" data-auth="reload">重新檢查</button>${lineBtn(sus?'':'用 LINE 聯絡續約')}<button data-auth="out">登出</button></div>`) }
   if(G==='recover') return box(`<h2>設定新密碼</h2><p class="sub">請輸入一組新的密碼，儲存後會直接登入。</p><form id="authForm" class="col">${pwField('auPass','新密碼','new-password',true)}<button class="pri" type="submit">儲存新密碼</button></form>${msg}`);
   const up=authMode==='up', fg=authMode==='forgot';
   return box(`<h2>${fg?'重設密碼':up?'註冊新帳號':'登入'}</h2><p class="sub">${fg?'輸入註冊時的 Email，我們會寄一封重設密碼的信給你。':up?'本系統為付費授權服務。註冊後需經 '+LICENSOR+' 審核開通才能使用，開通時會以 Email 通知。':'請輸入註冊時的 Email 和密碼。'}</p>
@@ -245,6 +249,7 @@ ${fg?'':pwField('auPass','密碼',up?'new-password':'current-password',up)}
 <button class="pri" type="submit">${fg?'寄出重設信':up?'註冊':'登入'}</button></form>${msg}
 ${needConfirm?'<div><button data-auth="resend">重寄驗證信</button></div>':''}
 <div class="brandbar">${up||fg?'<button data-auth="in">已有帳號，回登入</button>':'<button data-auth="up">註冊新帳號</button><button data-auth="forgot">忘記密碼</button>'}${needConfirm?'':'<button data-auth="resend">重寄驗證信</button>'}</div>
+<details ${up?'open':''}><summary>方案與費用說明</summary><div class="col" style="margin-top:8px">${PLANS()}<div>${lineBtn('用 LINE 詢問方案')}</div></div></details>
 ${faq}`) }
 const AUTH_ERR=e=>{ const raw=(e&&e.message||''), m=raw.toLowerCase();
   if(m.includes('failed to fetch')||m.includes('network')||m.includes('load failed')) return '連不上伺服器。請確認網路正常後再試一次；如果用的是公司網路，可以改用手機網路試試。';
@@ -277,7 +282,7 @@ async function pwSubmit(){ const e=document.getElementById('npw'), p=e?e.value:'
 async function loadAll(){ try{
     const {data:p,error:pe}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(); if(pe) throw pe; prof=p;
     if(!prof||prof.status==='pending'){ G='pending'; return render() }
-    if(prof.status==='suspended'||(!isAdmin()&&expired())){ G='blocked'; return render() }
+    if(prof.status==='suspended'||prof.status==='rejected'||(!isAdmin()&&expired())){ G='blocked'; return render() }
     const bs=await sbc.from('bom_brands').select('id,name,data,rev').order('name');
     if(bs.error) throw bs.error;
     brands={}; Object.keys(revs).forEach(k=>delete revs[k]); (bs.data||[]).forEach(applyRemote);
@@ -323,12 +328,15 @@ document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t
   if(t.dataset.chg&&isAdmin()){ setStatus('寄送中…'); sbc.rpc('bom_send_change',{target:t.dataset.chg}).then(({data,error})=>setStatus(error?'通知信未寄出，請稍後再試':data==='sent'?'已寄出異動通知信':'通知信未寄出')) }
   if(t.dataset.mkbrand&&isAdmin()){ const p=adm.profiles.find(x=>x.user_id===t.dataset.mkbrand); if(!p) return; const id=makeBrand((p.display_name||p.email.split('@')[0]).slice(0,60)); setStatus('建立中…');
     saveBrand(id).then(()=>sbc.from('bom_brand_access').insert({user_id:p.user_id,brand_id:id})).then(r=>{ setStatus(r&&r.error?'品牌已建立，但指派失敗，請手動勾選':'已建立品牌並指派'); notice='已建立品牌「'+brands[id].name+'」並指派給 '+(p.display_name||p.email)+'。品牌名稱可以到「品牌管理」修改。'; return loadAdmin() }).then(render).catch(()=>{ setStatus('建立失敗，請重新整理後再試') }); return }
+  if(t.dataset.bexp&&brands[t.dataset.bexp]&&isAdmin()){ cur=t.dataset.bexp; selItem=selSemi=null; exportXlsx(); return }
   if(t.dataset.bopen&&brands[t.dataset.bopen]){ cur=t.dataset.bopen; selItem=selSemi=null; tab='home'; window.scrollTo(0,0); render(); return }
   if(t.dataset.bdel&&isAdmin()){ const id=t.dataset.bdel, k='bd:'+id; if(armed!==k){ armed=k; render(); return } armed=null; delete brands[id]; dirty.delete(id); if(cur===id){ cur=null; pick() } siteDeleteBrand(id); loadAdmin().then(render); render(); return }
   if(t.dataset.mail&&isAdmin()){ setStatus('寄送中…'); sendApproval(t.dataset.mail).then(setStatus) } });
 document.addEventListener('change',async e=>{ const el=e.target; if(!isAdmin()) return;
+  if(el.dataset.pub){ const f=el.dataset.pub, v=el.value.trim(); if(f==='line_url'&&v&&!/^https:\/\//.test(v)){ setStatus('LINE 連結要以 https:// 開頭'); return } const {error}=await sbc.from('bom_public_settings').update({[f]:v||null,updated_at:new Date().toISOString()}).eq('id',1); if(!error) pub[f]=v||null; setStatus(error?'更新失敗':'登入頁內容已更新'); return }
   if(el.dataset.bname){ const id=el.dataset.bname, n=el.value.trim(); if(!brands[id]) return; if(!n){ el.value=brands[id].name; return } brands[id].name=n; touchId(id); render(); return }
   if(el.dataset.adm){ const [uidv,f]=el.dataset.adm.split('|'), was=adm.profiles.find(p=>p.user_id===uidv)||{}; const {error}=await sbc.from('bom_profiles').update({[f]:el.value===''?null:el.value}).eq('user_id',uidv); let m=error?'更新失敗':'授權已更新';
+    if(!error&&f==='status'&&el.value==='rejected') m='已設為不開通，不會寄信給對方。之後想開通，改成「使用中」即可。';
     if(!error&&f==='status'&&el.value==='suspended'&&was.status==='active') m='已停權，系統已寄信告知 '+was.email+'。資料仍完整保留，改回「使用中」即可恢復。';
     if(!error&&f==='status'&&el.value==='active'&&!adm.access.some(a=>a.user_id===uidv)) notice='注意：'+(was.display_name||was.email)+' 已開通，但還沒有指派任何品牌，他登入後會看不到資料。請在「可使用的品牌」勾選，或按「建立品牌並指派」。';
     if(!error&&f==='status'&&el.value==='active'&&was.status!=='active'&&was.email) m=(await approvalSent(was.email))?'已開通，並已自動寄出開通通知信給 '+was.email:'已開通。通知信未寄出：寄信服務尚未設定完成，設定後可按「重寄開通信」';
@@ -339,6 +347,7 @@ async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home'; 
   if(/error_code=|error=access_denied/.test(h)){ authMsg='這個連結已經過期或已經用過。請在下面重新操作一次（忘記密碼或重寄驗證信），再點最新那封信裡的連結。'; try{history.replaceState(null,'',location.pathname)}catch(x){} }
   if(!window.supabase){ G='error'; authMsg='無法載入登入元件，請檢查網路後重新整理。'; return render() }
   sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  sbc.from('bom_public_settings').select('*').eq('id',1).maybeSingle().then(r=>{ pub=(r&&r.data&&!Array.isArray(r.data))?r.data:{}; const e=document.getElementById('auEmail'), p=document.getElementById('auPass'); if(G!=='app'&&G!=='loading'&&!(e&&e.value)&&!(p&&p.value)) render() });
   dl={save:async({filename,data})=>{ const u=URL.createObjectURL(new Blob([data])), a=document.createElement('a'); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000) }};
   sbc.auth.onAuthStateChange((ev,s)=>{ setTimeout(()=>{
     if(ev==='PASSWORD_RECOVERY'){ me=s&&s.user; G='recover'; authMsg=''; render(); return }
