@@ -922,8 +922,8 @@ async function pwSubmit(){ const e=document.getElementById('npw'), p=e?e.value:'
 
 async function loadAll(){ try{
     let {data:p,error:pe}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(); if(pe) throw pe;
-    if(!p){ /* 損益分析系統註冊的帳號沒有 BOM 資料：補建待開通並通知管理者 */ await sbc.rpc('bom_ensure_profile'); ({data:p}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle()) } prof=p;
-    if(!prof||prof.status==='pending'){ G='pending'; return render() }
+    if(!p){ /* 損益分析系統註冊的帳號沒有 BOM 資料：補建待開通並通知管理者 */ await sbc.rpc('bom_ensure_profile'); ({data:p}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle()); if(!p) throw new Error('profile missing') } prof=p;
+    if(prof.status==='pending'){ G='pending'; return render() }
     if(prof.status==='suspended'||prof.status==='rejected'||(!isAdmin()&&expired())){ G='blocked'; return render() }
     const bs=await sbc.from('bom_brands').select('id,name,data,rev').order('name');
     if(bs.error) throw bs.error;
