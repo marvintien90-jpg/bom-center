@@ -2,14 +2,14 @@
 const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
 const LICENSOR='品牌加辣餐飲顧問工作室';
-const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','news','account','help','io','ing','semi','recipe','cost','price','order','ver','log'];
+const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','news','account','help','io','ing','semi','recipe','cost','price','order','cnt','rcv','supp','ver','log'];
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
-const LAB={news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','rcv','supp']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
+const LAB={cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
-const TIP={ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
+const TIP={cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['要先在品項配方填每道菜的月銷量，分類才會準。','price'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
@@ -128,6 +128,12 @@ V.help=()=>`<div class="head"><div><h2>使用說明</h2><p class="sub">常見問
 <details><summary>我和顧問同時改會不會互相蓋掉？</summary><p class="sub">不會。系統發現別人剛改過，就不會把你的版本蓋上去，而是把你的修改另存成一個存檔點，並在畫面上方通知你。</p></details>
 <details><summary>選單上有「進階」標記的是什麼？</summary><p class="sub">那是進階版才有的功能。想使用請聯絡 ${LICENSOR} 升級方案。</p></details>
 <details><summary>可以在手機上用嗎？</summary><p class="sub">可以。手機上選單會收在左上角的「選單」按鈕裡。表格比較寬時可以左右滑動。</p></details>
+<h2>庫存與進貨</h2>
+<details><summary>盤點要多久做一次？</summary><p class="sub">建議每個月最後一天打烊後盤一次。有了每月的盤點和進貨紀錄，系統就能算出這個月實際用了多少食材，找出損耗和份量不準的地方。</p></details>
+<details><summary>可以好幾個人一起盤點嗎？</summary><p class="sub">可以。每個人用自己的手機打開同一張盤點單，各自負責不同區域。每一格是分開存的，不會互相蓋掉。按「重新整理」可以看到別人剛盤的數字。</p></details>
+<details><summary>盤點的數量要填什麼單位？</summary><p class="sub">照食材主檔的「進貨單位」，例如公斤、包、箱，可以填小數。半包就填 0.5。</p></details>
+<details><summary>按了「完成盤點」還能改嗎？</summary><p class="sub">不能自己改，這是為了保護月結的數字。真的填錯了，請聯絡 ${LICENSOR}，顧問可以重新開啟。</p></details>
+<details><summary>進貨價跟食材主檔不一樣怎麼辦？</summary><p class="sub">存好進貨單後，系統會列出價錢不同的食材，按一下就能把新價錢更新到食材主檔，價格紀錄也會自動記一筆。</p></details>
 <h2>登入與帳號</h2>${LOGIN_FAQ()}`;
 
 /* ---- 上傳與下載表單 ---- */
@@ -413,6 +419,192 @@ document.addEventListener('change',async e=>{ const el=e.target; if(!isAdmin()) 
     setStatus(m); await loadAdmin(); render() }
   else if(el.dataset.admb){ const [uidv,bid]=el.dataset.admb.split('|'); const r=el.checked?await sbc.from('bom_brand_access').insert({user_id:uidv,brand_id:bid}):await sbc.from('bom_brand_access').delete().eq('user_id',uidv).eq('brand_id',bid); setStatus(r.error?'更新失敗':'品牌權限已更新'); await loadAdmin(); render() } });
 
+/* ---- 庫存與進貨：供應商、進貨登記、盤點（存在獨立資料表，不放進品牌那一大包，多人同時盤點也不會互蓋） ---- */
+let inv={brand:null,loading:false,err:'',supp:[],rcv:[],cnt:[],lines:{}}, invMsg='', supF=null, rcvF=null, rcvOpen=null, rcvDiff=null, rcvMon='', cntSel=null, cntNew=null, cntQ='', cntCat='', cntTodo=false, cntQT=null;
+const IVS={supF:()=>supF,rcvF:()=>rcvF,cntNew:()=>cntNew};
+const mon=d=>String(d||'').slice(0,7);
+/* 門市會進貨、要盤點的東西：全部食材，加上向總部叫貨的半成品（自製半成品已拆回原料，跟叫貨推估一致） */
+function invItems(b,c){ const out=[];
+  b.ingredients.forEach(i=>{ const g=c.I[i.id]; if(!g) return; out.push({key:'i:'+i.id,name:i.name,cat:i.cat||'未分類',unit:i.unit||'',pu:i.packUnit||i.unit||'',pack:i.packSize||1,cost:g.fr*((g.yield||100)/100),self:i.supply!=='hq',ix:b.ingredients.indexOf(i)}) });
+  b.semis.forEach(s=>{ if(s.supply!=='hq') return; const g=c.S[s.id]; if(!g) return; out.push({key:'s:'+s.id,name:s.name,cat:'總部半成品',unit:s.unit||'',pu:s.packUnit||s.unit||'',pack:s.packSize||1,cost:g.fr,self:false}) });
+  return out }
+function invErr(e){ const m=(e&&e.message)||String(e||'');
+  if(/BOM_COUNT_CLOSED/.test(m)) return m.replace(/^.*BOM_COUNT_CLOSED:\s*/,'');
+  if(/BOM_LIMIT/.test(m)) return m.replace(/^.*BOM_LIMIT:\s*/,'')+'，請聯絡 '+LICENSOR+'。';
+  if(/row-level security|permission denied|violates row/i.test(m)) return '沒有儲存：你的帳號沒有修改權限，或使用期限已到。請聯絡 '+LICENSOR+'。';
+  if(/does not exist|schema cache/i.test(m)) return '系統正在更新，這個功能暫時還不能用，請稍後再試。';
+  return '沒有儲存：連線有問題，請檢查網路後再試一次。' }
+async function pageAll(mk){ let all=[], from=0; for(;;){ const r=await mk().range(from,from+999); if(r.error) throw r.error; all=all.concat(r.data||[]); if(!r.data||r.data.length<1000) return all; from+=1000 } }
+async function invLoad(id){ inv.loading=true; inv.err=''; render();
+  try{ const [s,r,k]=await Promise.all([pageAll(()=>sbc.from('bom_suppliers').select('*').eq('brand_id',id).order('name')),
+      pageAll(()=>sbc.from('bom_receipts').select('*').eq('brand_id',id).order('received_on',{ascending:false}).order('created_at',{ascending:false})),
+      pageAll(()=>sbc.from('bom_counts').select('*').eq('brand_id',id).order('count_on',{ascending:false}).order('created_at',{ascending:false}))]);
+    const ids=k.slice(0,24).map(x=>x.id), ls=ids.length?await pageAll(()=>sbc.from('bom_count_lines').select('*').in('count_id',ids)):[], lines={}; ids.forEach(x=>lines[x]=[]); ls.forEach(l=>(lines[l.count_id]=lines[l.count_id]||[]).push(l));
+    if(cur!==id){ inv.loading=false; return }
+    inv={brand:id,loading:false,err:'',supp:s,rcv:r,cnt:k,lines} }
+  catch(e){ inv.loading=false; inv.brand=id; inv.err=/does not exist|schema cache/i.test((e&&e.message)||'')?'系統正在更新，這個功能暫時還不能用，請稍後再試。':'讀取失敗：請檢查網路後按「重新讀取」。' }
+  if(INV_T.includes(tab)) render() }
+const INV_T=['cnt','rcv','supp'];
+function invEnsure(){ if(inv.brand!==cur&&!inv.loading&&sbc){ cntSel=null; cntNew=null; rcvF=null; rcvOpen=null; rcvDiff=null; supF=null; invMsg=''; setTimeout(()=>invLoad(cur),0) } return inv.brand===cur&&!inv.loading }
+const invWait=()=>inv.err&&inv.brand===cur?`<p class="sample" role="status">${esc(inv.err)} <button data-iv="reload">重新讀取</button></p>`:EMPTY('讀取中…');
+const ivMsg=()=>invMsg?`<p class="sample" role="status">${esc(invMsg)} <button data-iv="msgok">知道了</button></p>`:'';
+const ivIn=(f,k,v,o={})=>`<input type="${o.type||'text'}" id="iv-${f}-${k}" data-ivf="${f}.${k}" value="${esc(v??'')}" ${o.max?`maxlength="${o.max}"`:''} ${o.type==='number'?'step="any" min="0" inputmode="decimal"':''} placeholder="${esc(o.ph||'')}" aria-label="${esc(o.label||k)}" ${o.style?`style="${o.style}"`:''}>`;
+function qtyTxt(p,base){ return isFinite(base)?nf(base/p.pack,p.pack>1?2:1).replace(/\.?0+$/,'')+' '+esc(p.pu):'–' }
+
+/* 供應商 */
+V.supp=(b,c)=>{ const head=`<div class="head"><div><h2>供應商</h2><p class="sub">把常往來的廠商記下來。進貨登記時直接選，就能看每家廠商每個月叫了多少錢。</p></div>${!RO()&&!supF&&inv.brand===cur?'<button class="pri" data-iv="supnew">新增供應商</button>':''}</div>`;
+  if(!invEnsure()) return head+invWait();
+  const m0=today().slice(0,7), m3=new Date(Date.now()+8*3600e3-92*864e5).toISOString().slice(0,10), sp={};
+  inv.rcv.forEach(r=>{ const k=r.supplier_id||'-', o=sp[k]=sp[k]||{m:0,q:0,last:''}; if(mon(r.received_on)===m0) o.m+=+r.total||0; if(r.received_on>=m3) o.q+=+r.total||0; if(r.received_on>o.last) o.last=r.received_on });
+  const f=supF, form=!f?'':`<div class="col" style="border:1px solid var(--accent);border-radius:8px;padding:12px"><h2>${f.id?'修改供應商':'新增供應商'}</h2>
+<div class="params"><label for="iv-supF-name">名稱* ${ivIn('supF','name',f.name,{max:80,label:'供應商名稱'})}</label><label for="iv-supF-contact">聯絡人 ${ivIn('supF','contact',f.contact,{max:60,label:'聯絡人'})}</label><label for="iv-supF-phone">電話 ${ivIn('supF','phone',f.phone,{max:40,label:'電話'})}</label><label for="iv-supF-line_id">LINE ${ivIn('supF','line_id',f.line_id,{max:60,label:'LINE'})}</label><label for="iv-supF-pay_terms">付款條件 ${ivIn('supF','pay_terms',f.pay_terms,{max:60,ph:'例如：月結 30 天',label:'付款條件'})}</label><label for="iv-supF-note">備註 ${ivIn('supF','note',f.note,{max:300,label:'備註',style:'min-width:220px'})}</label></div>
+<div class="brandbar"><button class="pri" data-iv="supsave">儲存</button><button data-iv="supcancel">取消</button></div></div>`;
+  const rows=inv.supp.map(s=>{ const o=sp[s.id]||{m:0,q:0,last:''};
+    return `<tr><td>${esc(s.name)}</td><td>${esc(s.contact||'')}</td><td>${esc(s.phone||'')}</td><td>${esc(s.line_id||'')}</td><td>${esc(s.pay_terms||'')}</td><td class="n">${$$(o.m,0)}</td><td class="n">${$$(o.q,0)}</td><td>${o.last||'–'}</td><td>${s.active?'<span class="pill good">往來中</span>':'<span class="pill warn">已停用</span>'}</td>${RO()?'':`<td style="white-space:nowrap"><button data-iv="supedit:${s.id}">修改</button> <button data-iv="suptog:${s.id}">${s.active?'停用':'啟用'}</button> <button class="${armed==='sd:'+s.id?'del armed':''}" data-iv="supdel:${s.id}">${armed==='sd:'+s.id?'確定刪除':'刪除'}</button></td>`}</tr>` }).join('');
+  return head+ivMsg()+form+`<div class="scroll"><table><thead><tr><th>名稱</th><th>聯絡人</th><th>電話</th><th>LINE</th><th>付款條件</th><th class="n">本月進貨</th><th class="n">近 3 個月進貨</th><th>最近進貨</th><th>狀態</th>${RO()?'':'<th></th>'}</tr></thead><tbody>${rows||`<tr><td colspan="10">還沒有供應商。${RO()?'':'按右上角「新增供應商」開始。'}</td></tr>`}</tbody></table></div>
+<p class="note">刪除供應商不會刪掉以前的進貨單，舊單據上仍保留廠商名稱。不再往來的廠商建議用「停用」，進貨登記就不會再出現。</p>` };
+
+/* 進貨登記 */
+function rcvBlank(){ return {id:null,date:today(),supplier:'',invoice:'',note:'',lines:[{key:'',qty:'',price:''}]} }
+function rcvLineHtml(L,i,items){ const p=items.find(x=>x.key===L.key), amt=(+L.qty||0)*(+L.price||0), cats=[...new Set(items.map(x=>x.cat))];
+  return `<tr><td><select id="iv-rl-${i}" data-ivl="${i}.key" aria-label="第 ${i+1} 列品項"><option value="">請選擇</option>${cats.map(ct=>`<optgroup label="${esc(ct)}">${items.filter(x=>x.cat===ct).map(x=>`<option value="${esc(x.key)}" ${x.key===L.key?'selected':''}>${esc(x.name)}</option>`).join('')}</optgroup>`).join('')}</select></td>
+<td class="n"><input type="number" step="any" min="0" inputmode="decimal" id="iv-rq-${i}" data-ivl="${i}.qty" value="${esc(L.qty)}" aria-label="第 ${i+1} 列數量"></td><td>${p?esc(p.pu):''}</td>
+<td class="n"><input type="number" step="any" min="0" inputmode="decimal" id="iv-rp-${i}" data-ivl="${i}.price" value="${esc(L.price)}" placeholder="${p?nf(p.cost*p.pack,2):''}" aria-label="第 ${i+1} 列單價"></td>
+<td class="n" id="iv-ra-${i}">${$$(amt,0)}</td><td>${rcvF.lines.length>1?`<button data-iv="rlrm:${i}" aria-label="移除第 ${i+1} 列">移除</button>`:''}</td></tr>` }
+V.rcv=(b,c)=>{ const items=invItems(b,c), head=`<div class="head"><div><h2>進貨登記</h2><p class="sub">照廠商送貨單或發票登記實際收到的數量和價錢。月底盤點時，系統會用「上次庫存＋這期進貨−這次庫存」算出實際用了多少。</p></div>${!RO()&&!rcvF&&inv.brand===cur?'<button class="pri" data-iv="rcvnew">新增進貨單</button>':''}</div>`;
+  if(!invEnsure()) return head+invWait();
+  if(!items.length) return head+EMPTY('這個品牌還沒有食材。請先到「食材主檔」建立食材，才能登記進貨。');
+  const f=rcvF, sups=inv.supp.filter(s=>s.active||(f&&s.id===f.supplier)), tot=f?f.lines.reduce((t,L)=>t+(+L.qty||0)*(+L.price||0),0):0;
+  const form=!f?'':`<div class="col" style="border:1px solid var(--accent);border-radius:8px;padding:12px"><h2>${f.id?'修改進貨單':'新增進貨單'}</h2>
+<div class="params"><label for="iv-rcvF-date">進貨日期* ${ivIn('rcvF','date',f.date,{type:'date',label:'進貨日期'})}</label><label for="iv-rsup">供應商 <select id="iv-rsup" data-ivf="rcvF.supplier" aria-label="供應商"><option value="">（未指定）</option>${sups.map(s=>`<option value="${s.id}" ${s.id===f.supplier?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label><label for="iv-rcvF-invoice">單據號碼 ${ivIn('rcvF','invoice',f.invoice,{max:40,label:'單據號碼',ph:'發票或送貨單號'})}</label><label for="iv-rcvF-note">備註 ${ivIn('rcvF','note',f.note,{max:300,label:'備註'})}</label></div>
+${inv.supp.length?'':'<p class="note">還沒有建立供應商也可以先登記，之後到「供應商」補上。</p>'}
+<div class="scroll"><table><thead><tr><th>品項</th><th class="n">數量</th><th>單位</th><th class="n">單價（每單位）</th><th class="n">金額</th><th></th></tr></thead><tbody>${f.lines.map((L,i)=>rcvLineHtml(L,i,items)).join('')}</tbody><tfoot><tr><td colspan="4">合計</td><td class="n" id="iv-rtot">${$$(tot,0)}</td><td></td></tr></tfoot></table></div>
+<div class="brandbar"><button data-iv="rladd">再加一列</button><button class="pri" data-iv="rcvsave">儲存進貨單</button><button data-iv="rcvcancel">取消</button></div>
+<p class="note">單價空白時，會用食材主檔目前的進價。單位是食材主檔的「進貨單位」，例如公斤、包、箱。</p></div>`;
+  const diff=rcvDiff&&rcvDiff.length?`<div class="board"><b>這張單的進價跟食材主檔不一樣</b>${rcvDiff.map(d=>`<span>${esc(d.name)}：主檔 ${$$(d.from,2)} → 這次 ${$$(d.to,2)}／${esc(d.pu)}</span>`).join('')}<div class="brandbar">${RO()?'':'<button class="pri" data-iv="rcvupd">把這些進價更新到食材主檔</button>'}<button data-iv="rcvkeep">先不要</button></div><span class="note">更新後成本、定價等分析都會改用新價錢，價格紀錄也會自動記一筆。</span></div>`:'';
+  const months=[...new Set([today().slice(0,7),...inv.rcv.map(r=>mon(r.received_on))])].sort().reverse(); if(!rcvMon||!months.includes(rcvMon)) rcvMon=months[0];
+  const list=inv.rcv.filter(r=>mon(r.received_on)===rcvMon), mt=list.reduce((t,r)=>t+(+r.total||0),0), sn=id=>{ const s=inv.supp.find(x=>x.id===id); return s?s.name:'' };
+  const agg={}; list.forEach(r=>(r.lines||[]).forEach(L=>{ const o=agg[L.key]=agg[L.key]||{name:L.name,unit:L.unit,pack:+L.pack||1,base:0,amt:0}; o.base+=(+L.qty||0)*(+L.pack||1); o.amt+=+L.amount||0 }));
+  const aggRows=Object.keys(agg).map(k=>{ const o=agg[k], p=items.find(x=>x.key===k), avg=o.base?o.amt/o.base:NaN; return [o.amt,`<tr><td>${esc(p?p.name:o.name)}</td><td class="n">${p?qtyTxt(p,o.base):nf(o.base/o.pack,1)+' '+esc(o.unit)}</td><td class="n">${$$(o.amt,0)}</td><td class="n">${p?$$(avg*p.pack,2):'–'}</td><td class="n">${p?$$(p.cost*p.pack,2):'–'}</td><td>${p&&isFinite(avg)&&Math.abs(avg/p.cost-1)>=.05?(avg>p.cost?'<span class="pill bad">比主檔貴</span>':'<span class="pill good">比主檔便宜</span>'):''}</td></tr>`] }).sort((a,z)=>z[0]-a[0]).map(x=>x[1]).join('');
+  const rows=list.map(r=>{ const op=rcvOpen===r.id, k='rd:'+r.id;
+    return `<tr><td>${esc(r.received_on)}</td><td>${esc(sn(r.supplier_id)||r.supplier_name||'（未指定）')}</td><td>${esc(r.invoice_no||'')}</td><td class="n">${(r.lines||[]).length}</td><td class="n">${$$(+r.total,0)}</td><td>${esc((r.created_by_email||'').split('@')[0])}</td><td style="white-space:nowrap"><button data-iv="rcvview:${r.id}" aria-expanded="${op}">${op?'收合':'明細'}</button>${RO()?'':` <button data-iv="rcvedit:${r.id}">修改</button> <button class="${armed===k?'del armed':''}" data-iv="rcvdel:${r.id}">${armed===k?'確定刪除':'刪除'}</button>`}</td></tr>`
+      +(op?`<tr><td colspan="7" style="white-space:normal"><div class="scroll"><table><thead><tr><th>品項</th><th class="n">數量</th><th class="n">單價</th><th class="n">金額</th></tr></thead><tbody>${(r.lines||[]).map(L=>`<tr><td>${esc(L.name)}</td><td class="n">${nf(+L.qty,2).replace(/\.?0+$/,'')} ${esc(L.unit)}</td><td class="n">${$$(+L.price,2)}</td><td class="n">${$$(+L.amount,0)}</td></tr>`).join('')}</tbody></table></div>${r.note?`<p class="note">備註：${esc(r.note)}</p>`:''}</td></tr>`:'') }).join('');
+  return head+ivMsg()+diff+form+`<h2>進貨紀錄</h2><div class="params"><label for="iv-rmon">月份 <select id="iv-rmon" data-ivm="1" aria-label="月份">${months.map(m=>`<option value="${m}" ${m===rcvMon?'selected':''}>${m.replace('-',' 年 ')} 月</option>`).join('')}</select></label></div>
+<div class="tiles"><div class="tile"><span>這個月進貨金額</span><b>${$$(mt,0)}</b><span>${list.length} 張單</span></div><div class="tile"><span>往來供應商</span><b>${new Set(list.map(r=>r.supplier_id||r.supplier_name||'-')).size} 家</b></div><div class="tile"><span>進貨品項</span><b>${Object.keys(agg).length} 項</b></div></div>
+<div class="scroll"><table><thead><tr><th>日期</th><th>供應商</th><th>單據號碼</th><th class="n">品項數</th><th class="n">金額</th><th>登記人</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7">這個月還沒有進貨紀錄。</td></tr>'}</tbody></table></div>
+${aggRows?`<h2>這個月各品項進貨彙總</h2><div class="scroll"><table><thead><tr><th>品項</th><th class="n">進貨量</th><th class="n">金額</th><th class="n">平均單價</th><th class="n">主檔單價</th><th></th></tr></thead><tbody>${aggRows}</tbody></table></div><p class="note">平均單價跟主檔差 5% 以上會標示出來，代表主檔的價錢可能該更新了。</p>`:''}` };
+async function rcvSave(b,c){ const f=rcvF, items=invItems(b,c); if(!f||RO()) return;
+  if(!f.date){ invMsg='沒有儲存：請填進貨日期。'; return render() }
+  const ls=f.lines.filter(L=>L.key||L.qty!==''); if(!ls.length){ invMsg='沒有儲存：至少要填一列品項和數量。'; return render() }
+  const out=[]; for(const [i,L] of ls.entries()){ const p=items.find(x=>x.key===L.key), q=+L.qty, pr=L.price===''?(p?p.cost*p.pack:NaN):+L.price;
+    if(!p){ invMsg=`沒有儲存：第 ${i+1} 列還沒選品項。`; return render() }
+    if(!(q>0)){ invMsg=`沒有儲存：「${p.name}」的數量要大於 0。`; return render() }
+    if(!(pr>=0)){ invMsg=`沒有儲存：「${p.name}」的單價不正確。`; return render() }
+    const price=Math.round(pr*100)/100; out.push({key:p.key,name:p.name,qty:q,pack:p.pack,unit:p.pu,price,amount:Math.round(q*price*100)/100}) }
+  const s=inv.supp.find(x=>x.id===f.supplier), row={brand_id:cur,received_on:f.date,supplier_id:s?s.id:null,supplier_name:s?s.name:null,invoice_no:f.invoice.trim()||null,note:f.note.trim()||null,lines:out,total:Math.round(out.reduce((t,L)=>t+L.amount,0)*100)/100};
+  setStatus('儲存中…'); const r=f.id?await sbc.from('bom_receipts').update(row).eq('id',f.id).select().single():await sbc.from('bom_receipts').insert(row).select().single();
+  if(r.error){ setStatus('儲存失敗'); invMsg=invErr(r.error); return render() }
+  inv.rcv=[r.data,...inv.rcv.filter(x=>x.id!==r.data.id)].sort((a,z)=>a.received_on<z.received_on?1:a.received_on>z.received_on?-1:0);
+  rcvDiff=out.map(L=>{ const p=items.find(x=>x.key===L.key); return p&&p.self&&p.ix>=0&&Math.abs(L.price-(b.ingredients[p.ix].buyPrice||0))>=.01?{ix:p.ix,id:b.ingredients[p.ix].id,name:p.name,pu:p.pu,from:b.ingredients[p.ix].buyPrice||0,to:L.price}:null }).filter(Boolean);
+  rcvMon=mon(f.date); rcvF=null; invMsg=''; setStatus('已儲存進貨單'); render() }
+function rcvApplyPrices(b){ if(!rcvDiff||RO()) return; rcvDiff.forEach(d=>{ const g=b.ingredients[d.ix]; if(!g||g.id!==d.id) return; if(g.buyPrice!==d.to){ b.priceLog.push({id:g.id,name:g.name,date:today(),from:g.buyPrice,to:d.to}); if(b.priceLog.length>300) b.priceLog.shift() } g.buyPrice=d.to });
+  const n=rcvDiff.length; rcvDiff=null; touch(); invMsg='已更新 '+n+' 樣食材的進價，成本分析會自動改用新價錢。'; render() }
+
+/* 盤點 */
+function cntSum(id){ const ls=inv.lines[id]; if(!ls) return null; return {n:ls.length,v:ls.reduce((t,l)=>t+(+l.qty_base||0)*(+l.unit_cost||0),0)} }
+function cntPrev(k){ const i=inv.cnt.findIndex(x=>x.id===k.id); return inv.cnt.slice(i+1).find(x=>x.status==='closed'&&x.count_on<=k.count_on)||null }
+V.cnt=(b,c)=>{ const items=invItems(b,c), head=t=>`<div class="head"><div><h2>盤點</h2><p class="sub">${t}</p></div>${!RO()&&!cntSel&&!cntNew&&inv.brand===cur?'<button class="pri" data-iv="cntnew">開始新盤點</button>':''}</div>`;
+  if(!invEnsure()) return head('數一數店裡現在每樣東西還剩多少。')+invWait();
+  if(!items.length) return head('數一數店裡現在每樣東西還剩多少。')+EMPTY('這個品牌還沒有食材。請先到「食材主檔」建立食材，才能盤點。');
+  const k=cntSel&&inv.cnt.find(x=>x.id===cntSel);
+  if(!k){ cntSel=null; const nf2=cntNew;
+    const form=!nf2?'':`<div class="col" style="border:1px solid var(--accent);border-radius:8px;padding:12px"><h2>開始新盤點</h2><div class="params"><label for="iv-cntNew-date">盤點日期* ${ivIn('cntNew','date',nf2.date,{type:'date',label:'盤點日期'})}</label><label for="iv-cntNew-label">名稱 ${ivIn('cntNew','label',nf2.label,{max:60,label:'盤點名稱'})}</label></div><div class="brandbar"><button class="pri" data-iv="cntcreate">建立並開始盤點</button><button data-iv="cntcancel">取消</button></div><p class="note">建議每個月最後一天打烊後盤點一次。可以好幾個人用各自的手機同時盤，不會互相蓋掉。</p></div>`;
+    const rows=inv.cnt.map(x=>{ const s=cntSum(x.id); return `<tr><td>${esc(x.count_on)}</td><td>${esc(x.label||'')}</td><td>${x.status==='open'?'<span class="pill warn">盤點中</span>':'<span class="pill good">已完成</span>'}</td><td class="n">${s?s.n+' / '+items.length:'–'}</td><td class="n">${s?$$(s.v,0):'–'}</td><td>${esc((x.closed_by_email||x.created_by_email||'').split('@')[0])}</td><td><button data-iv="cntopen:${x.id}">${x.status==='open'&&!RO()?'繼續盤點':'查看'}</button></td></tr>` }).join('');
+    return head('數一數店裡現在每樣東西還剩多少。盤點完，系統就能算出這段期間實際用了多少，跟配方算的應該用量比對。')+ivMsg()+form+`<div class="scroll"><table><thead><tr><th>盤點日期</th><th>名稱</th><th>狀態</th><th class="n">已盤品項</th><th class="n">庫存金額</th><th>經手人</th><th></th></tr></thead><tbody>${rows||`<tr><td colspan="7">還沒有盤點紀錄。${RO()?'':'按右上角「開始新盤點」。'}</td></tr>`}</tbody></table></div>` }
+  const ls=inv.lines[k.id]; if(!ls){ cntLoadLines(k.id); return head('')+EMPTY('讀取中…') }
+  const by={}; ls.forEach(l=>by[l.item_key]=l); const pv=cntPrev(k), pls=pv&&inv.lines[pv.id], pby={}; (pls||[]).forEach(l=>pby[l.item_key]=l); if(pv&&!pls) cntLoadLines(pv.id);
+  const open=k.status==='open'&&!RO(), cats=[...new Set(items.map(x=>x.cat))], q=cntQ.trim().toLowerCase();
+  const show=items.filter(p=>(!cntCat||p.cat===cntCat)&&(!q||p.name.toLowerCase().includes(q))&&(!cntTodo||!by[p.key]));
+  const done=items.filter(p=>by[p.key]).length, tot=ls.reduce((t,l)=>t+(+l.qty_base||0)*(+l.unit_cost||0),0), cid=p=>p.key.replace(':','_');
+  const rows=show.map(p=>{ const l=by[p.key], pl=pby[p.key], v=l?+l.qty_base/p.pack:'';
+    return `<tr><td style="white-space:normal;min-width:6.5em">${esc(p.name)}</td><td class="n">${open?`<input type="number" step="any" min="0" inputmode="decimal" id="cq-${cid(p)}" data-cq="${esc(p.key)}" value="${l?esc(String(Math.round(v*1000)/1000)):''}" aria-label="${esc(p.name)}盤點數量（${esc(p.pu)}）" style="width:80px">`:(l?qtyTxt(p,+l.qty_base):'<span class="note">沒盤</span>')}</td><td>${esc(p.pu)}</td><td class="n">${pl?qtyTxt(p,+pl.qty_base):'–'}</td><td class="n" id="cv-${cid(p)}">${l?$$(+l.qty_base*(+l.unit_cost||0),0):'–'}</td></tr>` }).join('');
+  const ka='cc:'+k.id, kd='cx:'+k.id, todo=items.length-done;
+  return head(open?'在每一列填現在還剩多少，填完離開格子就會自動存。單位照食材主檔的進貨單位，可以填小數，例如半包填 0.5。':'這張盤點單已完成，只能查看。')+ivMsg()+`<div class="brandbar"><button data-iv="cntback">← 回盤點清單</button><button data-iv="cntrel">重新整理（看別人盤的）</button>${dl&&window.XLSX?'<button data-iv="cntxls">下載盤點表 Excel</button>':''}</div>
+<div class="tiles"><div class="tile"><span>${esc(k.label||'盤點')}</span><b>${esc(k.count_on)}</b><span>${k.status==='open'?'盤點中':'已完成 · '+esc((k.closed_by_email||'').split('@')[0])}</span></div><div class="tile"><span>已盤品項</span><b id="cntDone">${done} / ${items.length}</b><span>${todo?'還有 '+todo+' 項沒填':'全部填完了'}</span></div><div class="tile"><span>庫存金額</span><b id="cntTot">${$$(tot,0)}</b><span>${pv?'上次（'+esc(pv.count_on)+'）'+(pls?$$(pls.reduce((t,l)=>t+(+l.qty_base||0)*(+l.unit_cost||0),0),0):'讀取中'):'這是第一次盤點'}</span></div></div>
+<div class="params"><label for="iv-cq">找品項 <input type="search" id="iv-cq" data-cfilter="q" value="${esc(cntQ)}" placeholder="輸入名稱" aria-label="找品項"></label><label for="iv-cc">分類 <select id="iv-cc" data-cfilter="cat" aria-label="分類"><option value="">全部</option>${cats.map(x=>`<option ${x===cntCat?'selected':''}>${esc(x)}</option>`).join('')}</select></label><label for="iv-ct"><input type="checkbox" id="iv-ct" data-cfilter="todo" ${cntTodo?'checked':''}> 只看還沒填的</label></div>
+<div class="scroll"><table><thead><tr><th>品項</th><th class="n">這次數量</th><th>單位</th><th class="n">上次盤點</th><th class="n">金額</th></tr></thead><tbody>${rows||'<tr><td colspan="5">沒有符合的品項。</td></tr>'}</tbody></table></div>
+<div class="brandbar">${open?`<button class="pri ${armed===ka?'armed':''}" data-iv="cntclose:${k.id}">${armed===ka?(todo?'確定完成（沒填的 '+todo+' 項當作 0）':'確定完成盤點'):'完成盤點'}</button>`:''}${k.status==='closed'&&isAdmin()?`<button data-iv="cntreopen:${k.id}">重新開啟（顧問）</button>`:''}${!RO()&&(k.status==='open'||isAdmin())?`<button class="${armed===kd?'del armed':''}" data-iv="cntdel:${k.id}">${armed===kd?'確定刪除這張盤點單':'刪除盤點單'}</button>`:''}</div>
+<p class="note">金額用盤點當時食材主檔的門市進價計算（向總部叫貨的品項用加盟主進貨價）。完成後就不能再改，避免月結數字被動到；真的需要更正請聯絡顧問重新開啟。</p>` };
+async function cntLoadLines(id){ if(cntLoadLines.busy===id) return; cntLoadLines.busy=id; try{ inv.lines[id]=await pageAll(()=>sbc.from('bom_count_lines').select('*').eq('count_id',id)) }catch(e){ inv.lines[id]=inv.lines[id]||[]; invMsg='讀取盤點明細失敗，請按「重新整理」。' } cntLoadLines.busy=null; if(tab==='cnt') render() }
+async function cntSet(key,raw){ const b=B(), c=ctx(b), p=invItems(b,c).find(x=>x.key===key), k=inv.cnt.find(x=>x.id===cntSel); if(!p||!k||RO()) return;
+  const ls=inv.lines[k.id]=inv.lines[k.id]||[], cid=key.replace(':','_'); setStatus('儲存中…'); let r;
+  if(raw===''){ r=await sbc.from('bom_count_lines').delete().eq('count_id',k.id).eq('item_key',key); if(!r.error){ const i=ls.findIndex(l=>l.item_key===key); if(i>=0) ls.splice(i,1) } }
+  else { const v=parseFloat(raw); if(!(v>=0)){ setStatus('數量要是 0 以上的數字'); return }
+    r=await sbc.from('bom_count_lines').upsert({count_id:k.id,brand_id:cur,item_key:key,name:p.name,qty_base:Math.round(v*p.pack*1e6)/1e6,unit_cost:Math.round(p.cost*1e6)/1e6}).select().single();
+    if(!r.error){ const i=ls.findIndex(l=>l.item_key===key); if(i>=0) ls[i]=r.data; else ls.push(r.data) } }
+  if(r.error){ setStatus('儲存失敗'); invMsg=invErr(r.error); return render() }
+  setStatus('已儲存「'+p.name+'」'); const l=ls.find(x=>x.item_key===key), items=invItems(b,c), done=items.filter(x=>ls.some(y=>y.item_key===x.key)).length;
+  const cv=document.getElementById('cv-'+cid); if(cv) cv.textContent=l?$$(+l.qty_base*(+l.unit_cost||0),0):'–';
+  const dn=document.getElementById('cntDone'); if(dn) dn.textContent=done+' / '+items.length;
+  const tt=document.getElementById('cntTot'); if(tt) tt.textContent=$$(ls.reduce((t,x)=>t+(+x.qty_base||0)*(+x.unit_cost||0),0),0) }
+async function cntClose(id){ const b=B(), c=ctx(b), items=invItems(b,c), ls=inv.lines[id]||[]; if(RO()) return; setStatus('處理中…');
+  const miss=items.filter(p=>!ls.some(l=>l.item_key===p.key)).map(p=>({count_id:id,brand_id:cur,item_key:p.key,name:p.name,qty_base:0,unit_cost:Math.round(p.cost*1e6)/1e6}));
+  if(miss.length){ const r=await sbc.from('bom_count_lines').upsert(miss).select(); if(r.error){ setStatus('完成失敗'); invMsg=invErr(r.error); return render() } inv.lines[id]=ls.concat(r.data||[]) }
+  const r=await sbc.from('bom_counts').update({status:'closed'}).eq('id',id).select().single(); if(r.error){ setStatus('完成失敗'); invMsg=invErr(r.error); return render() }
+  inv.cnt=inv.cnt.map(x=>x.id===id?r.data:x); setStatus('盤點已完成'); invMsg='盤點已完成，庫存金額 '+$$(cntSum(id).v,0)+'。'; render() }
+function cntXls(){ const b=B(), c=ctx(b), k=inv.cnt.find(x=>x.id===cntSel); if(!k||!window.XLSX||!dl) return; const by={}; (inv.lines[k.id]||[]).forEach(l=>by[l.item_key]=l);
+  const rows=[['分類','品項','單位','數量','單價（每單位）','金額']].concat(invItems(b,c).map(p=>{ const l=by[p.key], q=l?+l.qty_base/p.pack:''; return [p.cat,p.name,p.pu,q===''?'':Math.round(q*1000)/1000,Math.round(p.cost*p.pack*100)/100,l?Math.round(+l.qty_base*(+l.unit_cost||0)):''] }));
+  const ws=XLSX.utils.aoa_to_sheet(rows), wb=XLSX.utils.book_new(); ws['!cols']=[{wch:12},{wch:20},{wch:8},{wch:10},{wch:14},{wch:12}]; XLSX.utils.book_append_sheet(wb,ws,'盤點表');
+  dl.save({filename:`${b.name}_盤點_${k.count_on}.xlsx`,data:XLSX.write(wb,{type:'array',bookType:'xlsx'})}); setStatus('盤點表已下載') }
+
+document.addEventListener('input',e=>{ const el=e.target, d=el.dataset||{};
+  if(d.ivf){ const [o,k]=d.ivf.split('.'), f=IVS[o]&&IVS[o](); if(f) f[k]=el.value; return }
+  if(d.ivl&&rcvF){ const [i,k]=d.ivl.split('.'), L=rcvF.lines[+i]; if(!L) return; L[k]=el.value; if(k==='key') return;
+    const items=invItems(B(),ctx(B())), p=items.find(x=>x.key===L.key), pr=L.price===''?(p?p.cost*p.pack:0):+L.price, a=document.getElementById('iv-ra-'+i); if(a) a.textContent=$$((+L.qty||0)*(pr||0),0);
+    const t=document.getElementById('iv-rtot'); if(t) t.textContent=$$(rcvF.lines.reduce((s,x)=>{ const q=items.find(y=>y.key===x.key); return s+(+x.qty||0)*(x.price===''?(q?q.cost*q.pack:0):+x.price) },0),0); return }
+  if(d.cfilter==='q'){ cntQ=el.value; clearTimeout(cntQT); cntQT=setTimeout(()=>{ const pos=el.selectionStart; render(); const n=document.getElementById('iv-cq'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos) }catch(x){} } },250) } });
+document.addEventListener('change',e=>{ const el=e.target, d=el.dataset||{};
+  if(d.ivl&&rcvF&&d.ivl.endsWith('.key')){ render(); return }
+  if(d.ivm){ rcvMon=el.value; rcvOpen=null; render(); return }
+  if(d.cfilter==='cat'){ cntCat=el.value; render(); return } if(d.cfilter==='todo'){ cntTodo=el.checked; render(); return }
+  if(d.cq&&cntSel) cntSet(d.cq,el.value.trim()) });
+document.addEventListener('click',async e=>{ const t=e.target.closest('button'); if(!t||!t.dataset.iv) return; const [a,id]=t.dataset.iv.split(':'), b=B(); if(!b) return;
+  const arm=k=>{ if(armed!==k){ armed=k; render(); return false } armed=null; return true };
+  if(a==='reload'){ inv.brand=null; invEnsure(); return } if(a==='msgok'){ invMsg=''; render(); return }
+  if(RO()&&!['rcvview','cntopen','cntback','cntrel','cntxls','rcvkeep'].includes(a)) return;
+  if(a==='supnew'){ supF={id:null,name:'',contact:'',phone:'',line_id:'',pay_terms:'',note:''}; render(); const n=document.getElementById('iv-supF-name'); if(n) n.focus(); return }
+  if(a==='supedit'){ const s=inv.supp.find(x=>x.id===id); if(s){ supF={id:s.id,name:s.name||'',contact:s.contact||'',phone:s.phone||'',line_id:s.line_id||'',pay_terms:s.pay_terms||'',note:s.note||''}; window.scrollTo(0,0); render() } return }
+  if(a==='supcancel'){ supF=null; render(); return }
+  if(a==='supsave'){ const f=supF; if(!f) return; const name=f.name.trim(); if(!name){ invMsg='沒有儲存：請填供應商名稱。'; return render() }
+    if(inv.supp.some(s=>s.id!==f.id&&s.name===name)){ invMsg='沒有儲存：已經有一家叫「'+name+'」的供應商。'; return render() }
+    const row={brand_id:cur,name,contact:f.contact.trim()||null,phone:f.phone.trim()||null,line_id:f.line_id.trim()||null,pay_terms:f.pay_terms.trim()||null,note:f.note.trim()||null}; setStatus('儲存中…');
+    const r=f.id?await sbc.from('bom_suppliers').update(row).eq('id',f.id).select().single():await sbc.from('bom_suppliers').insert(row).select().single();
+    if(r.error){ setStatus('儲存失敗'); invMsg=invErr(r.error); return render() }
+    inv.supp=[...inv.supp.filter(x=>x.id!==r.data.id),r.data].sort((x,y)=>x.name.localeCompare(y.name,'zh-Hant')); supF=null; invMsg=''; setStatus('已儲存供應商'); render(); return }
+  if(a==='suptog'){ const s=inv.supp.find(x=>x.id===id); if(!s) return; const r=await sbc.from('bom_suppliers').update({active:!s.active}).eq('id',id).select().single(); if(r.error){ invMsg=invErr(r.error) } else inv.supp=inv.supp.map(x=>x.id===id?r.data:x); render(); return }
+  if(a==='supdel'){ if(!arm('sd:'+id)) return; const r=await sbc.from('bom_suppliers').delete().eq('id',id); if(r.error) invMsg=invErr(r.error); else { inv.supp=inv.supp.filter(x=>x.id!==id); inv.rcv.forEach(x=>{ if(x.supplier_id===id) x.supplier_id=null }) } render(); return }
+  if(a==='rcvnew'){ rcvF=rcvBlank(); rcvDiff=null; render(); return }
+  if(a==='rcvcancel'){ rcvF=null; render(); return }
+  if(a==='rladd'&&rcvF){ rcvF.lines.push({key:'',qty:'',price:''}); render(); const n=document.getElementById('iv-rl-'+(rcvF.lines.length-1)); if(n) n.focus(); return }
+  if(a==='rlrm'&&rcvF){ rcvF.lines.splice(+id,1); render(); return }
+  if(a==='rcvsave'){ rcvSave(b,ctx(b)); return }
+  if(a==='rcvview'){ rcvOpen=rcvOpen===id?null:id; render(); return }
+  if(a==='rcvedit'){ const r=inv.rcv.find(x=>x.id===id); if(!r) return; rcvF={id:r.id,date:r.received_on,supplier:r.supplier_id||'',invoice:r.invoice_no||'',note:r.note||'',lines:(r.lines||[]).map(L=>({key:L.key,qty:String(L.qty),price:String(L.price)}))}; if(!rcvF.lines.length) rcvF.lines=[{key:'',qty:'',price:''}]; rcvDiff=null; window.scrollTo(0,0); render(); return }
+  if(a==='rcvdel'){ if(!arm('rd:'+id)) return; const r=await sbc.from('bom_receipts').delete().eq('id',id); if(r.error) invMsg=invErr(r.error); else inv.rcv=inv.rcv.filter(x=>x.id!==id); render(); return }
+  if(a==='rcvupd'){ rcvApplyPrices(b); return } if(a==='rcvkeep'){ rcvDiff=null; render(); return }
+  if(a==='cntnew'){ const d=today(); cntNew={date:d,label:(+d.slice(5,7))+' 月盤點'}; render(); return }
+  if(a==='cntcancel'){ cntNew=null; render(); return }
+  if(a==='cntcreate'){ const f=cntNew; if(!f||!f.date){ invMsg='沒有建立：請填盤點日期。'; return render() } setStatus('建立中…');
+    const r=await sbc.from('bom_counts').insert({brand_id:cur,count_on:f.date,label:f.label.trim()||null}).select().single(); if(r.error){ setStatus('建立失敗'); invMsg=invErr(r.error); return render() }
+    inv.cnt=[r.data,...inv.cnt].sort((x,y)=>x.count_on<y.count_on?1:x.count_on>y.count_on?-1:0); inv.lines[r.data.id]=[]; cntNew=null; cntSel=r.data.id; cntQ=''; cntCat=''; cntTodo=false; setStatus('已建立盤點單'); render(); return }
+  if(a==='cntopen'){ cntSel=id; cntQ=''; cntCat=''; cntTodo=false; invMsg=''; window.scrollTo(0,0); render(); return }
+  if(a==='cntback'){ cntSel=null; invMsg=''; render(); return }
+  if(a==='cntrel'){ delete inv.lines[cntSel]; render(); return }
+  if(a==='cntxls'){ cntXls(); return }
+  if(a==='cntclose'){ if(!arm('cc:'+id)) return; const ae=document.activeElement; if(ae&&ae.dataset&&ae.dataset.cq) await cntSet(ae.dataset.cq,ae.value.trim()); cntClose(id); return }
+  if(a==='cntreopen'&&isAdmin()){ const r=await sbc.from('bom_counts').update({status:'open'}).eq('id',id).select().single(); if(r.error) invMsg=invErr(r.error); else inv.cnt=inv.cnt.map(x=>x.id===id?r.data:x); render(); return }
+  if(a==='cntdel'){ if(!arm('cx:'+id)) return; const r=await sbc.from('bom_counts').delete().eq('id',id); if(r.error) invMsg=invErr(r.error); else { inv.cnt=inv.cnt.filter(x=>x.id!==id); delete inv.lines[id]; cntSel=null } render(); return } });
+
 async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home'; wantAdmin=h==='admin';
   if(/error_code=|error=access_denied/.test(h)){ authMsg='這個連結已經過期或已經用過。請在下面重新操作一次（忘記密碼或重寄驗證信），再點最新那封信裡的連結。'; try{history.replaceState(null,'',location.pathname)}catch(x){} }
   if(!window.supabase){ G='error'; authMsg='無法載入登入元件，請檢查網路後重新整理。'; return render() }
@@ -422,7 +614,7 @@ async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home'; 
   dl={save:async({filename,data})=>{ const u=URL.createObjectURL(new Blob([data])), a=document.createElement('a'); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000) }};
   sbc.auth.onAuthStateChange((ev,s)=>{ setTimeout(()=>{
     if(ev==='PASSWORD_RECOVERY'){ me=s&&s.user; G='recover'; authMsg=''; render(); return }
-    if(ev==='SIGNED_OUT'){ if(wantAdmin) tab='admin'; me=null; prof=null; brands={}; versions=[]; notice=''; logRows=null; ups=null; imp=null; upMsg=''; annRead=new Set(); annReads=[]; annEdit=null; setTimeout(()=>loadAnns().then(render),0); cur=null; G='login'; authMode='in'; render(); return }
+    if(ev==='SIGNED_OUT'){ if(wantAdmin) tab='admin'; me=null; prof=null; brands={}; versions=[]; notice=''; logRows=null; ups=null; inv={brand:null,loading:false,err:'',supp:[],rcv:[],cnt:[],lines:{}}; cntSel=null; rcvF=null; supF=null; cntNew=null; rcvDiff=null; invMsg=''; imp=null; upMsg=''; annRead=new Set(); annReads=[]; annEdit=null; setTimeout(()=>loadAnns().then(render),0); cur=null; G='login'; authMode='in'; render(); return }
     if(ev==='SIGNED_IN'&&s&&G!=='recover'&&(!me||me.id!==s.user.id)){ me=s.user; G='loading'; render(); loadAll() } },0) });
   const {data}=await sbc.auth.getSession();
   if(data&&data.session){ if(!me){ me=data.session.user; G='loading'; render(); loadAll() } } else if(G==='loading'){ G='login'; render() } }

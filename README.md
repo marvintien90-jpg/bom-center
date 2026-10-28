@@ -7,3 +7,7 @@
 ## 原始檔
 
 `src/` 內是產生 `index.html` 的來源：`base-page.html`（試算功能本體）、`sitecode.js`（登入、授權、存檔與防覆蓋）、`buildsite.js`（組合腳本）。
+
+## 庫存與進貨（2026-10 新增）
+
+盤點、進貨登記、供應商存在獨立資料表 `bom_suppliers`、`bom_receipts`、`bom_counts`、`bom_count_lines`，權限沿用 `bom_private.can_read／can_write`。結構見 `supabase/migrations/`。上線前跑 `tests/` 的模擬測試。
