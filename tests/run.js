@@ -2,10 +2,10 @@ const {chromium}=require('playwright'); const fs=require('fs'), path=require('pa
 const SITE=process.argv[2], MOCK=fs.readFileSync(path.join(__dirname,'mock.js'),'utf8'), XL=fs.readFileSync(path.join(__dirname,'node_modules/xlsx/dist/xlsx.full.min.js'),'utf8');
 let fails=0; const ok=(c,m)=>{ if(c) console.log('  ✓ '+m); else { fails++; console.log('  ✗ '+m) } };
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function open(br,role,w){ const ctx=await br.newContext({viewport:{width:w||1280,height:900}}); const pg=await ctx.newPage(); const errs=[];
+async function open(br,role,w,link){ const ctx=await br.newContext({viewport:{width:w||1280,height:900}}); const pg=await ctx.newPage(); const errs=[];
   pg.on('pageerror',e=>errs.push(e.message+' @ '+(e.stack||'').split('\n').slice(1,3).join(' '))); pg.on('console',m=>{ if(m.type()==='error'&&!/favicon|Failed to load resource/.test(m.text())) errs.push('console: '+m.text()) });
   await pg.route('**/*',r=>{ const u=r.request().url();
-    if(u.includes('supabase-js')) return r.fulfill({contentType:'application/javascript',body:`window.__MOCK=${JSON.stringify({role})};\n`+MOCK});
+    if(u.includes('supabase-js')) return r.fulfill({contentType:'application/javascript',body:`window.__MOCK=${JSON.stringify({role,link})};\n`+MOCK});
     if(u.includes('xlsx')) return r.fulfill({contentType:'application/javascript',body:XL});
     if(u.startsWith('file:')) return r.continue(); return r.fulfill({status:404,body:''}) });
   await pg.goto('file://'+SITE); await sleep(400); return {pg,errs,ctx} }
@@ -56,6 +56,16 @@ async function allTabs(pg,label){ const ids=await pg.$$eval('#nav [data-tab]',bs
     ok(/牛五花肉片\s+5\.5 公斤\s+10 公斤\s+0 公斤\s+15\.5 公斤/.test(t),'實際用量＝期初 5.5＋進貨 10−期末 0');
     ok(t.includes('用太少'),'差異超過 10% 標示');
     await fill(pg,'#iv-vrev','500000'); t=await main(pg); ok(t.includes('實際食材成本率'),'填營業額後顯示成本率');
+    await tab(pg,'brands'); ok(await pg.$('[data-plink="b1"]'),'品牌管理有對應損益分析選單');
+    const opt=await pg.$$eval('[data-plink="b1"] option',os=>os.map(o=>o.value).find(v=>v.includes('中山店'))); await pg.selectOption('[data-plink="b1"]',opt); await sleep(300);
+    ok(await pg.evaluate(()=>window.__db.bom_pl_link.length===1&&window.__db.bom_pl_link[0].store_name==='中山店'),'選擇後寫入對應');
+    await tab(pg,'pl'); t=await main(pg); ok(t.includes('損益數字來自損益分析中心')&&t.includes('測試客戶／測試石鍋／中山店'),'損益趨勢改讀損益中心並註明來源');
+    ok(await pg.$$eval('#main [data-p^="periods."]',es=>es.length>0&&es.every(e=>e.disabled)),'對應後損益數字不能在 BOM 改');
+    await pg.evaluate(()=>{ touch(); }); await sleep(1300); ok(await pg.evaluate(()=>(window.__db.bom_brands[0].data.periods||[]).length===0),'存檔不會把損益中心的數字寫進品牌資料');
+    await tab(pg,'var'); t=await main(pg); ok(t.includes('帶入損益表營業額 $520,000（10月）'),'用量差異可帶入損益表營業額');
+    await pg.evaluate(()=>document.querySelector('[data-varpl]').click()); await sleep(150); t=await main(pg); ok(t.includes('實際食材成本率'),'帶入後顯示實際成本率');
+    await tab(pg,'brands'); await pg.selectOption('[data-plink="b1"]',''); await sleep(300); ok(await pg.evaluate(()=>window.__db.bom_pl_link.length===0),'可取消對應');
+    await tab(pg,'pl'); t=await main(pg); ok(!t.includes('損益數字來自損益分析中心'),'取消後恢復原本資料');
     await allTabs(pg,'管理員'); ok(!errs.length,'沒有頁面錯誤'+(errs.length?'：'+errs.join(' | '):'')); }
   /* 進階版可編輯業主 */
   console.log('進階版業主'); { const {pg,errs}=await open(br,'pro');
@@ -74,6 +84,7 @@ async function allTabs(pg,label){ const ids=await pg.$$eval('#nav [data-tab]',bs
     await tab(pg,'cnt'); await iv(pg,'cntopen:c0'); let t=await main(pg); ok(t.includes('5.5 公斤')&&!(await pg.$('[data-cq]')),'只讀可查看盤點內容');
     ok(await pg.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),'盤點明細手機沒有水平捲動');
     await allTabs(pg,'基本版只讀'); ok(!errs.length,'沒有頁面錯誤'+(errs.length?'：'+errs.join(' | '):'')); }
+  console.log('已對應損益中心的業主'); { const {pg,errs}=await open(br,'pro',1280,true); await tab(pg,'pl'); const t=await main(pg); ok(t.includes('損益數字來自損益分析中心')&&/52(0,000|萬)/.test(t)||t.includes('520,000'),'業主看到損益中心數字'); await allTabs(pg,'已對應業主'); ok(!errs.length,'沒有頁面錯誤'+(errs.length?'：'+errs.join(' | '):'')); }
   console.log('直接打開用量差異'); { const {pg,errs}=await open(br,'pro'); await tab(pg,'var'); await sleep(300); const t=await main(pg); ok(t.includes('目前有 1 次')&&!t.includes('讀取中'),'第一次就開用量差異也會載入'); ok(!errs.length,'沒有頁面錯誤'); }
   console.log('待開通／未登入'); { const {pg,errs}=await open(br,'pending'); ok((await main(pg)).includes('開通'),'待開通畫面'); ok(!errs.length,'沒有頁面錯誤'); }
   { const {pg,errs}=await open(br,'none'); ok(await pg.$('#auEmail'),'未登入顯示登入畫面'); ok(!errs.length,'沒有頁面錯誤'+(errs.length?'：'+errs.join(' | '):'')); }

@@ -605,7 +605,7 @@ function touch(){ if(!cur||RO()) return; dirty.add(cur); setStatus('儲存中…
 function flush(){ const ids=[...dirty]; dirty.clear();
   ids.forEach(id=>{ chain=chain.then(()=>saveBrand(id)).catch(()=>{ saving.delete(id); setStatus('儲存失敗：連線中斷，請重新整理後再試') }) }) }
 /* 每次存檔都帶著「我手上是第幾版」；資料庫裡的版本若已被別人往前推，這次就不寫入 */
-async function saveBrand(id){ const b=brands[id]; if(!b) return; const body=JSON.parse(JSON.stringify(b)), base=revs[id]; saving.add(id);
+async function saveBrand(id){ const b=brands[id]; if(!b) return; const body=plain(id), base=revs[id]; saving.add(id);
   const res=base===undefined
     ? await sbc.from('bom_brands').insert({id,name:b.name,data:body,edited_on_site:true}).select('id,rev')
     : await sbc.from('bom_brands').update({name:b.name,data:body,edited_on_site:true,rev:base+1}).eq('id',id).eq('rev',base).select('id,rev');
@@ -614,10 +614,10 @@ async function saveBrand(id){ const b=brands[id]; if(!b) return; const body=JSON
   if(res.error&&!/BOM_CONFLICT/.test(res.error.message||'')) throw res.error;
   if(res.data&&res.data.length){ revs[id]=res.data[0].rev; if(!dirty.size) setStatus('已儲存'); return }
   await resolveConflict(id) }
-function applyRemote(r){ const d=r.data&&typeof r.data==='object'?r.data:{}; brands[r.id]=norm(Object.assign(blank(r.name),d,{name:r.name})); revs[r.id]=r.rev }
+function applyRemote(r){ const d=r.data&&typeof r.data==='object'?r.data:{}; brands[r.id]=norm(Object.assign(blank(r.name),d,{name:r.name})); revs[r.id]=r.rev; delete ownP[r.id]; plApply(r.id) }
 async function loadVersions(){ const vs=await sbc.from('bom_snapshots').select('id,brand_id,brand_name,note,data,created_at,created_by_email,auto').order('created_at',{ascending:false}).limit(150);
   versions=(vs.data||[]).map(r=>({id:r.id,brandId:r.brand_id,brandName:r.brand_name,note:r.note,at:r.created_at,data:r.data,by:r.created_by_email,auto:r.auto,synced:true})) }
-async function resolveConflict(id){ const mine=JSON.parse(JSON.stringify(brands[id])); dirty.delete(id);
+async function resolveConflict(id){ const mine=plain(id); dirty.delete(id);
   const {data:r}=await sbc.from('bom_brands').select('id,name,data,rev,updated_by_email').eq('id',id).maybeSingle();
   if(!r||r.rev===revs[id]){ setStatus('儲存失敗：你沒有修改這個品牌的權限'); return }
   const {error}=await sbc.from('bom_snapshots').insert({id:uid('c')+Date.now().toString(36),brand_id:id,brand_name:mine.name,note:'衝突保留：我未存入的修改',data:mine});
@@ -647,7 +647,7 @@ function siteDeleteBrand(id){ const keep=brands[id]||null, keepRev=revs[id]; del
   sbc.from("bom_brands").delete().eq("id",id).select("id").then(({data,error})=>{ if(error||!data||!data.length){ window.__delErr=error?(error.code+" "+error.message):"0 rows"; notice="品牌沒有刪除成功"+(error?"（"+(error.message||"").slice(0,80)+"）":"：資料庫沒有刪到任何資料")+"。資料仍然保留，請把這段訊息告訴顧問。"; setStatus("刪除失敗"); checkRemote().then(render); render() } else { setStatus("已刪除，並已自動保留一份刪除前備份"); loadVersions() } }) }
 function siteDeleteVer(id){ sbc.from('bom_snapshots').delete().eq('id',id).then(({error})=>{ if(error) setStatus('刪除失敗：只有管理員可以刪除存檔點') }) }
 async function verCreate(brandId,note){ const b=brands[brandId]; if(!b||RO()) return null;
-  const v={id:uid('v')+Date.now().toString(36),brandId,brandName:b.name,note:note||'手動存檔',at:new Date().toISOString(),data:JSON.parse(JSON.stringify(b)),by:me&&me.email,auto:false,synced:true};
+  const v={id:uid('v')+Date.now().toString(36),brandId,brandName:b.name,note:note||'手動存檔',at:new Date().toISOString(),data:plain(brandId),by:me&&me.email,auto:false,synced:true};
   const {error}=await sbc.from('bom_snapshots').insert({id:v.id,brand_id:brandId,brand_name:b.name,note:v.note,data:v.data,created_at:v.at});
   if(error){ setStatus(/BOM_LIMIT/.test(error.message||'')?'存檔點已達上限，請聯絡顧問清理舊的存檔點':'存檔點建立失敗'); return null } versions.unshift(v); return v }
 
@@ -845,12 +845,12 @@ document.addEventListener('click',e=>{ const dlg=document.getElementById('annDlg
 
 /* ---- 品牌管理（僅管理員） ---- */
 function touchId(id){ dirty.add(id); setStatus('儲存中…'); clearTimeout(timer); timer=setTimeout(flush,900) }
-function makeBrand(name,from){ const id=uid('b'), src=from&&brands[from]; brands[id]=src?norm(Object.assign(JSON.parse(JSON.stringify(src)),{name,sample:false})):norm(blank(name)); return id }
+function makeBrand(name,from){ const id=uid('b'), src=from&&brands[from]; brands[id]=src?norm(Object.assign(plain(from),{name,sample:false})):norm(blank(name)); return id }
 V.brands=()=>{ const ids=Object.keys(brands), owners=id=>adm.access.filter(a=>a.brand_id===id).map(a=>(adm.profiles.find(p=>p.user_id===a.user_id)||{})).filter(p=>p.email);
   return `<div class="head"><div><h2>品牌管理</h2><p class="sub">每個品牌是一套獨立的食材、配方和損益資料。先在這裡建立品牌，再到「授權管理」指派給業主。品牌名稱可以隨時直接修改。</p></div></div>
 <h2>新增品牌</h2><form id="nbForm" class="params"><label for="nbName">品牌名稱 <input type="text" id="nbName" required maxlength="60" placeholder="例如：嗑肉石鍋" style="min-width:200px"></label><label for="nbFrom">起始內容 <select id="nbFrom"><option value="">空白（從頭建立）</option>${ids.map(id=>`<option value="${id}">複製「${esc(brands[id].name)}」的資料</option>`).join('')}</select></label><button class="pri" type="submit">建立品牌</button></form>
-<h2>所有品牌</h2><div class="scroll"><table><thead><tr><th>品牌名稱（可直接修改）</th><th class="n">食材</th><th class="n">品項</th><th class="n">損益期數</th><th>可使用的業主</th><th></th></tr></thead><tbody>${ids.map(id=>{ const b=brands[id], os=owners(id), k='bd:'+id; return `<tr><td><input type="text" data-bname="${id}" value="${esc(b.name)}" maxlength="60" aria-label="品牌名稱"></td><td class="n">${b.ingredients.length}</td><td class="n">${b.items.length}</td><td class="n">${(b.periods||[]).length}</td><td style="white-space:normal">${os.map(p=>esc(p.display_name||p.email)+(p.status==='active'?'':'（'+({pending:'待開通',suspended:'停權'}[p.status]||'')+'）')).join('、')||'<span class="pill warn">尚未指派</span>'}</td><td><button data-bopen="${id}">開啟</button> <button data-bexp="${id}">匯出 Excel</button> <button class="del ${armed===k?'armed':''}" data-bdel="${id}">${armed===k?'確定刪除':'刪除'}</button></td></tr>` }).join('')||'<tr><td colspan="6">還沒有品牌。請用上方表單建立第一個。</td></tr>'}</tbody></table></div>
-<p class="note">刪除品牌前系統會自動保留一份備份。刪除後，原本被指派的業主就看不到這個品牌。業主解約需要交接資料時，按「匯出 Excel」會下載這個品牌所有頁面的完整資料。</p>` };
+<h2>所有品牌</h2><div class="scroll"><table><thead><tr><th>品牌名稱（可直接修改）</th><th class="n">食材</th><th class="n">品項</th><th class="n">損益期數</th><th>對應損益分析</th><th>可使用的業主</th><th></th></tr></thead><tbody>${ids.map(id=>{ const b=brands[id], os=owners(id), k='bd:'+id; return `<tr><td><input type="text" data-bname="${id}" value="${esc(b.name)}" maxlength="60" aria-label="品牌名稱"></td><td class="n">${b.ingredients.length}</td><td class="n">${b.items.length}</td><td class="n">${(b.periods||[]).length}</td><td>${plCell(id)}</td><td style="white-space:normal">${os.map(p=>esc(p.display_name||p.email)+(p.status==='active'?'':'（'+({pending:'待開通',suspended:'停權'}[p.status]||'')+'）')).join('、')||'<span class="pill warn">尚未指派</span>'}</td><td><button data-bopen="${id}">開啟</button> <button data-bexp="${id}">匯出 Excel</button> <button class="del ${armed===k?'armed':''}" data-bdel="${id}">${armed===k?'確定刪除':'刪除'}</button></td></tr>` }).join('')||'<tr><td colspan="7">還沒有品牌。請用上方表單建立第一個。</td></tr>'}</tbody></table></div>
+<p class="note">刪除品牌前系統會自動保留一份備份。刪除後，原本被指派的業主就看不到這個品牌。業主解約需要交接資料時，按「匯出 Excel」會下載這個品牌所有頁面的完整資料。「對應損益分析」選好後，這個品牌的損益趨勢、損益兩平和用量差異會直接讀損益分析中心的月報，不用再另外導入。</p>` };
 
 /* ---- 授權管理（僅管理員） ---- */
 async function loadAdmin(){ const [p,a]=await Promise.all([sbc.from('bom_profiles').select('*').order('created_at',{ascending:false}),sbc.from('bom_brand_access').select('*')]); adm={profiles:p.data||[],access:a.data||[]} }
@@ -934,8 +934,8 @@ async function loadAll(){ try{
     const bs=await sbc.from('bom_brands').select('id,name,data,rev').order('name');
     if(bs.error) throw bs.error;
     brands={}; Object.keys(revs).forEach(k=>delete revs[k]); (bs.data||[]).forEach(applyRemote);
-    await loadVersions(); await loadAnns();
-    if(isAdmin()){ if(!adminTab){ TABS[TABS.length-1][2].push(['admin','授權管理']); adminTab=true } await loadAdmin() }
+    await plLoad(); await loadVersions(); await loadAnns();
+    if(isAdmin()){ if(!adminTab){ TABS[TABS.length-1][2].push(['admin','授權管理']); adminTab=true } await loadAdmin(); try{ plEnts=(await sbc.rpc('bom_pl_entities')).data||[] }catch(x){ plEnts=[] } }
     cur=null; pick(); if(wantAdmin&&!isAdmin()) notice='你開的是管理員專用的連結，但目前登入的是業主帳號 '+me.email+'。要進授權管理，請先登出，再用管理員帳號登入。'; if(isAdmin()) wantAdmin=false; if(!V[tab]||!allowed(tab)||((tab==='admin'||tab==='brands'||tab==='annc')&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }); loadUps().then(()=>{ if(tab==='home'||tab==='io') render() }) }
   catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
 
@@ -956,7 +956,9 @@ function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.cla
   if(!allowed(tab)){ $('#main').innerHTML=`<div class="empty"><h2>「${LAB[tab]}」是進階版功能</h2><p class="sub">你目前的方案是${PLAN_NAME[prof.plan]}。想使用這項分析，請聯絡 ${LICENSOR} 升級為進階版。升級後原本的資料會直接沿用。</p><button data-tab="home">回首頁</button></div>`; return }
   if(TIP[tab]){ const n=TIP[tab][1]; $('#main').insertAdjacentHTML('afterbegin',`<div class="tip"><span><b>提示</b>　${TIP[tab][0]}</span>${n&&allowed(n)?`<button data-tab="${n}">下一步：${LAB[n]} →</button>`:''}</div>`) }
   if(RO()){ document.querySelectorAll('#main [data-p],#banner [data-p]').forEach(el=>{ if(!el.dataset.ui&&!el.dataset.mx&&!el.dataset.sim) el.disabled=true });
-    document.querySelectorAll('#main [data-add],#main [data-del],#main [data-act],#main [data-arm],#main #verNote').forEach(el=>el.hidden=true) } }
+    document.querySelectorAll('#main [data-add],#main [data-del],#main [data-act],#main [data-arm],#main #verNote').forEach(el=>el.hidden=true) }
+  { const d=plData[cur]; if((tab==='pl'||tab==='be')&&d&&d.periods.length){ document.querySelectorAll('#main [data-p^="periods."]').forEach(el=>el.disabled=true); document.querySelectorAll('#main [data-del^="periods."]').forEach(el=>el.hidden=true);
+    const tip=$('#main .tip'), html=`<div class="board" style="margin-bottom:10px"><b>損益數字來自損益分析中心</b><span>${esc(plName(plLinks[cur]))}，共 ${d.periods.length} 個月（${esc(d.periods[0].month)}～${esc(d.periods[d.periods.length-1].month)}）。要修改或新增月份，請到<a href="${PL_URL}" target="_blank" rel="noopener">損益分析中心</a>上傳。</span></div>`; if(tip) tip.insertAdjacentHTML('afterend',html); else $('#main').insertAdjacentHTML('afterbegin',html) } } }
 
 document.addEventListener('submit',e=>{ if(e.target.id==='annForm'&&isAdmin()){ e.preventDefault(); saveAnn('published'); return }
   if(e.target.id==='pubForm'&&isAdmin()){ e.preventDefault(); const v={}; ['line_url','basic_price','pro_price','intro'].forEach(f=>{ v[f]=(document.getElementById('pub-'+f).value||'').trim()||null });
@@ -995,6 +997,28 @@ document.addEventListener('change',async e=>{ const el=e.target; if(!isAdmin()) 
     if(!error&&f==='status'&&el.value==='active'&&was.status!=='active'&&was.email) m=(await approvalSent(was.email))?'已開通，並已自動寄出開通通知信給 '+was.email:'已開通。通知信未寄出：寄信服務尚未設定完成，設定後可按「重寄開通信」';
     setStatus(m); await loadAdmin(); render() }
   else if(el.dataset.admb){ const [uidv,bid]=el.dataset.admb.split('|'); const r=el.checked?await sbc.from('bom_brand_access').insert({user_id:uidv,brand_id:bid}):await sbc.from('bom_brand_access').delete().eq('user_id',uidv).eq('brand_id',bid); setStatus(r.error?'更新失敗':'品牌權限已更新'); await loadAdmin(); render() } });
+
+/* ---- 與損益分析中心串接：對應的品牌直接讀損益中心的月報（不存進品牌資料，品牌裡原本手動複製的那份保留不動） ---- */
+const PL_URL='https://marvintien90-jpg.github.io/pl-center/';
+let plLinks={}, plData={}, ownP={}, plEnts=null;
+function plConv(x){ const [y,m]=x.month.split('-'); return {label:(+m)+'月',period:`${y} 年 ${+m} 月`,source:'損益分析中心'+(x.source?'（'+x.source+'）':''),month:x.month,revenue:x.revenue||[],purchases:x.purchases||[],expenses:x.expenses||[]} }
+function plApply(id){ const b=brands[id], d=plData[id]; if(!b) return; if(!d||!d.periods.length){ if(ownP[id]!==undefined){ b.periods=ownP[id]; delete ownP[id] } return }
+  if(ownP[id]===undefined) ownP[id]=b.periods; b.periods=d.periods.map(plConv) }
+/* 存檔、存檔點都要存品牌自己的資料，不能把損益中心的數字寫回去 */
+function plain(id){ const c=JSON.parse(JSON.stringify(brands[id])); if(ownP[id]!==undefined) c.periods=JSON.parse(JSON.stringify(ownP[id])); return c }
+async function plLoad(){ const r=await sbc.from('bom_pl_link').select('*'); plLinks={}; (r.data||[]).forEach(l=>plLinks[l.brand_id]=l);
+  await Promise.all(Object.keys(brands).map(async id=>{ if(!plLinks[id]){ delete plData[id]; plApply(id); return } const x=await sbc.rpc('bom_pl_periods',{b:id}); plData[id]=x.error||!x.data?null:x.data; plApply(id) })) }
+const plName=l=>l?[l.client_name,l.brand_name,l.store_name||'所有分店合計'].join('／'):'';
+const plKey=e=>JSON.stringify([e.client,e.brand,e.store??null]);
+function plCell(id){ const l=plLinks[id], cur=l?plKey({client:l.client_name,brand:l.brand_name,store:l.store_name}):'', ents=plEnts||[], opts=[], seen=new Set();
+  ents.forEach(e=>{ const bk=plKey({client:e.client,brand:e.brand,store:null}); if(!seen.has(bk)&&ents.filter(x=>x.client===e.client&&x.brand===e.brand).length>1){ seen.add(bk); opts.push([bk,e.client+'／'+e.brand+'／所有分店合計']) } opts.push([plKey(e),e.client+'／'+e.brand+'／'+(e.store||'（未分店）')+'（'+e.months+' 個月）']) });
+  if(cur&&!opts.some(o=>o[0]===cur)) opts.push([cur,plName(l)+'（損益中心找不到）']);
+  return `<select data-plink="${id}" aria-label="對應損益分析"><option value="">不對應</option>${opts.map(o=>`<option value="${esc(o[0])}" ${o[0]===cur?'selected':''}>${esc(o[1])}</option>`).join('')}</select>` }
+document.addEventListener('change',async e=>{ const el=e.target; if(!el.dataset||!el.dataset.plink||!isAdmin()) return; const id=el.dataset.plink; setStatus('更新對應中…');
+  let r; if(!el.value) r=await sbc.from('bom_pl_link').delete().eq('brand_id',id);
+  else { const [c,bn,s]=JSON.parse(el.value); r=await sbc.from('bom_pl_link').upsert({brand_id:id,client_name:c,brand_name:bn,store_name:s,updated_at:new Date().toISOString()}) }
+  if(r.error){ setStatus('對應失敗，請重新整理後再試'); return }
+  await plLoad(); setStatus(el.value?'已對應，損益頁會改讀損益分析中心的數字':'已取消對應'); render() });
 
 /* ---- 庫存與進貨：供應商、進貨登記、盤點（存在獨立資料表，不放進品牌那一大包，多人同時盤點也不會互蓋） ---- */
 let inv={brand:null,loading:false,err:'',supp:[],rcv:[],cnt:[],lines:{}}, invMsg='', supF=null, rcvF=null, rcvOpen=null, rcvDiff=null, rcvMon='', cntSel=null, cntNew=null, cntQ='', cntCat='', cntTodo=false, cntQT=null;
@@ -1184,6 +1208,9 @@ document.addEventListener('click',async e=>{ const t=e.target.closest('button');
 
 /* 用量差異：兩次盤點之間，實際用量（期初＋進貨−期末）對照配方算出的理論用量 */
 let varEnd='', varRev='';
+function varPlBtn(a,z){ const d=plData[cur]; if(!a||!d||!d.periods.length) return ''; const ms=d.periods.filter(p=>p.month>mon(a.count_on)&&p.month<=mon(z.count_on)); if(!ms.length) return ''; const v=ms.reduce((t,p)=>t+p.revenue.reduce((s,x)=>s+(+x.amount||0),0),0);
+  return `<button data-varpl="${v}">帶入損益表營業額 ${$$(v,0)}（${ms.map(p=>+p.month.slice(5)+'月').join('、')}）</button>` }
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(t&&t.dataset.varpl){ varRev=t.dataset.varpl; render() } });
 const sg$=v=>(v<0?'-':v>0?'+':'')+$$(Math.abs(v),0);
 function varCalc(b,c,a,z){ const items=invItems(b,c), la={}, lz={}; (inv.lines[a.id]||[]).forEach(l=>la[l.item_key]=l); (inv.lines[z.id]||[]).forEach(l=>lz[l.item_key]=l);
   const rc={}; inv.rcv.filter(r=>r.received_on>a.count_on&&r.received_on<=z.count_on).forEach(r=>(r.lines||[]).forEach(L=>{ const o=rc[L.key]=rc[L.key]||{q:0,amt:0}; o.q+=(+L.qty||0)*(+L.pack||1); o.amt+=+L.amount||0 }));
@@ -1199,7 +1226,7 @@ V.var=(b,c)=>{ const head=`<div class="head"><div><h2>用量差異分析</h2><p 
   if(cl.length<2) return head+`<div class="empty"><p class="sub">要有兩次「已完成」的盤點才算得出來，目前有 ${cl.length} 次。</p><p class="sub">做法：月底盤點一次 → 這個月每次進貨都登記 → 下個月底再盤點一次。</p><button data-tab="cnt">去盤點</button></div>`;
   if(!varEnd||!cl.some(x=>x.id===varEnd)) varEnd=cl[0].id;
   const zi=cl.findIndex(x=>x.id===varEnd), z=cl[zi], a=cl[zi+1];
-  const sel=`<div class="params"><label for="iv-vend">比較期間 <select id="iv-vend" data-varend="1" aria-label="比較期間">${cl.slice(0,-1).map((x,i)=>`<option value="${x.id}" ${x.id===varEnd?'selected':''}>${esc(cl[i+1].count_on)} ～ ${esc(x.count_on)}（${esc(x.label||'盤點')}）</option>`).join('')}</select></label><label for="iv-vrev">這段期間的營業額（可不填） <input type="number" id="iv-vrev" data-varrev="1" step="any" min="0" inputmode="decimal" value="${esc(varRev)}" placeholder="例如 850000" style="width:130px"></label></div>`;
+  const sel=`<div class="params"><label for="iv-vend">比較期間 <select id="iv-vend" data-varend="1" aria-label="比較期間">${cl.slice(0,-1).map((x,i)=>`<option value="${x.id}" ${x.id===varEnd?'selected':''}>${esc(cl[i+1].count_on)} ～ ${esc(x.count_on)}（${esc(x.label||'盤點')}）</option>`).join('')}</select></label><label for="iv-vrev">這段期間的營業額（可不填） <input type="number" id="iv-vrev" data-varrev="1" step="any" min="0" inputmode="decimal" value="${esc(varRev)}" placeholder="例如 850000" style="width:130px"></label>${varPlBtn(a,z)}</div>`;
   if(!a) return head+sel+EMPTY('這是最早的一次盤點，前面沒有可以比較的盤點。');
   if(!inv.lines[a.id]||!inv.lines[z.id]){ if(!inv.lines[a.id]) cntLoadLines(a.id); if(!inv.lines[z.id]) cntLoadLines(z.id); return head+sel+EMPTY('讀取中…') }
   const R=varCalc(b,c,a,z), noRecipe=!b.items.some(it=>(it.monthlySales||0)>0), A=R.rows.reduce((t,r)=>t+r.av,0), T=R.rows.reduce((t,r)=>t+r.tv,0), lt=r=>!isFinite(r.rate)?(r.act>0&&Math.abs(r.dv)>=100?['配方沒用到','warn']:['正常','good']):Math.abs(r.dv)<100?['正常','good']:Math.abs(r.rate)>=.1?[r.dq>0?'用太多':'用太少','bad']:Math.abs(r.rate)>=.05?[r.dq>0?'偏多':'偏少','warn']:['正常','good'];
@@ -1221,7 +1248,7 @@ async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home'; 
   dl={save:async({filename,data})=>{ const u=URL.createObjectURL(new Blob([data])), a=document.createElement('a'); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000) }};
   sbc.auth.onAuthStateChange((ev,s)=>{ setTimeout(()=>{
     if(ev==='PASSWORD_RECOVERY'){ me=s&&s.user; G='recover'; authMsg=''; render(); return }
-    if(ev==='SIGNED_OUT'){ if(wantAdmin) tab='admin'; me=null; prof=null; brands={}; versions=[]; notice=''; logRows=null; ups=null; inv={brand:null,loading:false,err:'',supp:[],rcv:[],cnt:[],lines:{}}; cntSel=null; rcvF=null; supF=null; cntNew=null; rcvDiff=null; invMsg=''; imp=null; upMsg=''; annRead=new Set(); annReads=[]; annEdit=null; setTimeout(()=>loadAnns().then(render),0); cur=null; G='login'; authMode='in'; render(); return }
+    if(ev==='SIGNED_OUT'){ if(wantAdmin) tab='admin'; me=null; prof=null; brands={}; versions=[]; notice=''; logRows=null; ups=null; plLinks={}; plData={}; Object.keys(ownP).forEach(k=>delete ownP[k]); inv={brand:null,loading:false,err:'',supp:[],rcv:[],cnt:[],lines:{}}; cntSel=null; rcvF=null; supF=null; cntNew=null; rcvDiff=null; invMsg=''; imp=null; upMsg=''; annRead=new Set(); annReads=[]; annEdit=null; setTimeout(()=>loadAnns().then(render),0); cur=null; G='login'; authMode='in'; render(); return }
     if(ev==='SIGNED_IN'&&s&&G!=='recover'&&(!me||me.id!==s.user.id)){ me=s.user; G='loading'; render(); loadAll() } },0) });
   const {data}=await sbc.auth.getSession();
   if(data&&data.session){ if(!me){ me=data.session.user; G='loading'; render(); loadAll() } } else if(G==='loading'){ G='login'; render() } }

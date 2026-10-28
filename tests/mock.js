@@ -16,6 +16,7 @@ const db={bom_profiles:[{user_id:'u-admin',email:users.admin.email,role:'admin',
  bom_brands:[{id:'b1',name:'測試石鍋',data:brand,rev:1},{id:'b2',name:'第二品牌',data:Object.assign({},brand,{name:'第二品牌',ingredients:[]}),rev:1}],
  bom_brand_access:[{user_id:'u-pro',brand_id:'b1'},{user_id:'u-basic',brand_id:'b1'}],
  bom_snapshots:[],bom_change_log:[],bom_uploads:[],bom_announcements:[],bom_announcement_reads:[],bom_public_settings:[{id:1}],bom_mail_log:[],
+ bom_pl_link:(P.link?[{brand_id:'b1',client_name:'測試客戶',brand_name:'測試石鍋',store_name:'中山店'}]:[]),
  bom_suppliers:[{id:'sp1',brand_id:'b1',name:'大成肉品',contact:'王先生',phone:'0912',active:true}],
  bom_receipts:[{id:'r0',brand_id:'b1',supplier_id:'sp1',supplier_name:'大成肉品',received_on:today.slice(0,8)+'01',lines:[{key:'i:i1',name:'牛五花肉片',qty:10,pack:1000,unit:'公斤',price:483,amount:4830}],total:4830,created_by_email:'pro@x.tw'}],
  bom_counts:[{id:'c0',brand_id:'b1',count_on:'2026-09-30',label:'9 月盤點',status:'closed',created_by_email:'pro@x.tw',closed_by_email:'pro@x.tw'}],
@@ -35,7 +36,7 @@ function exec(q){ const T=db[q.t]||(db[q.t]=[]); let rows=T.filter(r=>q.f.every(
   if(q.op==='select'){ let out=rows.slice(); q.o.forEach(o=>{}); for(let i=q.o.length-1;i>=0;i--){ const o=q.o[i]; out.sort((a,b)=>(a[o.c]>b[o.c]?1:a[o.c]<b[o.c]?-1:0)*(o.asc?1:-1)) } if(q.r) out=out.slice(q.r[0],q.r[1]+1); return {data:out.map(r=>JSON.parse(JSON.stringify(r))),error:null} }
   if(q.op==='insert'||q.op==='upsert'){ const arr=Array.isArray(q.v)?q.v:[q.v], out=[];
     for(const v0 of arr){ const v=Object.assign({},v0);
-      if(INV.includes(q.t)&&!canWrite(v.brand_id)) return err('new row violates row-level security policy');
+      if(INV.includes(q.t)&&!canWrite(v.brand_id)) return err('new row violates row-level security policy'); if(q.t==='bom_pl_link'&&!isAdmin()) return err('new row violates row-level security policy'); if(q.t==='bom_pl_link'){ const ex=T.find(r=>r.brand_id===v.brand_id); if(ex){ Object.assign(ex,v); out.push(ex); continue } }
       if(q.t==='bom_count_lines'){ const c=db.bom_counts.find(x=>x.id===v.count_id); if(!c) return err('count not found'); if(c.status!=='open') return err('BOM_COUNT_CLOSED: 這張盤點單已完成，不能再修改'); v.brand_id=c.brand_id; v.counted_by_email=em;
         const ex=T.find(r=>r.count_id===v.count_id&&r.item_key===v.item_key); if(ex){ if(q.op!=='upsert') return err('duplicate'); Object.assign(ex,v); out.push(ex); continue } }
       if(q.t==='bom_counts'){ v.status='open'; v.created_by_email=em }
@@ -61,7 +62,12 @@ function B(t){ const q={t,op:'select',f:[],o:[],r:null,v:null,one:false,maybe:fa
     single(){ q.one=true; return b }, maybeSingle(){ q.maybe=true; return b },
     then(res,rej){ return new Promise(r=>setTimeout(r,5)).then(()=>{ const x=exec(q); if(x.error) return x; if(q.one||q.maybe){ const d=x.data||[]; return {data:d[0]||null,error:q.one&&!d[0]?{message:'no rows'}:null} } return x }).then(res,rej) } };
   return b }
-window.supabase={createClient(){ return {from:B, rpc:async()=>({data:null,error:null}),
+const PLP=[{month:'2026-09',source:'09.pdf',revenue:[{name:'內用',amount:500000}],purchases:[{name:'肉類',amount:150000}],expenses:[{name:'租金',amount:80000},{name:'Uber-服務費',amount:20000}]},{month:'2026-10',source:'10.pdf',revenue:[{name:'內用',amount:520000}],purchases:[{name:'肉類',amount:160000}],expenses:[{name:'租金',amount:80000}]}];
+async function rpc(n,a){ await new Promise(r=>setTimeout(r,5));
+  if(n==='bom_pl_periods'){ const l=(db.bom_pl_link||[]).find(x=>x.brand_id===a.b); if(!l||!canRead(a.b)) return {data:null,error:null}; return {data:{client:l.client_name,brand:l.brand_name,store:l.store_name,periods:JSON.parse(JSON.stringify(PLP))},error:null} }
+  if(n==='bom_pl_entities') return {data:isAdmin()?[{client:'測試客戶',brand:'測試石鍋',store:'中山店',months:2},{client:'茗人茶館',brand:'茗人茶館',store:'草屯店',months:7}]:[],error:null};
+  return {data:null,error:null} }
+window.supabase={createClient(){ return {from:B, rpc,
   auth:{getSession:async()=>({data:{session:me?{user:me}:null}}),onAuthStateChange(){ return {data:{subscription:{unsubscribe(){}}}} },signOut:async()=>({}),signInWithPassword:async()=>({error:{message:'x'}})},
   storage:{from:()=>({upload:async()=>({error:null}),createSignedUrl:async()=>({data:{signedUrl:'#'}})})},
   channel:()=>({on(){ return this },subscribe(){ return this }}),removeChannel(){} } }};
