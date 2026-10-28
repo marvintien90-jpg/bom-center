@@ -6,10 +6,10 @@ const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','news','accou
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','rcv','supp']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
-const LAB={cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','rcv','var','supp']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
+const LAB={var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
-const TIP={cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
+const TIP={var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['要先在品項配方填每道菜的月銷量，分類才會準。','price'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
@@ -444,7 +444,7 @@ async function invLoad(id){ inv.loading=true; inv.err=''; render();
     inv={brand:id,loading:false,err:'',supp:s,rcv:r,cnt:k,lines} }
   catch(e){ inv.loading=false; inv.brand=id; inv.err=/does not exist|schema cache/i.test((e&&e.message)||'')?'系統正在更新，這個功能暫時還不能用，請稍後再試。':'讀取失敗：請檢查網路後按「重新讀取」。' }
   if(INV_T.includes(tab)) render() }
-const INV_T=['cnt','rcv','supp'];
+const INV_T=['cnt','rcv','var','supp'];
 function invEnsure(){ if(inv.brand!==cur&&!inv.loading&&sbc){ cntSel=null; cntNew=null; rcvF=null; rcvOpen=null; rcvDiff=null; supF=null; invMsg=''; setTimeout(()=>invLoad(cur),0) } return inv.brand===cur&&!inv.loading }
 const invWait=()=>inv.err&&inv.brand===cur?`<p class="sample" role="status">${esc(inv.err)} <button data-iv="reload">重新讀取</button></p>`:EMPTY('讀取中…');
 const ivMsg=()=>invMsg?`<p class="sample" role="status">${esc(invMsg)} <button data-iv="msgok">知道了</button></p>`:'';
@@ -535,7 +535,7 @@ V.cnt=(b,c)=>{ const items=invItems(b,c), head=t=>`<div class="head"><div><h2>�
 <div class="scroll"><table><thead><tr><th>品項</th><th class="n">這次數量</th><th>單位</th><th class="n">上次盤點</th><th class="n">金額</th></tr></thead><tbody>${rows||'<tr><td colspan="5">沒有符合的品項。</td></tr>'}</tbody></table></div>
 <div class="brandbar">${open?`<button class="pri ${armed===ka?'armed':''}" data-iv="cntclose:${k.id}">${armed===ka?(todo?'確定完成（沒填的 '+todo+' 項當作 0）':'確定完成盤點'):'完成盤點'}</button>`:''}${k.status==='closed'&&isAdmin()?`<button data-iv="cntreopen:${k.id}">重新開啟（顧問）</button>`:''}${!RO()&&(k.status==='open'||isAdmin())?`<button class="${armed===kd?'del armed':''}" data-iv="cntdel:${k.id}">${armed===kd?'確定刪除這張盤點單':'刪除盤點單'}</button>`:''}</div>
 <p class="note">金額用盤點當時食材主檔的門市進價計算（向總部叫貨的品項用加盟主進貨價）。完成後就不能再改，避免月結數字被動到；真的需要更正請聯絡顧問重新開啟。</p>` };
-async function cntLoadLines(id){ if(cntLoadLines.busy===id) return; cntLoadLines.busy=id; try{ inv.lines[id]=await pageAll(()=>sbc.from('bom_count_lines').select('*').eq('count_id',id)) }catch(e){ inv.lines[id]=inv.lines[id]||[]; invMsg='讀取盤點明細失敗，請按「重新整理」。' } cntLoadLines.busy=null; if(tab==='cnt') render() }
+async function cntLoadLines(id){ if(cntLoadLines.busy===id) return; cntLoadLines.busy=id; try{ inv.lines[id]=await pageAll(()=>sbc.from('bom_count_lines').select('*').eq('count_id',id)) }catch(e){ inv.lines[id]=inv.lines[id]||[]; invMsg='讀取盤點明細失敗，請按「重新整理」。' } cntLoadLines.busy=null; if(INV_T.includes(tab)) render() }
 async function cntSet(key,raw){ const b=B(), c=ctx(b), p=invItems(b,c).find(x=>x.key===key), k=inv.cnt.find(x=>x.id===cntSel); if(!p||!k||RO()) return;
   const ls=inv.lines[k.id]=inv.lines[k.id]||[], cid=key.replace(':','_'); setStatus('儲存中…'); let r;
   if(raw===''){ r=await sbc.from('bom_count_lines').delete().eq('count_id',k.id).eq('item_key',key); if(!r.error){ const i=ls.findIndex(l=>l.item_key===key); if(i>=0) ls.splice(i,1) } }
@@ -604,6 +604,36 @@ document.addEventListener('click',async e=>{ const t=e.target.closest('button');
   if(a==='cntclose'){ if(!arm('cc:'+id)) return; const ae=document.activeElement; if(ae&&ae.dataset&&ae.dataset.cq) await cntSet(ae.dataset.cq,ae.value.trim()); cntClose(id); return }
   if(a==='cntreopen'&&isAdmin()){ const r=await sbc.from('bom_counts').update({status:'open'}).eq('id',id).select().single(); if(r.error) invMsg=invErr(r.error); else inv.cnt=inv.cnt.map(x=>x.id===id?r.data:x); render(); return }
   if(a==='cntdel'){ if(!arm('cx:'+id)) return; const r=await sbc.from('bom_counts').delete().eq('id',id); if(r.error) invMsg=invErr(r.error); else { inv.cnt=inv.cnt.filter(x=>x.id!==id); delete inv.lines[id]; cntSel=null } render(); return } });
+
+/* 用量差異：兩次盤點之間，實際用量（期初＋進貨−期末）對照配方算出的理論用量 */
+let varEnd='', varRev='';
+const sg$=v=>(v<0?'-':v>0?'+':'')+$$(Math.abs(v),0);
+function varCalc(b,c,a,z){ const items=invItems(b,c), la={}, lz={}; (inv.lines[a.id]||[]).forEach(l=>la[l.item_key]=l); (inv.lines[z.id]||[]).forEach(l=>lz[l.item_key]=l);
+  const rc={}; inv.rcv.filter(r=>r.received_on>a.count_on&&r.received_on<=z.count_on).forEach(r=>(r.lines||[]).forEach(L=>{ const o=rc[L.key]=rc[L.key]||{q:0,amt:0}; o.q+=(+L.qty||0)*(+L.pack||1); o.amt+=+L.amount||0 }));
+  const days=Math.max(1,Math.round((new Date(z.count_on)-new Date(a.count_on))/864e5)), dpm=b.settings.daysPerMonth||30, d=demand(b,c), th=theory(b,c);
+  const est=th.sales*days/dpm, rev=parseFloat(varRev), scale=rev>0&&th.sales>0?rev/th.sales:days/dpm;
+  const rows=items.map(p=>{ const o=la[p.key]?+la[p.key].qty_base:0, cl=lz[p.key]?+lz[p.key].qty_base:0, r=rc[p.key]?rc[p.key].q:0, act=o+r-cl, g=c.get(p.key), y=p.key[0]==='i'?((g&&g.yield)||100)/100:1;
+    const thq=(d[p.key]||0)/y*scale, cost=lz[p.key]&&lz[p.key].unit_cost!=null?+lz[p.key].unit_cost:p.cost, dq=act-thq;
+    return {p,o,r,cl,act,thq,dq,dv:dq*cost,av:act*cost,tv:thq*cost,rate:thq>0?dq/thq:NaN,miss:!la[p.key]||!lz[p.key]} });
+  return {rows,days,est,rev:rev>0?rev:NaN,scale,rcvAmt:Object.values(rc).reduce((t,x)=>t+x.amt,0)} }
+V.var=(b,c)=>{ const head=`<div class="head"><div><h2>用量差異分析</h2><p class="sub">比較兩次盤點之間「實際用掉多少」和「照配方應該用多少」。差很多的食材，就是損耗、份量不準、漏登進貨或配方沒建好的線索。</p></div></div>`;
+  if(!invEnsure()) return head+invWait();
+  const cl=inv.cnt.filter(x=>x.status==='closed');
+  if(cl.length<2) return head+`<div class="empty"><p class="sub">要有兩次「已完成」的盤點才算得出來，目前有 ${cl.length} 次。</p><p class="sub">做法：月底盤點一次 → 這個月每次進貨都登記 → 下個月底再盤點一次。</p><button data-tab="cnt">去盤點</button></div>`;
+  if(!varEnd||!cl.some(x=>x.id===varEnd)) varEnd=cl[0].id;
+  const zi=cl.findIndex(x=>x.id===varEnd), z=cl[zi], a=cl[zi+1];
+  const sel=`<div class="params"><label for="iv-vend">比較期間 <select id="iv-vend" data-varend="1" aria-label="比較期間">${cl.slice(0,-1).map((x,i)=>`<option value="${x.id}" ${x.id===varEnd?'selected':''}>${esc(cl[i+1].count_on)} ～ ${esc(x.count_on)}（${esc(x.label||'盤點')}）</option>`).join('')}</select></label><label for="iv-vrev">這段期間的營業額（可不填） <input type="number" id="iv-vrev" data-varrev="1" step="any" min="0" inputmode="decimal" value="${esc(varRev)}" placeholder="例如 850000" style="width:130px"></label></div>`;
+  if(!a) return head+sel+EMPTY('這是最早的一次盤點，前面沒有可以比較的盤點。');
+  if(!inv.lines[a.id]||!inv.lines[z.id]){ if(!inv.lines[a.id]) cntLoadLines(a.id); if(!inv.lines[z.id]) cntLoadLines(z.id); return head+sel+EMPTY('讀取中…') }
+  const R=varCalc(b,c,a,z), noRecipe=!b.items.some(it=>(it.monthlySales||0)>0), A=R.rows.reduce((t,r)=>t+r.av,0), T=R.rows.reduce((t,r)=>t+r.tv,0), lt=r=>!isFinite(r.rate)?(r.act>0&&Math.abs(r.dv)>=100?['配方沒用到','warn']:['正常','good']):Math.abs(r.dv)<100?['正常','good']:Math.abs(r.rate)>=.1?[r.dq>0?'用太多':'用太少','bad']:Math.abs(r.rate)>=.05?[r.dq>0?'偏多':'偏少','warn']:['正常','good'];
+  const rows=R.rows.slice().sort((x,y)=>Math.abs(y.dv)-Math.abs(x.dv)).map(r=>{ const s=lt(r), p=r.p; return `<tr><td>${esc(p.name)}</td><td class="n">${qtyTxt(p,r.o)}</td><td class="n">${qtyTxt(p,r.r)}</td><td class="n">${qtyTxt(p,r.cl)}</td><td class="n"><b>${qtyTxt(p,r.act)}</b></td><td class="n">${qtyTxt(p,r.thq)}</td><td class="n">${r.dq>0?'+':''}${qtyTxt(p,r.dq)}</td><td class="n">${sg$(r.dv)}</td><td class="n">${isFinite(r.rate)?(r.rate>0?'+':'')+pct(r.rate,0):'–'}</td><td><span class="pill ${s[1]}">${s[0]}</span>${r.act<0?' <span class="pill bad">期末比期初＋進貨還多</span>':''}</td></tr>` }).join('');
+  const neg=R.rows.filter(r=>r.act<0).length, over=R.rows.filter(r=>lt(r)[1]==='bad').length;
+  return head+sel+(noRecipe?'<p class="sample">品項配方還沒填月銷量，理論用量會是 0。請先到「品項配方」填每道菜的月銷量。</p>':'')+`
+<div class="tiles"><div class="tile"><span>實際食材成本</span><b>${$$(A,0)}</b><span>${R.days} 天 · 期初＋進貨−期末</span></div><div class="tile"><span>照配方應該花</span><b>${$$(T,0)}</b><span>${isFinite(R.rev)?'依你填的營業額換算':'依月銷量 × '+R.days+' 天估算'}</span></div><div class="tile"><span>差異金額</span><b>${sg$(A-T)}</b><span>${T?(A-T>0?'多花 ':'少花 ')+pct(Math.abs(A-T)/T,1):''}</span></div>${isFinite(R.rev)?`<div class="tile"><span>實際食材成本率</span><b>${pct(A/R.rev)}</b><span>理論 ${pct(T/R.rev)}</span></div>`:''}</div>
+${over||neg?`<div class="board"><b>需要注意</b>${over?`<span>有 ${over} 樣食材差異超過 10%，建議先從金額最大的開始查：份量有沒有照標準、有沒有報廢沒記、進貨有沒有漏登。</span>`:''}${neg?`<span>有 ${neg} 樣食材算出來用量是負的，通常是進貨漏登或盤點數字填錯。</span>`:''}</div>`:''}
+<div class="scroll"><table><thead><tr><th>品項</th><th class="n">期初</th><th class="n">進貨</th><th class="n">期末</th><th class="n">實際用量</th><th class="n">理論用量</th><th class="n">差異量</th><th class="n">差異金額</th><th class="n">差異率</th><th>判斷</th></tr></thead><tbody>${rows}</tbody></table></div>
+<p class="note">理論用量 = 每道菜的配方 × 銷量，已把可用率的損耗算進去。${isFinite(R.rev)?'銷量用你填的營業額，依目前菜單的銷售比例換算。':'沒有填營業額時，用「品項配方」的月銷量 × '+R.days+' 天 ÷ '+(b.settings.daysPerMonth||30)+' 天估算；填上這段期間的實際營業額會更準。'}差異 10% 以上標紅、5% 以上標黃，金額小於 100 元不標。金額用期末盤點當時的進價。</p>` };
+document.addEventListener('change',e=>{ const d=e.target.dataset||{}; if(d.varend){ varEnd=e.target.value; render() } else if(d.varrev){ varRev=e.target.value; render() } });
 
 async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home'; wantAdmin=h==='admin';
   if(/error_code=|error=access_denied/.test(h)){ authMsg='這個連結已經過期或已經用過。請在下面重新操作一次（忘記密碼或重寄驗證信），再點最新那封信裡的連結。'; try{history.replaceState(null,'',location.pathname)}catch(x){} }

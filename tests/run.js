@@ -52,6 +52,10 @@ async function allTabs(pg,label){ const ids=await pg.$$eval('#nav [data-tab]',bs
     const st=await pg.evaluate(id=>({s:window.__db.bom_counts.find(c=>c.id===id).status,n:window.__db.bom_count_lines.filter(l=>l.count_id===id).length}),cid); ok(st.s==='closed'&&st.n===5,'完成盤點：未填補 0、狀態已完成');
     t=await main(pg); ok(t.includes('重新開啟（顧問）'),'管理員可重新開啟');
     await iv(pg,'cntxls'); await sleep(100);
+    await tab(pg,'var'); t=await main(pg); ok(t.includes('實際食材成本')&&!bad(t),'用量差異頁算出結果');
+    ok(/牛五花肉片\s+5\.5 公斤\s+10 公斤\s+0 公斤\s+15\.5 公斤/.test(t),'實際用量＝期初 5.5＋進貨 10−期末 0');
+    ok(t.includes('用太少'),'差異超過 10% 標示');
+    await fill(pg,'#iv-vrev','500000'); t=await main(pg); ok(t.includes('實際食材成本率'),'填營業額後顯示成本率');
     await allTabs(pg,'管理員'); ok(!errs.length,'沒有頁面錯誤'+(errs.length?'：'+errs.join(' | '):'')); }
   /* 進階版可編輯業主 */
   console.log('進階版業主'); { const {pg,errs}=await open(br,'pro');
@@ -60,14 +64,17 @@ async function allTabs(pg,label){ const ids=await pg.$$eval('#nav [data-tab]',bs
     await iv(pg,'cntback'); await iv(pg,'cntnew'); await iv(pg,'cntcreate'); await sleep(100);
     await pg.evaluate(()=>{ window.__fail={t:'bom_count_lines',op:'upsert',msg:'TypeError: Failed to fetch'} }); await fill(pg,'#cq-i_i7','2'); await sleep(100); t=await main(pg); ok(t.includes('連線有問題'),'存檔失敗顯示白話錯誤'); await pg.evaluate(()=>{ window.__fail=null });
     await tab(pg,'supp'); t=await main(pg); ok(t.includes('新增供應商'),'業主可管理供應商');
+    await tab(pg,'var'); t=await main(pg); ok(t.includes('目前有 1 次'),'只有一次盤點時說明還不能算');
     await allTabs(pg,'進階版業主'); ok(!errs.length,'沒有頁面錯誤'+(errs.length?'：'+errs.join(' | '):'')); }
   /* 基本版只讀，手機寬度 */
   console.log('基本版只讀（手機）'); { const {pg,errs}=await open(br,'basic',390);
     const navs=await pg.$$eval('#nav [data-tab]',bs=>bs.map(b=>b.dataset.tab+(b.innerText.includes('進階')?'*':''))); ok(['cnt','rcv','supp'].every(x=>navs.includes(x)),'選單有盤點／進貨／供應商且不是進階功能');
     for(const id of ['cnt','rcv','supp']){ await tab(pg,id); const t=await main(pg); ok(!/開始新盤點|新增進貨單|新增供應商/.test(t),id+'：只讀看不到新增按鈕'); ok(await pg.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),id+'：手機沒有水平捲動') }
+    await tab(pg,'var'); ok((await main(pg)).includes('是進階版功能'),'基本版看到用量差異升級提示');
     await tab(pg,'cnt'); await iv(pg,'cntopen:c0'); let t=await main(pg); ok(t.includes('5.5 公斤')&&!(await pg.$('[data-cq]')),'只讀可查看盤點內容');
     ok(await pg.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),'盤點明細手機沒有水平捲動');
     await allTabs(pg,'基本版只讀'); ok(!errs.length,'沒有頁面錯誤'+(errs.length?'：'+errs.join(' | '):'')); }
+  console.log('直接打開用量差異'); { const {pg,errs}=await open(br,'pro'); await tab(pg,'var'); await sleep(300); const t=await main(pg); ok(t.includes('目前有 1 次')&&!t.includes('讀取中'),'第一次就開用量差異也會載入'); ok(!errs.length,'沒有頁面錯誤'); }
   console.log('待開通／未登入'); { const {pg,errs}=await open(br,'pending'); ok((await main(pg)).includes('開通'),'待開通畫面'); ok(!errs.length,'沒有頁面錯誤'); }
   { const {pg,errs}=await open(br,'none'); ok(await pg.$('#auEmail'),'未登入顯示登入畫面'); ok(!errs.length,'沒有頁面錯誤'+(errs.length?'：'+errs.join(' | '):'')); }
   await br.close(); console.log(fails?`\n${fails} 項失敗`:'\n全部通過'); process.exit(fails?1:0) })().catch(e=>{ console.error(e); process.exit(2) });
