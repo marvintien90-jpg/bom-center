@@ -1035,12 +1035,13 @@ function invErr(e){ const m=(e&&e.message)||String(e||'');
   if(/row-level security|permission denied|violates row/i.test(m)) return '沒有儲存：你的帳號沒有修改權限，或使用期限已到。請聯絡 '+LICENSOR+'。';
   if(/does not exist|schema cache/i.test(m)) return '系統正在更新，這個功能暫時還不能用，請稍後再試。';
   return '沒有儲存：連線有問題，請檢查網路後再試一次。' }
+/* 分頁讀取要有唯一的排序，不然同一時間建立的資料跨頁時可能重複或漏掉 */
 async function pageAll(mk){ let all=[], from=0; for(;;){ const r=await mk().range(from,from+999); if(r.error) throw r.error; all=all.concat(r.data||[]); if(!r.data||r.data.length<1000) return all; from+=1000 } }
 async function invLoad(id){ inv.loading=true; inv.err=''; render();
-  try{ const [s,r,k]=await Promise.all([pageAll(()=>sbc.from('bom_suppliers').select('*').eq('brand_id',id).order('name')),
-      pageAll(()=>sbc.from('bom_receipts').select('*').eq('brand_id',id).order('received_on',{ascending:false}).order('created_at',{ascending:false})),
-      pageAll(()=>sbc.from('bom_counts').select('*').eq('brand_id',id).order('count_on',{ascending:false}).order('created_at',{ascending:false}))]);
-    const ids=k.slice(0,24).map(x=>x.id), ls=ids.length?await pageAll(()=>sbc.from('bom_count_lines').select('*').in('count_id',ids)):[], lines={}; ids.forEach(x=>lines[x]=[]); ls.forEach(l=>(lines[l.count_id]=lines[l.count_id]||[]).push(l));
+  try{ const [s,r,k]=await Promise.all([pageAll(()=>sbc.from('bom_suppliers').select('*').eq('brand_id',id).order('name').order('id')),
+      pageAll(()=>sbc.from('bom_receipts').select('*').eq('brand_id',id).order('received_on',{ascending:false}).order('created_at',{ascending:false}).order('id')),
+      pageAll(()=>sbc.from('bom_counts').select('*').eq('brand_id',id).order('count_on',{ascending:false}).order('created_at',{ascending:false}).order('id'))]);
+    const ids=k.slice(0,24).map(x=>x.id), ls=ids.length?await pageAll(()=>sbc.from('bom_count_lines').select('*').in('count_id',ids).order('count_id').order('item_key')):[], lines={}; ids.forEach(x=>lines[x]=[]); ls.forEach(l=>(lines[l.count_id]=lines[l.count_id]||[]).push(l));
     if(cur!==id){ inv.loading=false; return }
     inv={brand:id,loading:false,err:'',supp:s,rcv:r,cnt:k,lines} }
   catch(e){ inv.loading=false; inv.brand=id; inv.err=/does not exist|schema cache/i.test((e&&e.message)||'')?'系統正在更新，這個功能暫時還不能用，請稍後再試。':'讀取失敗：請檢查網路後按「重新讀取」。' }
@@ -1136,7 +1137,7 @@ V.cnt=(b,c)=>{ const items=invItems(b,c), head=t=>`<div class="head"><div><h2>�
 <div class="scroll"><table><thead><tr><th>品項</th><th class="n">這次數量</th><th>單位</th><th class="n">上次盤點</th><th class="n">金額</th></tr></thead><tbody>${rows||'<tr><td colspan="5">沒有符合的品項。</td></tr>'}</tbody></table></div>
 <div class="brandbar">${open?`<button class="pri ${armed===ka?'armed':''}" data-iv="cntclose:${k.id}">${armed===ka?(todo?'確定完成（沒填的 '+todo+' 項當作 0）':'確定完成盤點'):'完成盤點'}</button>`:''}${k.status==='closed'&&isAdmin()?`<button data-iv="cntreopen:${k.id}">重新開啟（顧問）</button>`:''}${!RO()&&(k.status==='open'||isAdmin())?`<button class="${armed===kd?'del armed':''}" data-iv="cntdel:${k.id}">${armed===kd?'確定刪除這張盤點單':'刪除盤點單'}</button>`:''}</div>
 <p class="note">金額用盤點當時食材主檔的門市進價計算（向總部叫貨的品項用加盟主進貨價）。完成後就不能再改，避免月結數字被動到；真的需要更正請聯絡顧問重新開啟。</p>` };
-async function cntLoadLines(id){ if(cntLoadLines.busy===id) return; cntLoadLines.busy=id; try{ inv.lines[id]=await pageAll(()=>sbc.from('bom_count_lines').select('*').eq('count_id',id)) }catch(e){ inv.lines[id]=inv.lines[id]||[]; invMsg='讀取盤點明細失敗，請按「重新整理」。' } cntLoadLines.busy=null; if(INV_T.includes(tab)) render() }
+async function cntLoadLines(id){ if(cntLoadLines.busy===id) return; cntLoadLines.busy=id; try{ inv.lines[id]=await pageAll(()=>sbc.from('bom_count_lines').select('*').eq('count_id',id).order('item_key')) }catch(e){ inv.lines[id]=inv.lines[id]||[]; invMsg='讀取盤點明細失敗，請按「重新整理」。' } cntLoadLines.busy=null; if(INV_T.includes(tab)) render() }
 async function cntSet(key,raw){ const b=B(), c=ctx(b), p=invItems(b,c).find(x=>x.key===key), k=inv.cnt.find(x=>x.id===cntSel); if(!p||!k||RO()) return;
   const ls=inv.lines[k.id]=inv.lines[k.id]||[], cid=key.replace(':','_'); setStatus('儲存中…'); let r;
   if(raw===''){ r=await sbc.from('bom_count_lines').delete().eq('count_id',k.id).eq('item_key',key); if(!r.error){ const i=ls.findIndex(l=>l.item_key===key); if(i>=0) ls.splice(i,1) } }

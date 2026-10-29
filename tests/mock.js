@@ -21,14 +21,17 @@ const db={bom_profiles:[{user_id:'u-admin',email:users.admin.email,role:'admin',
  bom_receipts:[{id:'r0',brand_id:'b1',supplier_id:'sp1',supplier_name:'大成肉品',received_on:today.slice(0,8)+'01',lines:[{key:'i:i1',name:'牛五花肉片',qty:10,pack:1000,unit:'公斤',price:483,amount:4830}],total:4830,created_by_email:'pro@x.tw'}],
  bom_counts:[{id:'c0',brand_id:'b1',count_on:'2026-09-30',label:'9 月盤點',status:'closed',created_by_email:'pro@x.tw',closed_by_email:'pro@x.tw'}],
  bom_count_lines:[{count_id:'c0',brand_id:'b1',item_key:'i:i1',name:'牛五花肉片',qty_base:5500,unit_cost:0.483},{count_id:'c0',brand_id:'b1',item_key:'i:i7',name:'洋蔥',qty_base:3000,unit_cost:0.035}]};
-window.__db=db; window.__fail=null;
+/* 大量資料模式：把 b1 換成 bigdata.js 的模擬門市 */
+const BIG=window.__BIG; if(BIG){ db.bom_brands[0].data=BIG.brand; db.bom_brands[0].name=BIG.brand.name; db.bom_suppliers=BIG.supp; db.bom_receipts=BIG.rcv; db.bom_counts=BIG.counts; db.bom_count_lines=BIG.lines;
+  db.bom_pl_link=[{brand_id:'b1',client_name:BIG.brand.name,brand_name:BIG.brand.name,store_name:'測試店'}] }
+window.__db=db; window.__fail=null; window.__q=0;
 const prof=()=>db.bom_profiles.find(p=>p.user_id===(me&&me.id));
 const isAdmin=()=>{const p=prof(); return !!p&&p.role==='admin'};
 const canRead=b=>isAdmin()||(prof()&&prof().status==='active'&&db.bom_brand_access.some(a=>a.user_id===me.id&&a.brand_id===b));
 const canWrite=b=>isAdmin()||(canRead(b)&&prof().access==='edit');
 const INV=['bom_suppliers','bom_receipts','bom_counts','bom_count_lines'];
 let seq=1; const err=m=>({data:null,error:{message:m}});
-function exec(q){ const T=db[q.t]||(db[q.t]=[]); let rows=T.filter(r=>q.f.every(f=>f(r)));
+function exec(q){ window.__q++; const T=db[q.t]||(db[q.t]=[]); let rows=T.filter(r=>q.f.every(f=>f(r)));
   if(INV.includes(q.t)) rows=rows.filter(r=>canRead(r.brand_id));
   if(q.t==='bom_brands') rows=rows.filter(r=>canRead(r.id));
   if(window.__fail&&window.__fail.t===q.t&&window.__fail.op===q.op) return err(window.__fail.msg);
@@ -64,7 +67,7 @@ function B(t){ const q={t,op:'select',f:[],o:[],r:null,v:null,one:false,maybe:fa
   return b }
 const PLP=[{month:'2026-09',source:'09.pdf',revenue:[{name:'內用',amount:500000}],purchases:[{name:'肉類',amount:150000}],expenses:[{name:'租金',amount:80000},{name:'Uber-服務費',amount:20000}]},{month:'2026-10',source:'10.pdf',revenue:[{name:'內用',amount:520000}],purchases:[{name:'肉類',amount:160000}],expenses:[{name:'租金',amount:80000}]}];
 async function rpc(n,a){ await new Promise(r=>setTimeout(r,5));
-  if(n==='bom_pl_periods'){ const l=(db.bom_pl_link||[]).find(x=>x.brand_id===a.b); if(!l||!canRead(a.b)) return {data:null,error:null}; return {data:{client:l.client_name,brand:l.brand_name,store:l.store_name,periods:JSON.parse(JSON.stringify(PLP))},error:null} }
+  if(n==='bom_pl_periods'){ const l=(db.bom_pl_link||[]).find(x=>x.brand_id===a.b); if(!l||!canRead(a.b)) return {data:null,error:null}; return {data:{client:l.client_name,brand:l.brand_name,store:l.store_name,periods:JSON.parse(JSON.stringify(BIG?BIG.plp:PLP))},error:null} }
   if(n==='bom_pl_entities') return {data:isAdmin()?[{client:'測試客戶',brand:'測試石鍋',store:'中山店',months:2},{client:'茗人茶館',brand:'茗人茶館',store:'草屯店',months:7}]:[],error:null};
   return {data:null,error:null} }
 window.supabase={createClient(){ return {from:B, rpc,
