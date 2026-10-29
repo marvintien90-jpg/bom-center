@@ -152,10 +152,41 @@ const timed=async(pg,f)=>{ const t0=Date.now(); await f(); return Date.now()-t0 
     await pg.evaluate(()=>document.querySelector('[data-iv="ponew"]').click()); await sleep(80); await pg.evaluate(()=>document.querySelector('[data-iv="posave"]').click()); await sleep(80); ok((await main(pg)).includes('至少要填一列'),'空白採購單擋下');
     await pg.evaluate(()=>document.querySelector('[data-iv="pocancel"]').click());
     await tab(pg,'home'); await sleep(200); t=await main(pg); ok(t.includes('庫存提醒')&&t.includes('撐不到下次叫貨'),'首頁出現庫存提醒');
+    /* 第二階段批次 3：預估與情境 */
+    await tab(pg,'fc'); await sleep(200); t=await main(pg);
+    ok(t.includes('近 3 個月的營收水準')&&t.includes('2026-10')&&t.includes('2026-12')&&!bad(t),'12 個月損益 → 用季節起伏預估 2026-10～12，沒有錯誤數字');
+    const F1=await pg.evaluate(()=>{ const b=brands[cur], c=ctx(b), B0=fcBase(b,c), P=window.__BIG.plp, k=P.slice(-3), s=a=>a.reduce((t,x)=>t+x.amount,0), R=k.reduce((t,p)=>t+s(p.revenue),0)/3, Pc=k.reduce((t,p)=>t+s(p.purchases),0)/3, ex=n=>k.reduce((t,p)=>t+p.expenses.filter(x=>x.name===n).reduce((u,x)=>u+x.amount,0),0)/3;
+      const F=fcForecast(B0.H,12), H=B0.H.map(h=>h.R), si=H.map(x=>x/(H.reduce((t,y)=>t+y,0)/12));
+      return {dR:Math.abs(B0.R-R),dfr:Math.abs(B0.fr-Pc/R),dl:Math.abs(B0.g.labor-ex('薪資')),dr:Math.abs(B0.g.rent-ex('租金支出')),dv:Math.abs(B0.g.var-ex('外送平台服務費')),df:Math.abs(B0.g.fixed-ex('水電瓦斯')-ex('雜支')),
+        ratio:F.rows.map((r,i)=>r.R/si[i]), rel:F.rel, lo:F.rows.every(r=>r.lo<r.R&&r.R<r.hi), be:B0, n:F.rows.length } });
+    ok(F1.dR<1&&F1.dfr<1e-9,'現況＝近 3 個月損益表平均（營收、食材成本率）');
+    ok(F1.dl<1&&F1.dr<1&&F1.dv<1&&F1.df<1,'費用自動分類：薪資→人事、租金支出→租金、外送平台服務費→連動、水電和雜支→固定');
+    ok(F1.n===12&&Math.max(...F1.ratio)-Math.min(...F1.ratio)<1e-6*F1.ratio[0],'12 個月預估都＝同一水準 × 去年同月起伏');
+    ok(F1.rel>=0.03&&F1.rel<0.15&&F1.lo,'可能範圍 ±'+(F1.rel*100).toFixed(1)+'%，預估值在範圍內');
+    const sc=async(k,v)=>{ const sel='#iv-fc-'+k; if(k==='cat') await pg.selectOption(sel,v); else await pg.fill(sel,v); await pg.dispatchEvent(sel,'change'); await sleep(120) };
+    await sc('traffic','-10'); let Q=await pg.evaluate(()=>{ const b=brands[cur], c=ctx(b), B0=fcBase(b,c); return {S:fcScen(B0,fcCatShare(b,c)),B0} });
+    const exp=(B0,v,pr,fk,lab,rent)=>{ const R=B0.R*v*pr, food=B0.R*v*B0.fr*fk, E=B0.g.labor*lab+B0.g.rent+rent+R*B0.vr+B0.g.fixed; return {R,food,N:R-food-E} };
+    let e=exp(Q.B0,.9,1,1,1,0); ok(Math.abs(Q.S.R-e.R)<1&&Math.abs(Q.S.food-e.food)<1&&Math.abs(Q.S.N-e.N)<1,'來客 -10%：營收、食材、外送抽成一起降，淨利 '+Math.round(e.N).toLocaleString());
+    t=await main(pg); ok(t.includes('比現況少')&&t.includes(Math.round(e.N).toLocaleString()),'畫面顯示情境淨利和比現況少多少');
+    await sc('traffic',''); await sc('price','5'); Q=await pg.evaluate(()=>{ const b=brands[cur], c=ctx(b), B0=fcBase(b,c); return {S:fcScen(B0,fcCatShare(b,c)),B0} });
+    e=exp(Q.B0,1,1.05,1,1,0); ok(Math.abs(Q.S.R-e.R)<1&&Math.abs(Q.S.food-Q.B0.R*Q.B0.fr)<1&&Math.abs(Q.S.N-e.N)<1&&Q.S.fr<Q.B0.fr,'漲價 5%：營收增加、食材成本不變、成本率下降');
+    await sc('price',''); await pg.evaluate(()=>document.querySelector('[data-fcpre="meat"]').click()); await sleep(150);
+    Q=await pg.evaluate(()=>{ const b=brands[cur], c=ctx(b), B0=fcBase(b,c), sh=fcCatShare(b,c); return {S:fcScen(B0,sh),B0,sh,st:{...fcS}} });
+    const top=Object.entries(Q.sh).sort((a,b)=>b[1]-a[1])[0]; e=exp(Q.B0,1,1,1+top[1]*.15,1,0);
+    ok(Q.st.cat===top[0]&&Q.st.catPct==='15'&&Math.abs(Q.S.food-e.food)<1&&Math.abs(Object.values(Q.sh).reduce((a,b)=>a+b,0)-1)<1e-9,`「${top[0]}漲 15%」：佔食材 ${(top[1]*100).toFixed(0)}%，食材成本多 ${Math.round(e.food-Q.B0.R*Q.B0.fr).toLocaleString()}`);
+    await pg.evaluate(()=>document.querySelector('[data-fcpre="clear"]').click()); await sleep(120); await sc('labor','4'); await sc('rent','10000');
+    Q=await pg.evaluate(()=>{ const b=brands[cur], c=ctx(b), B0=fcBase(b,c); return {S:fcScen(B0,fcCatShare(b,c)),B0} }); e=exp(Q.B0,1,1,1,1.04,10000);
+    const beN=Q.S.be*(1-Q.B0.fr-Q.B0.vr)-(Q.B0.g.labor*1.04+Q.B0.g.rent+10000+Q.B0.g.fixed);
+    ok(Math.abs(Q.S.N-e.N)<1&&Math.abs(beN)<1,'人事 +4%、租金 +1 萬：淨利正確，兩平營收下淨利剛好是 0');
+    await pg.evaluate(()=>document.querySelector('[data-fcpre="clear"]').click()); await sleep(80);
+    await pg.selectOption('#iv-fcn','12'); await pg.dispatchEvent('#iv-fcn','change'); await sleep(150); t=await main(pg); ok(t.includes('2027-09')&&!bad(t),'改成預估 12 個月');
+    const fb=await pg.evaluate(()=>{ const b=brands[cur], c=ctx(b), x=fcBase({...b,periods:[]},c), y=fcBase({...b,periods:b.periods.slice(-1)},c), z=fcForecast(fcHist({...b,periods:b.periods.slice(-4)}),3); return {src:x&&x.src,R:x&&x.R,th:theory(b,c).sales,y:y.H.length,zm:z.method,zr:z.rows.every(r=>r.R>0)} });
+    ok(fb.src.includes('還沒有損益表')&&Math.abs(fb.R-fb.th)<1,'沒有損益表時改用配方月銷量估');
+    ok(fb.y===1&&fb.zm.includes('近 4 個月平均')&&fb.zr,'只有 4 個月時用平均加趨勢');
     ok(!errs.length,'沒有程式錯誤'+(errs.length?' → '+errs.slice(0,3).join(' | '):'')); }
   console.log('基本版只讀');{ const {pg,errs}=await open(br,'basic',390); let t0;
     const nav=await pg.$$eval('#nav [data-tab]',bs=>bs.map(b=>b.dataset.tab+(b.textContent.includes('進階')?'*':'')));
-    ok(nav.includes('waste')&&nav.includes('po')&&!nav.includes('sales'),'基本版有耗損登記和採購單，銷量匯入是進階版');
+    ok(nav.includes('waste')&&nav.includes('po')&&!nav.includes('sales')&&!nav.includes('fc'),'基本版有耗損登記和採購單，銷量匯入是進階版');
     await tab(pg,'po'); await waitFor(pg,()=>inv.brand===cur&&!inv.loading); await sleep(100); t0=await main(pg);
     ok(t0.includes('快用完')&&!(await pg.$('[data-pok]'))&&!(await pg.$('[data-iv="pomake"]'))&&!(await pg.$('[data-iv^="posend"]')),'只讀帳號看得到庫存提醒和採購單，不能開單');
     await tab(pg,'waste'); await waitFor(pg,()=>inv.brand===cur&&!inv.loading); await sleep(100); let t=await main(pg);
@@ -169,5 +200,6 @@ const timed=async(pg,f)=>{ const t0=Date.now(); await f(); return Date.now()-t0 
     ok(w.doc<=w.vw+1,`盤點單整頁沒有橫向捲動（${w.doc}/${w.vw}）`);
     const inp=await pg.$eval('[id^="cq-"]',e=>{ const r=e.getBoundingClientRect(); return r.right<=innerWidth&&r.width>40 }); ok(inp,'數量輸入框在畫面內');
     await tab(pg,'var'); await waitFor(pg,()=>!!document.querySelector('#main table')); const w2=await pg.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1); ok(w2,'差異表在手機上只有表格內捲動');
+    await tab(pg,'fc'); await sleep(250); await pg.screenshot({path:path.join(__dirname,'fc-mobile.png'),fullPage:true}); ok(await pg.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'預估與情境在手機上沒有橫向捲動');
     ok(!errs.length,'沒有程式錯誤'+(errs.length?' → '+errs.slice(0,3).join(' | '):'')); }
   await br.close(); console.log(fails?`\n${fails} 項沒過`:'\n全部通過'); process.exit(fails?1:0) })();

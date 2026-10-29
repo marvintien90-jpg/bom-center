@@ -6,10 +6,10 @@ const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','news','accou
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
-const LAB={po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','price','channel']],['ops','營運管理',['order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
+const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
-const TIP={po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
+const TIP={fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['要先在品項配方填每道菜的月銷量，分類才會準。','price'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
@@ -139,6 +139,9 @@ V.help=()=>`<div class="head"><div><h2>使用說明</h2><p class="sub">常見問
 <details><summary>耗損登記要記什麼？</summary><p class="sub">丟掉的、壞掉的、做壞重做的、員工餐、招待客人的，都記。食材用進貨單位填，整道菜就選「整份餐點」填份數。月底的用量差異會先扣掉這些，剩下的差異才是要查的。</p></details>
 <details><summary>POS 銷量要怎麼匯入？</summary><p class="sub">從 POS 後台匯出「商品銷售統計」（Excel 或 CSV），到「銷量匯入」上傳，選好期間，確認每個品名對應到哪道菜就能存。對應過的品名會記住，下次自動對好。整段盤點期間都有匯入時，用量差異就會改用實際賣出的份數計算。</p></details>
 <details><summary>進貨價跟食材主檔不一樣怎麼辦？</summary><p class="sub">存好進貨單後，系統會列出價錢不同的食材，按一下就能把新價錢更新到食材主檔，價格紀錄也會自動記一筆。</p></details>
+<h2>預估與情境</h2>
+<details><summary>營收預估準嗎？</summary><p class="sub">損益表滿 12 個月時，用近 3 個月的水準乘上去年同月的淡旺季起伏；不滿 12 個月就用近幾個月平均加一半的趨勢。表上的「可能範圍」是這個方法過去的平均誤差，遇到颱風、裝修、新開分店這類特殊月份會不準，請自己再斟酌。</p></details>
+<details><summary>情境模擬怎麼用？</summary><p class="sub">填想試算的變化，例如來客 -10、售價 5、某一類食材漲 15，可以同時填好幾項，下面會列出每月淨利和損益兩平營收的變化。也可以按「試：來客少 10%」這類按鈕快速帶入。費用分類是依損益表科目名稱自動判斷的。</p></details>
 <h2>登入與帳號</h2>${LOGIN_FAQ()}`;
 
 /* ---- 上傳與下載表單 ---- */
@@ -897,6 +900,59 @@ document.addEventListener('click',async e=>{ const t=e.target.closest('button');
   if(a==='podel'&&o){ if(!arm('pd:'+id)) return; const r=await sbc.from('bom_pos').delete().eq('id',id); if(r.error) invMsg=invErr(r.error); else inv.pos=inv.pos.filter(x=>x.id!==id); render(); return }
   if(a==='porecv'&&o){ rcvF={id:null,po:o.id,date:today(),supplier:o.supplier_id||'',invoice:'',note:o.note||'',lines:(o.lines||[]).map(L=>({key:L.key,qty:String(L.qty),price:String(L.price)}))}; rcvDiff=null; invMsg='這是採購單轉來的進貨單：照廠商實際送來的數量和價錢修改後按「儲存進貨單」。'; tab='rcv'; try{ history.replaceState(null,'','#rcv') }catch(x){} window.scrollTo(0,0); render(); return } });
 
+/* ---- 第二階段批次 3：營收與成本預估、情境模擬（讀損益表歷史；沒有損益表就用配方和兩平設定估） ---- */
+let fcS={traffic:'',price:'',food:'',cat:'',catPct:'',labor:'',rent:'',n:3};
+const fcKind=n=>/薪|人事|勞保|健保|伙食|獎金|加班|兼職|工讀/.test(n)?'labor':/租/.test(n)?'rent':/外送|平台|uber|foodpanda|熊貓|服務費|刷卡|手續費|抽成|佣金/i.test(n)?'var':'fixed';
+const fcLab={labor:'人事費用',rent:'租金',var:'跟營收連動的費用（外送抽成、刷卡費）',fixed:'其他固定費用（水電、雜支等）'};
+function fcHist(b){ return (b.periods||[]).map((p,i)=>{ const R=sumA(p.revenue||[]),P=sumA(p.purchases||[]),E=sumA(p.expenses||[]); return {lab:p.label||p.period||'第 '+(i+1)+' 期',month:p.month||null,R,P,E,N:R-P-E,ex:p.expenses||[]} }).filter(x=>x.R>0) }
+const fcNext=(m,i)=>{ const [y,mm]=m.split('-').map(Number), d=new Date(Date.UTC(y,mm-1+i,1)); return d.toISOString().slice(0,7) };
+/* 營收預估：滿 12 個月用「近 3 個月水準 × 去年同月的季節起伏」，不滿就用近幾個月平均加一半趨勢（每月最多 ±2.5%） */
+function fcForecast(H,n){ const L=H.length, R=H.map(h=>h.R), out=[]; let method, rel;
+  if(L>=12){ const ly=R.slice(L-12), avg=ly.reduce((t,x)=>t+x,0)/12, si=ly.map(x=>x/avg), lvl=R.slice(-3).reduce((t,x)=>t+x,0)/(si[9]+si[10]+si[11]);
+    const res=R.slice(-12).map((x,i)=>x/(si[i]*lvl)-1); rel=Math.max(.03,Math.sqrt(res.reduce((t,x)=>t+x*x,0)/res.length));
+    for(let i=0;i<n;i++) out.push(lvl*si[i%12]); method='近 3 個月的營收水準，乘上去年同月的季節起伏'; }
+  else { const k=Math.min(6,L), ys=R.slice(-k), mx=(k-1)/2, my=ys.reduce((t,y)=>t+y,0)/k; let sl=0,d=0; ys.forEach((y,i)=>{ sl+=(i-mx)*(y-my); d+=(i-mx)**2 }); sl=d?sl/d:0; sl=Math.max(-my*.05,Math.min(my*.05,sl))*.5;
+    rel=Math.max(.03,k>1?Math.sqrt(ys.reduce((t,y)=>t+(y-my)**2,0)/(k-1))/my:.1); for(let i=0;i<n;i++) out.push(my+sl*(k-1-mx+i+1)); method=k>=3?`近 ${k} 個月平均，加上一半的趨勢（每月最多 ±2.5%）`:`只有 ${k} 個月資料，先用平均值，準確度有限`; }
+  const last=H[L-1]; return {method,rel,rows:out.map((R0,i)=>({lab:last.month?fcNext(last.month,i+1):'之後第 '+(i+1)+' 個月',R:R0,lo:R0*(1-rel),hi:R0*(1+rel)}))} }
+/* 現況（近 3 個月平均）拆成：食材成本率、各類費用 */
+function fcBase(b,c){ const H=fcHist(b);
+  if(H.length){ const k=H.slice(-3), n=k.length, R=k.reduce((t,h)=>t+h.R,0)/n, P=k.reduce((t,h)=>t+h.P,0)/n, g={labor:0,rent:0,var:0,fixed:0};
+    k.forEach(h=>h.ex.forEach(x=>g[fcKind(x.name||'')]+=(+x.amount||0)/n)); return {src:H.length>=3?'近 3 個月損益表平均':'損益表 '+H.length+' 個月平均',H,R,fr:R?P/R:0,g,vr:R?g.var/R:0} }
+  const t=theory(b,c), F=sumA(b.fixed||[]); if(!(t.sales>0)) return null;
+  return {src:'還沒有損益表：營收和食材用配方的月銷量，費用用「損益兩平」頁的固定費用和變動費用率',H:[],R:t.sales,fr:t.rate,g:{labor:0,rent:0,var:t.sales*(b.be.varPct||0)/100,fixed:F},vr:(b.be.varPct||0)/100} }
+/* 各食材分類佔食材成本的比例（用配方用量 × 門市進價），給「某一類漲價」用 */
+function fcCatShare(b,c){ const d=demand(b,c), sh={}; let tot=0; invItems(b,c).forEach(p=>{ const g=c.get(p.key), y=p.key[0]==='i'?((g&&g.yield)||100)/100:1, v=(d[p.key]||0)/y*p.cost; sh[p.cat]=(sh[p.cat]||0)+v; tot+=v }); Object.keys(sh).forEach(k=>sh[k]=tot?sh[k]/tot:0); return sh }
+function fcScen(B0,sh){ const P=x=>(parseFloat(x)||0)/100, v=1+P(fcS.traffic), pr=1+P(fcS.price), R=B0.R*v*pr, fk=1+P(fcS.food)+(fcS.cat&&sh[fcS.cat]?sh[fcS.cat]*P(fcS.catPct):0);
+  const food=B0.R*v*B0.fr*fk, lab=B0.g.labor*(1+P(fcS.labor)), rent=B0.g.rent+(parseFloat(fcS.rent)||0), vx=R*B0.vr, fx=B0.g.fixed, E=lab+rent+vx+fx, fr2=B0.fr*fk/pr;
+  return {R,food,lab,rent,vx,fx,E,N:R-food-E,fr:R?food/R:0,be:1-fr2-B0.vr>0?(lab+rent+fx)/(1-fr2-B0.vr):NaN} }
+V.fc=(b,c)=>{ const head=`<div class="head"><div><h2>營收預估與情境模擬</h2><p class="sub">用過去的損益表推估接下來幾個月的營收、成本和淨利；再試算「來客少一成」「漲價 5%」「肉價漲 15%」這類情況，淨利會變多少、要做到多少營收才打平。</p></div></div>`;
+  const B0=fcBase(b,c); if(!B0) return head+EMPTY('還沒有損益表，品項配方也還沒填售價和月銷量，沒辦法估算。請先導入損益表，或到「品項配方」填月銷量。');
+  const S0={R:B0.R,food:B0.R*B0.fr,lab:B0.g.labor,rent:B0.g.rent,vx:B0.g.var,fx:B0.g.fixed}; S0.E=S0.lab+S0.rent+S0.vx+S0.fx; S0.N=S0.R-S0.food-S0.E; S0.fr=B0.fr; S0.be=1-B0.fr-B0.vr>0?(S0.lab+S0.rent+S0.fx)/(1-B0.fr-B0.vr):NaN;
+  let fcHtml='';
+  if(B0.H.length>=2){ const F=fcForecast(B0.H,Math.max(1,Math.min(12,+fcS.n||3))), fixed=S0.lab+S0.rent+S0.fx;
+    const rows=F.rows.map(r=>{ const food=r.R*B0.fr, E=fixed+r.R*B0.vr, N=r.R-food-E; return `<tr><td>${esc(r.lab)}</td><td class="n">${$$(r.R,0)}</td><td class="n">${$$(r.lo,0)} ～ ${$$(r.hi,0)}</td><td class="n">${$$(food,0)}</td><td class="n">${$$(E,0)}</td><td class="n"><b>${$$(N,0)}</b></td><td class="n">${pct(N/r.R)}</td></tr>` }).join('');
+    const tot=F.rows.reduce((t,r)=>t+r.R,0), totN=F.rows.reduce((t,r)=>t+r.R*(1-B0.fr-B0.vr)-fixed,0), labs=B0.H.map(h=>h.lab).concat(F.rows.map((r,i)=>r.lab.length===7?'預'+r.lab.slice(5)+'月':'預'+(i+1)));
+    fcHtml=`<h2>接下來 <select id="iv-fcn" data-fc="n" aria-label="預估幾個月">${[1,3,6,12].map(n=>`<option ${+fcS.n===n?'selected':''}>${n}</option>`).join('')}</select> 個月預估</h2>
+<div class="tiles"><div class="tile"><span>預估營收合計</span><b>${$$(tot,0)}</b><span>${F.rows.length} 個月</span></div><div class="tile"><span>預估淨利合計</span><b>${$$(totN,0)}</b><span>淨利率 ${pct(totN/tot)}</span></div><div class="tile"><span>每月損益兩平營收</span><b>${$$(S0.be,0)}</b><span>${isFinite(S0.be)&&F.rows[0]?(F.rows[0].R>=S0.be?'下個月預估可以打平':'下個月預估會虧損'):''}</span></div></div>
+<div class="scroll" style="padding:8px">${lineChart(labs.slice(-18),[{name:'營收',vals:B0.H.map(h=>h.R).concat(F.rows.map(r=>r.R)).slice(-18),color:'var(--accent)'}],v=>nf(v/1e4,0)+'萬')}</div>
+<div class="scroll"><table><thead><tr><th>月份</th><th class="n">預估營收</th><th class="n">可能範圍</th><th class="n">食材成本</th><th class="n">營業費用</th><th class="n">淨利</th><th class="n">淨利率</th></tr></thead><tbody>${rows}</tbody></table></div>
+<p class="note">預估方法：${F.method}。可能範圍是過去每月實際跟這個方法的平均誤差（±${pct(F.rel,0)}）。食材成本率用${esc(B0.src)}的 ${pct(B0.fr)}；人事、租金、其他固定費用照近 3 個月平均，外送抽成和刷卡費跟著營收比例變動。圖上「預」開頭的是預估月份。</p>` }
+  else fcHtml=`<p class="sample">${B0.H.length?'只有 1 個月的損益表，還不能預估趨勢，下面的情境模擬先用這個月的數字。':esc(B0.src)+'。導入 2 個月以上的損益表就能預估營收。'}</p>`;
+  const sh=fcCatShare(b,c), cats=Object.keys(sh).filter(k=>sh[k]>0).sort((x,y)=>sh[y]-sh[x]), S=fcScen(B0,sh);
+  const inp=(k,lab,ph,u)=>`<label for="iv-fc-${k}">${lab} <input type="number" step="any" inputmode="decimal" id="iv-fc-${k}" data-fc="${k}" value="${esc(fcS[k])}" placeholder="${ph}" style="width:80px" aria-label="${lab}"> ${u}</label>`;
+  const line=(lab,a,z,inv)=>{ const d=z-a; return `<tr><td>${lab}</td><td class="n">${$$(a,0)}</td><td class="n">${$$(z,0)}</td><td class="n">${Math.abs(d)<.5?'–':`<span class="pill ${(inv?d<0:d>0)?'good':'bad'}">${sg$(d)}</span>`}</td></tr>` };
+  const any=['traffic','price','food','catPct','labor','rent'].some(k=>parseFloat(fcS[k]));
+  return head+fcHtml+`<h2>情境模擬</h2><p class="sub">以${esc(B0.src)}為基準（每月營收 ${$$(B0.R,0)}），填想試算的變化，可以同時填好幾項。負數代表減少。</p>
+<div class="params">${inp('traffic','來客／份數','例如 -10','%')}${inp('price','售價調整','例如 5','%')}${inp('food','全部食材進價','例如 8','%')}<label for="iv-fc-cat">某一類食材 <select id="iv-fc-cat" data-fc="cat" aria-label="食材分類"><option value="">（不指定）</option>${cats.map(k=>`<option value="${esc(k)}" ${k===fcS.cat?'selected':''}>${esc(k)}（佔食材 ${pct(sh[k],0)}）</option>`).join('')}</select></label>${inp('catPct','這一類漲價','例如 15','%')}${inp('labor','人事費用','例如 5','%')}${inp('rent','租金每月增減','例如 10000','元')}</div>
+<div class="brandbar"><button data-fcpre="slow">試：來客少 10%</button><button data-fcpre="up">試：漲價 5%、來客少 3%</button><button data-fcpre="meat">試：${esc(cats[0]||'主要食材')}漲 15%</button><button data-fcpre="wage">試：基本工資調漲（人事 +4%）</button>${any?'<button data-fcpre="clear">清除</button>':''}</div>
+<div class="tiles"><div class="tile"><span>情境下每月淨利</span><b>${$$(S.N,0)}</b><span>${any?(S.N>=S0.N?'比現況多 ':'比現況少 ')+$$(Math.abs(S.N-S0.N),0):'跟現況一樣'}</span></div><div class="tile"><span>食材成本率</span><b>${pct(S.fr)}</b><span>現況 ${pct(S0.fr)}</span></div><div class="tile"><span>損益兩平營收</span><b>${$$(S.be,0)}</b><span>${isFinite(S.be)?(S.R>=S.be?'情境下還有 '+pct((S.R-S.be)/S.R,0)+' 的安全空間':'情境下會虧損，差 '+$$(S.be-S.R,0)):'成本太高，怎麼賣都不會打平'}</span></div></div>
+<div class="scroll"><table><thead><tr><th>每月</th><th class="n">現況</th><th class="n">情境</th><th class="n">差異</th></tr></thead><tbody>
+${line('營收',S0.R,S.R)}${line('食材成本',S0.food,S.food,1)}${line(fcLab.labor,S0.lab,S.lab,1)}${line(fcLab.rent,S0.rent,S.rent,1)}${line(fcLab.var,S0.vx,S.vx,1)}${line(fcLab.fixed,S0.fx,S.fx,1)}<tr><td><b>淨利</b></td><td class="n"><b>${$$(S0.N,0)}</b></td><td class="n"><b>${$$(S.N,0)}</b></td><td class="n"><b>${sg$(S.N-S0.N)}</b></td></tr><tr><td>淨利率</td><td class="n">${pct(S0.N/S0.R)}</td><td class="n">${pct(S.N/S.R)}</td><td></td></tr></tbody></table></div>
+<p class="note">漲價只會增加營收、不會增加食材成本；來客變動會同時影響營收、食材和外送抽成。某一類食材漲價，是照配方算出這一類佔食材成本的比例（${cats.slice(0,3).map(k=>esc(k)+' '+pct(sh[k],0)).join('、')}${cats.length>3?'…':''}）換算。費用的分類是依損益表科目名稱自動判斷：含「薪、人事、勞健保」算人事，含「租」算租金，含「外送、平台、刷卡、手續費」算跟營收連動，其他算固定。</p>` };
+document.addEventListener('change',e=>{ const d=e.target.dataset||{}; if(!d.fc) return; fcS[d.fc]=e.target.value; render() });
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t||!t.dataset.fcpre) return; const k=t.dataset.fcpre, b=B(); if(!b) return;
+  const base={traffic:'',price:'',food:'',cat:'',catPct:'',labor:'',rent:'',n:fcS.n};
+  fcS=k==='slow'?{...base,traffic:'-10'}:k==='up'?{...base,price:'5',traffic:'-3'}:k==='meat'?{...base,cat:Object.entries(fcCatShare(b,ctx(b))).sort((x,y)=>y[1]-x[1])[0]?.[0]||'',catPct:'15'}:k==='wage'?{...base,labor:'4'}:base; render() });
 async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home'; wantAdmin=h==='admin';
   if(/error_code=|error=access_denied/.test(h)){ authMsg='這個連結已經過期或已經用過。請在下面重新操作一次（忘記密碼或重寄驗證信），再點最新那封信裡的連結。'; try{history.replaceState(null,'',location.pathname)}catch(x){} }
   if(!window.supabase){ G='error'; authMsg='無法載入登入元件，請檢查網路後重新整理。'; return render() }
