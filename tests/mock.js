@@ -22,14 +22,14 @@ const db={bom_profiles:[{user_id:'u-admin',email:users.admin.email,role:'admin',
  bom_counts:[{id:'c0',brand_id:'b1',count_on:'2026-09-30',label:'9 月盤點',status:'closed',created_by_email:'pro@x.tw',closed_by_email:'pro@x.tw'}],
  bom_count_lines:[{count_id:'c0',brand_id:'b1',item_key:'i:i1',name:'牛五花肉片',qty_base:5500,unit_cost:0.483},{count_id:'c0',brand_id:'b1',item_key:'i:i7',name:'洋蔥',qty_base:3000,unit_cost:0.035}]};
 /* 大量資料模式：把 b1 換成 bigdata.js 的模擬門市 */
-const BIG=window.__BIG; if(BIG){ db.bom_brands[0].data=BIG.brand; db.bom_brands[0].name=BIG.brand.name; db.bom_suppliers=BIG.supp; db.bom_receipts=BIG.rcv; db.bom_counts=BIG.counts; db.bom_count_lines=BIG.lines;
+const BIG=window.__BIG; if(BIG){ db.bom_brands[0].data=BIG.brand; db.bom_brands[0].name=BIG.brand.name; db.bom_suppliers=BIG.supp; db.bom_receipts=BIG.rcv; db.bom_counts=BIG.counts; db.bom_count_lines=BIG.lines; db.bom_waste=BIG.waste; db.bom_sales=BIG.sales;
   db.bom_pl_link=[{brand_id:'b1',client_name:BIG.brand.name,brand_name:BIG.brand.name,store_name:'測試店'}] }
 window.__db=db; window.__fail=null; window.__q=0;
 const prof=()=>db.bom_profiles.find(p=>p.user_id===(me&&me.id));
 const isAdmin=()=>{const p=prof(); return !!p&&p.role==='admin'};
 const canRead=b=>isAdmin()||(prof()&&prof().status==='active'&&db.bom_brand_access.some(a=>a.user_id===me.id&&a.brand_id===b));
 const canWrite=b=>isAdmin()||(canRead(b)&&prof().access==='edit');
-const INV=['bom_suppliers','bom_receipts','bom_counts','bom_count_lines'];
+const INV=['bom_suppliers','bom_receipts','bom_counts','bom_count_lines','bom_waste','bom_sales'];
 let seq=1; const err=m=>({data:null,error:{message:m}});
 function exec(q){ window.__q++; const T=db[q.t]||(db[q.t]=[]); let rows=T.filter(r=>q.f.every(f=>f(r)));
   if(INV.includes(q.t)) rows=rows.filter(r=>canRead(r.brand_id));
@@ -43,7 +43,7 @@ function exec(q){ window.__q++; const T=db[q.t]||(db[q.t]=[]); let rows=T.filter
       if(q.t==='bom_count_lines'){ const c=db.bom_counts.find(x=>x.id===v.count_id); if(!c) return err('count not found'); if(c.status!=='open') return err('BOM_COUNT_CLOSED: 這張盤點單已完成，不能再修改'); v.brand_id=c.brand_id; v.counted_by_email=em;
         const ex=T.find(r=>r.count_id===v.count_id&&r.item_key===v.item_key); if(ex){ if(q.op!=='upsert') return err('duplicate'); Object.assign(ex,v); out.push(ex); continue } }
       if(q.t==='bom_counts'){ v.status='open'; v.created_by_email=em }
-      if(q.t==='bom_receipts') v.created_by_email=em;
+      if(q.t==='bom_receipts'||q.t==='bom_waste'||q.t==='bom_sales') v.created_by_email=em;
       if(q.t!=='bom_count_lines'&&!v.id) v.id='x'+(seq++); if(q.t==='bom_suppliers'&&v.active===undefined) v.active=true;
       T.push(v); out.push(v) }
     return {data:JSON.parse(JSON.stringify(out)),error:null} }

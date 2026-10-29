@@ -38,5 +38,12 @@ for(let m=1;m<=12;m++){ const s=new Date(Date.UTC(2025,9+m-1,1)), mo=iso(s).slic
   plp.push({month:mo,source:'模擬資料'+mo.replace('-','')+'.pdf',revenue:[{name:'內用／外帶',amount:r-Math.round(r*0.3)},{name:'外送平台',amount:Math.round(r*0.3)}],
     purchases:Object.keys(pc).sort().map(k=>({name:k,amount:Math.round(pc[k])})),
     expenses:[{name:'薪資',amount:Math.round(r*0.22)},{name:'租金支出',amount:120000},{name:'水電瓦斯',amount:Math.round(r*0.04)},{name:'外送平台服務費',amount:Math.round(r*0.09)},{name:'雜支',amount:Math.round(r*0.02)}]}) }
-window.__BIG={brand,supp,rcv,counts,lines,plp,v:V};
+/* 第二階段：9 月的耗損（多用的品項一半有登記，正好等於多用的量）＋一筆整份餐點報廢；9 月整月 POS 銷量（含一個套餐和一個不算的飲料） */
+brand.posMap={'可樂':'x'}; brand.combos=[{id:'k1',name:'雙人套餐',price:500,lines:[{item:'m1',qty:1},{item:'m2',qty:1}]}];
+const waste=[]; let wid=1, odd=0;
+K.forEach(x=>{ if(V[x.k]!=null&&x.v>=0.12&&(odd++)%2===0){ const q=Math.round(x.mu*x.v); waste.push({id:'w'+(wid++),brand_id:'b1',waste_on:'2026-09-15',item_key:x.k,name:x.nm,qty:q,unit_cost:Math.round(price(x,12)/1000*1e6)/1e6,amount:Math.round(q*price(x,12)/1000*100)/100,reason:'過期',note:null,created_by_email:'pro@x.tw',created_at:'2026-09-15T10:00:00Z'}) } });
+waste.push({id:'w'+(wid++),brand_id:'b1',waste_on:'2026-09-20',item_key:'m:m2',name:items[1].name,qty:2,unit_cost:100,amount:200,reason:'製作失誤',note:'翻鍋',created_by_email:'pro@x.tw',created_at:'2026-09-20T10:00:00Z'});
+const sl=items.map(it=>{ const q=it.monthlySales-(it.id==='m1'||it.id==='m2'?20:0); return {key:'m:'+it.id,name:it.name,qty:q,amount:q*it.price} }).concat([{key:'k:k1',name:'雙人套餐（套餐）',qty:20,amount:10000}]);
+const sales=[{id:'sl1',brand_id:'b1',start_on:'2026-09-01',end_on:'2026-09-30',source:'POS_202609.xlsx',lines:sl,unmatched:[{name:'可樂',qty:300,amount:9000,key:'x'}],qty_total:sl.reduce((t,l)=>t+l.qty,0)+300,amount_total:sl.reduce((t,l)=>t+l.amount,0)+9000,created_by_email:'marvintien90@gmail.com',created_at:'2026-10-01T00:00:00Z'}];
+window.__BIG={brand,supp,rcv,counts,lines,plp,v:V,waste,sales};
 })();

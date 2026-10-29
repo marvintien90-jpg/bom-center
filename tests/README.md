@@ -11,6 +11,6 @@ node run.js /絕對路徑/index.html
 
 ## 大量資料驗證
 
-`node big.js /abs/index.html`：用 `bigdata.js` 的模擬門市（156 食材、60 道菜、25 供應商、1500 張進貨單、14 次盤點）測分頁、用量差異（核對預埋偏差）、損益串接、速度與手機版。
+`node big.js /abs/index.html`：用 `bigdata.js` 的模擬門市（156 食材、60 道菜、1 個套餐、25 供應商、1500 張進貨單、14 次盤點、9 月耗損與 POS 銷量）測分頁、用量差異（核對預埋偏差、扣耗損、POS 實際銷量）、耗損登記、POS 匯入（CSV 偵測、自動對應、重疊阻擋）、損益串接、速度、基本版只讀與手機版。
 
 資料庫裡的同一家模擬門市用 `seed_model_store.sql` 建立（品牌 id `test-model-store`，只有管理員看得到），`cleanup_model_store.sql` 刪除。
