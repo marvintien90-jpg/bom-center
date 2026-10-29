@@ -21,7 +21,7 @@ const timed=async(pg,f)=>{ const t0=Date.now(); await f(); return Date.now()-t0 
   console.log('管理員（電腦版）'); { const {pg,errs}=await open(br,'admin');
     await tab(pg,'cnt'); const ms=await waitFor(pg,()=>inv.brand===cur&&!inv.loading);
     const S=await pg.evaluate(()=>({r:inv.rcv.length,c:inv.cnt.length,l:Object.values(inv.lines).reduce((t,a)=>t+a.length,0),s:inv.supp.length,uniq:new Set(inv.rcv.map(x=>x.id)).size}));
-    ok(S.r===1500&&S.uniq===1500,`讀到全部 1500 張進貨單、沒有重複（分頁超過 1000 筆）→ ${S.r}/${S.uniq}`);
+    const NR=await pg.evaluate(()=>window.__BIG.rcv.length); ok(S.r===NR&&S.uniq===NR&&NR>1000,`讀到全部 ${NR} 張進貨單、沒有重複（分頁超過 1000 筆）→ ${S.r}/${S.uniq}`);
     const EL=await pg.evaluate(()=>window.__BIG.lines.length);
     ok(S.c===14&&S.l===EL&&S.s===25,`盤點 14 次、明細 ${EL} 行、供應商 25 家 → ${S.c}/${S.l}/${S.s}`);
     ok(ms>=0&&ms<3000,`庫存資料讀完 ${ms} ms`);
@@ -113,10 +113,51 @@ const timed=async(pg,f)=>{ const t0=Date.now(); await f(); return Date.now()-t0 
     t=await main(pg); ok(t.includes('依 POS 實際銷量')&&!bad(t),'8 月整月有匯入，差異改用 POS 銷量');
     const sid=S2.s.id; await tab(pg,'sales'); await sleep(80); await pg.evaluate(id=>document.querySelector(`[data-iv="sldel:${id}"]`).click(),sid); await sleep(80); await pg.evaluate(id=>document.querySelector(`[data-iv="sldel:${id}"]`).click(),sid); await sleep(150);
     ok(await pg.evaluate(id=>!window.__db.bom_sales.some(s=>s.id===id),sid),'刪除匯入要按兩次');
+    /* 庫存提醒與採購單 */
+    d=await timed(pg,async()=>{ await tab(pg,'po'); await sleep(80) }); t=await main(pg); ok(t.includes('2026-09-30 盤點')&&t.includes('其中 10 天用 POS 實際銷量')&&!bad(t),`庫存提醒：從 9/30 盤點接著推估，10/1～10/10 用 POS（${d} ms）`);
+    /* 獨立核對推估庫存：期初＋10 月進貨−（POS 份數＋月銷量×沒匯入的天數）×配方÷可用率−已叫未到不算在庫存 */
+    const chk2=await pg.evaluate(()=>{ const b=brands[cur], c=ctx(b), E=stockEst(b,c), B=window.__BIG, days=Math.round((Date.parse(today())-Date.parse('2026-09-30'))/864e5), unc=days-10, z=B.counts.find(x=>x.count_on==='2026-09-30');
+      const po={}; B.sales.find(x=>x.id==='sl-oct').lines.forEach(L=>po[L.key.slice(2)]=L.qty);
+      return E.rows.filter(r=>r.daily>0).map(r=>{ const k=r.p.key, g=k[0]==='i'?B.brand.ingredients.find(x=>'i:'+x.id===k):null, y=g?g.yield/100:1, s0=(B.lines.find(l=>l.count_id===z.id&&l.item_key===k)||{}).qty_base||0;
+        const use=B.brand.items.reduce((t,it)=>t+it.lines.filter(l=>l.ref===k).reduce((x,l)=>x+l.qty*((po[it.id]||0)+it.monthlySales*unc/30),0),0)/y;
+        const rc=window.__db.bom_receipts.filter(x=>x.received_on>'2026-09-30').reduce((t,x)=>t+x.lines.filter(L=>L.key===k).reduce((s,L)=>s+L.qty*L.pack,0),0);
+        return {k,ok:Math.abs(r.est-(s0+rc-use))<1e-6,est:r.est,exp:s0+rc-use} }) });
+    ok(chk2.length>100&&chk2.every(x=>x.ok),`推估庫存 ${chk2.length} 樣全部等於獨立計算（期初＋進貨−用量）`+(chk2.some(x=>!x.ok)?' 例：'+JSON.stringify(chk2.filter(x=>!x.ok).slice(0,2)):''));
+    const r1=await pg.evaluate(()=>{ const b=brands[cur], E=stockEst(b,ctx(b)); return E.rows.find(r=>r.p.key==='i:i1') }); ok(r1.on===3000,'已送出的採購單 3 公斤算進「已叫未到」');
+    const r25=await pg.evaluate(()=>{ const b=brands[cur], E=stockEst(b,ctx(b)); return E.rows.find(r=>r.p.key==='i:i25') }); ok(r25.rc===2000,'10/5 進貨 2 公斤有加進庫存');
+    const needN=await pg.evaluate(()=>{ const b=brands[cur], E=stockEst(b,ctx(b)); return E.rows.filter(r=>r.need).length }); const trs=await pg.$$eval('#main table:first-of-type tbody tr',rs=>rs.length);
+    ok(needN>0&&t.includes(`快用完\n${needN} 樣`)||t.includes(needN+' 樣'),`列出 ${needN} 樣快用完`);
+    /* 只留兩樣（不同供應商）建立採購單 */
+    const pick=await pg.evaluate(()=>{ const ks=Object.keys(poPick).filter(k=>poPick[k].sup); const a=ks[0], b2=ks.find(k=>poPick[k].sup!==poPick[a].sup); Object.keys(poPick).forEach(k=>poPick[k].on=false); return [a,b2] });
+    await pg.evaluate(()=>render()); await pg.check(`input[type=checkbox][data-pok="${pick[0]}"]`); await sleep(120);
+    await pg.fill(`#pq-${pick[1].replace(':','_')}`,'4'); await pg.dispatchEvent(`#pq-${pick[1].replace(':','_')}`,'input'); await sleep(50);
+    ok(await pg.evaluate(k=>poPick[k].on,pick[1]),'在建議量填數字會自動勾選');
+    const before=await pg.evaluate(()=>window.__db.bom_pos.length); await pg.evaluate(()=>document.querySelector('[data-iv="pomake"]').click()); await sleep(250);
+    const made=await pg.evaluate(n=>window.__db.bom_pos.slice(n),before); ok(made.length===2&&made.every(o=>o.status==='draft'&&o.lines.length===1&&o.supplier_name)&&made.some(o=>o.lines[0].key===pick[1]&&o.lines[0].qty===4),'依供應商分成 2 張草稿採購單，數量照填的');
+    t=await main(pg); ok(t.includes('已建立 2 張採購單'),'建立後提示');
+    const pid=made.find(o=>o.lines[0].key===pick[1]).id; await pg.evaluate(id=>document.querySelector(`[data-iv="posend:${id}"]`).click(),pid); await sleep(250);
+    const msg=await pg.$eval('#iv-pomsg',e=>e.value), po=await pg.evaluate(id=>window.__db.bom_pos.find(o=>o.id===id),pid);
+    ok(po.status==='sent'&&msg.includes(po.supplier_name+' 您好')&&msg.includes(po.lines[0].name+' 4 ')&&msg.includes('希望'),'送出：狀態變已送出，產生可貼到 LINE 的叫貨訊息');
+    await pg.evaluate(()=>document.querySelector('[data-iv="pomsgok"]').click()); await sleep(80);
+    const after=await pg.evaluate(k=>{ const b=brands[cur], E=stockEst(b,ctx(b)); return E.rows.find(r=>r.p.key===k).on },pick[1]); ok(after===4*(await pg.evaluate(k=>invItems(brands[cur],ctx(brands[cur])).find(x=>x.key===k).pack,pick[1])),'送出後算進已叫未到');
+    await pg.evaluate(id=>document.querySelector(`[data-iv="porecv:${id}"]`).click(),pid); await sleep(150); t=await main(pg);
+    ok(await pg.evaluate(()=>tab)==='rcv'&&t.includes('採購單轉來的進貨單')&&await pg.$eval('#iv-rq-0',e=>e.value)==='4','收貨：跳到進貨登記並帶入採購單內容');
+    await pg.fill('#iv-rq-0','3.5'); await pg.dispatchEvent('#iv-rq-0','input'); const nR=await pg.evaluate(()=>window.__db.bom_receipts.length);
+    await pg.evaluate(()=>document.querySelector('[data-iv="rcvsave"]').click()); await sleep(250);
+    const rr=await pg.evaluate(n=>window.__db.bom_receipts.slice(n)[0],nR), po2=await pg.evaluate(id=>window.__db.bom_pos.find(o=>o.id===id),pid);
+    ok(rr&&rr.lines[0].qty===3.5&&rr.supplier_id===po2.supplier_id&&po2.status==='received'&&po2.receipt_id===rr.id,'存成進貨單（實收 3.5），採購單自動標已收貨並連到進貨單');
+    ok((await main(pg)).includes('採購單也標成已收貨'),'存好後提示');
+    await tab(pg,'po'); await sleep(80); await pg.evaluate(()=>document.querySelector('[data-iv="podel:po2"]').click()); await sleep(60); await pg.evaluate(()=>document.querySelector('[data-iv="podel:po2"]').click()); await sleep(150);
+    ok(await pg.evaluate(()=>!window.__db.bom_pos.some(o=>o.id==='po2')),'刪除草稿要按兩次');
+    await pg.evaluate(()=>document.querySelector('[data-iv="ponew"]').click()); await sleep(80); await pg.evaluate(()=>document.querySelector('[data-iv="posave"]').click()); await sleep(80); ok((await main(pg)).includes('至少要填一列'),'空白採購單擋下');
+    await pg.evaluate(()=>document.querySelector('[data-iv="pocancel"]').click());
+    await tab(pg,'home'); await sleep(200); t=await main(pg); ok(t.includes('庫存提醒')&&t.includes('撐不到下次叫貨'),'首頁出現庫存提醒');
     ok(!errs.length,'沒有程式錯誤'+(errs.length?' → '+errs.slice(0,3).join(' | '):'')); }
-  console.log('基本版只讀');{ const {pg,errs}=await open(br,'basic',390);
+  console.log('基本版只讀');{ const {pg,errs}=await open(br,'basic',390); let t0;
     const nav=await pg.$$eval('#nav [data-tab]',bs=>bs.map(b=>b.dataset.tab+(b.textContent.includes('進階')?'*':'')));
-    ok(nav.includes('waste')&&!nav.includes('sales'),'基本版有耗損登記，銷量匯入是進階版');
+    ok(nav.includes('waste')&&nav.includes('po')&&!nav.includes('sales'),'基本版有耗損登記和採購單，銷量匯入是進階版');
+    await tab(pg,'po'); await waitFor(pg,()=>inv.brand===cur&&!inv.loading); await sleep(100); t0=await main(pg);
+    ok(t0.includes('快用完')&&!(await pg.$('[data-pok]'))&&!(await pg.$('[data-iv="pomake"]'))&&!(await pg.$('[data-iv^="posend"]')),'只讀帳號看得到庫存提醒和採購單，不能開單');
     await tab(pg,'waste'); await waitFor(pg,()=>inv.brand===cur&&!inv.loading); await sleep(100); let t=await main(pg);
     ok(!(await pg.$('#iv-wkey'))&&!(await pg.$('[data-iv^="wsdel"]'))&&t.includes('耗損紀錄'),'只讀帳號看得到紀錄，沒有登記和刪除');
     ok(await pg.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'手機上沒有橫向捲動');

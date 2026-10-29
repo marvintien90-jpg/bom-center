@@ -45,5 +45,11 @@ K.forEach(x=>{ if(V[x.k]!=null&&x.v>=0.12&&(odd++)%2===0){ const q=Math.round(x.
 waste.push({id:'w'+(wid++),brand_id:'b1',waste_on:'2026-09-20',item_key:'m:m2',name:items[1].name,qty:2,unit_cost:100,amount:200,reason:'製作失誤',note:'翻鍋',created_by_email:'pro@x.tw',created_at:'2026-09-20T10:00:00Z'});
 const sl=items.map(it=>{ const q=it.monthlySales-(it.id==='m1'||it.id==='m2'?20:0); return {key:'m:'+it.id,name:it.name,qty:q,amount:q*it.price} }).concat([{key:'k:k1',name:'雙人套餐（套餐）',qty:20,amount:10000}]);
 const sales=[{id:'sl1',brand_id:'b1',start_on:'2026-09-01',end_on:'2026-09-30',source:'POS_202609.xlsx',lines:sl,unmatched:[{name:'可樂',qty:300,amount:9000,key:'x'}],qty_total:sl.reduce((t,l)=>t+l.qty,0)+300,amount_total:sl.reduce((t,l)=>t+l.amount,0)+9000,created_by_email:'marvintien90@gmail.com',created_at:'2026-10-01T00:00:00Z'}];
-window.__BIG={brand,supp,rcv,counts,lines,plp,v:V,waste,sales};
+/* 批次 2：10 月的一張進貨、10/1～10/10 的 POS 銷量、一張已送出和一張草稿採購單（用來測庫存推估） */
+rcv.unshift({id:'r-oct',brand_id:'b1',supplier_id:'sp1',supplier_name:supp[0].name,received_on:'2026-10-05',invoice_no:'OCT',lines:[{key:'i:i25',name:ing[24].name,qty:2,pack:1000,unit:'公斤',price:100,amount:200},{key:'s:s1',name:semis[0].name,qty:1,pack:1000,unit:'包(1kg)',price:300,amount:300}],total:500,created_by_email:'pro@x.tw',created_at:'2026-10-05T09:00:00Z'});
+const so=items.map(it=>({key:'m:'+it.id,name:it.name,qty:Math.round(it.monthlySales/3),amount:Math.round(it.monthlySales/3)*it.price}));
+sales.unshift({id:'sl-oct',brand_id:'b1',start_on:'2026-10-01',end_on:'2026-10-10',source:'POS_20261001-10.csv',lines:so,unmatched:[],qty_total:so.reduce((t,l)=>t+l.qty,0),amount_total:so.reduce((t,l)=>t+l.amount,0),created_by_email:'pro@x.tw',created_at:'2026-10-11T00:00:00Z'});
+const pos=[{id:'po1',brand_id:'b1',supplier_id:'sp2',supplier_name:supp[1].name,order_on:'2026-10-20',expect_on:'2026-10-21',status:'sent',lines:[{key:'i:i1',name:ing[0].name,qty:3,pack:1000,unit:'公斤',price:200,amount:600}],total:600,created_by_email:'pro@x.tw',created_at:'2026-10-20T00:00:00Z'},
+  {id:'po2',brand_id:'b1',supplier_id:'sp3',supplier_name:supp[2].name,order_on:'2026-10-21',expect_on:null,status:'draft',lines:[{key:'i:i2',name:ing[1].name,qty:1,pack:1000,unit:'公斤',price:50,amount:50}],total:50,created_by_email:'pro@x.tw',created_at:'2026-10-21T00:00:00Z'}];
+window.__BIG={brand,supp,rcv,counts,lines,plp,v:V,waste,sales,pos};
 })();
