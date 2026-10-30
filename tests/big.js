@@ -183,6 +183,8 @@ const timed=async(pg,f)=>{ const t0=Date.now(); await f(); return Date.now()-t0 
     const fb=await pg.evaluate(()=>{ const b=brands[cur], c=ctx(b), x=fcBase({...b,periods:[]},c), y=fcBase({...b,periods:b.periods.slice(-1)},c), z=fcForecast(fcHist({...b,periods:b.periods.slice(-4)}),3); return {src:x&&x.src,R:x&&x.R,th:theory(b,c).sales,y:y.H.length,zm:z.method,zr:z.rows.every(r=>r.R>0)} });
     ok(fb.src.includes('還沒有損益表')&&Math.abs(fb.R-fb.th)<1,'沒有損益表時改用配方月銷量估');
     ok(fb.y===1&&fb.zm.includes('近 4 個月平均')&&fb.zr,'只有 4 個月時用平均加趨勢');
+    const gap=await pg.evaluate(()=>{ const b=brands[cur], P=b.periods.filter(p=>p.month!=='2026-03'), sh=[...b.periods].reverse(); return {g:fcForecast(fcHist({...b,periods:P}),3).method, s:fcHist({...b,periods:sh}).map(h=>h.month).join()===fcHist(b).map(h=>h.month).join()} });
+    ok(gap.g.includes('平均')&&gap.s,'中間缺一個月就不用季節法；月份順序亂了會自動排好');
     ok(!errs.length,'沒有程式錯誤'+(errs.length?' → '+errs.slice(0,3).join(' | '):'')); }
   console.log('基本版只讀');{ const {pg,errs}=await open(br,'basic',390); let t0;
     const nav=await pg.$$eval('#nav [data-tab]',bs=>bs.map(b=>b.dataset.tab+(b.textContent.includes('進階')?'*':'')));

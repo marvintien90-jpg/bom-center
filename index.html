@@ -1481,11 +1481,12 @@ document.addEventListener('click',async e=>{ const t=e.target.closest('button');
 let fcS={traffic:'',price:'',food:'',cat:'',catPct:'',labor:'',rent:'',n:3};
 const fcKind=n=>/薪|人事|勞保|健保|伙食|獎金|加班|兼職|工讀/.test(n)?'labor':/租/.test(n)?'rent':/外送|平台|uber|foodpanda|熊貓|服務費|刷卡|手續費|抽成|佣金/i.test(n)?'var':'fixed';
 const fcLab={labor:'人事費用',rent:'租金',var:'跟營收連動的費用（外送抽成、刷卡費）',fixed:'其他固定費用（水電、雜支等）'};
-function fcHist(b){ return (b.periods||[]).map((p,i)=>{ const R=sumA(p.revenue||[]),P=sumA(p.purchases||[]),E=sumA(p.expenses||[]); return {lab:p.label||p.period||'第 '+(i+1)+' 期',month:p.month||null,R,P,E,N:R-P-E,ex:p.expenses||[]} }).filter(x=>x.R>0) }
+function fcHist(b){ return (b.periods||[]).map((p,i)=>{ const R=sumA(p.revenue||[]),P=sumA(p.purchases||[]),E=sumA(p.expenses||[]); return {lab:p.label||p.period||'第 '+(i+1)+' 期',month:p.month||null,R,P,E,N:R-P-E,ex:p.expenses||[]} }).filter(x=>x.R>0).sort((x,y)=>x.month&&y.month?x.month.localeCompare(y.month):0) }
 const fcNext=(m,i)=>{ const [y,mm]=m.split('-').map(Number), d=new Date(Date.UTC(y,mm-1+i,1)); return d.toISOString().slice(0,7) };
 /* 營收預估：滿 12 個月用「近 3 個月水準 × 去年同月的季節起伏」，不滿就用近幾個月平均加一半趨勢（每月最多 ±2.5%） */
+const fcSeq=H=>{ const m=H.slice(-12).map(h=>h.month); return m.length===12&&m.every((x,i)=>x&&/^\d{4}-\d{2}$/.test(x)&&(!i||fcNext(m[i-1],1)===x)) };
 function fcForecast(H,n){ const L=H.length, R=H.map(h=>h.R), out=[]; let method, rel;
-  if(L>=12){ const ly=R.slice(L-12), avg=ly.reduce((t,x)=>t+x,0)/12, si=ly.map(x=>x/avg), lvl=R.slice(-3).reduce((t,x)=>t+x,0)/(si[9]+si[10]+si[11]);
+  if(L>=12&&fcSeq(H)){ const ly=R.slice(L-12), avg=ly.reduce((t,x)=>t+x,0)/12, si=ly.map(x=>x/avg), lvl=R.slice(-3).reduce((t,x)=>t+x,0)/(si[9]+si[10]+si[11]);
     const res=R.slice(-12).map((x,i)=>x/(si[i]*lvl)-1); rel=Math.max(.03,Math.sqrt(res.reduce((t,x)=>t+x*x,0)/res.length));
     for(let i=0;i<n;i++) out.push(lvl*si[i%12]); method='近 3 個月的營收水準，乘上去年同月的季節起伏'; }
   else { const k=Math.min(6,L), ys=R.slice(-k), mx=(k-1)/2, my=ys.reduce((t,y)=>t+y,0)/k; let sl=0,d=0; ys.forEach((y,i)=>{ sl+=(i-mx)*(y-my); d+=(i-mx)**2 }); sl=d?sl/d:0; sl=Math.max(-my*.05,Math.min(my*.05,sl))*.5;
@@ -1516,7 +1517,7 @@ V.fc=(b,c)=>{ const head=`<div class="head"><div><h2>營收預估與情境模擬
 <p class="note">預估方法：${F.method}。可能範圍是過去每月實際跟這個方法的平均誤差（±${pct(F.rel,0)}）。食材成本率用${esc(B0.src)}的 ${pct(B0.fr)}；人事、租金、其他固定費用照近 3 個月平均，外送抽成和刷卡費跟著營收比例變動。圖上「預」開頭的是預估月份。</p>` }
   else fcHtml=`<p class="sample">${B0.H.length?'只有 1 個月的損益表，還不能預估趨勢，下面的情境模擬先用這個月的數字。':esc(B0.src)+'。導入 2 個月以上的損益表就能預估營收。'}</p>`;
   const sh=fcCatShare(b,c), cats=Object.keys(sh).filter(k=>sh[k]>0).sort((x,y)=>sh[y]-sh[x]), S=fcScen(B0,sh);
-  const inp=(k,lab,ph,u)=>`<label for="iv-fc-${k}">${lab} <input type="number" step="any" inputmode="decimal" id="iv-fc-${k}" data-fc="${k}" value="${esc(fcS[k])}" placeholder="${ph}" style="width:80px" aria-label="${lab}"> ${u}</label>`;
+  const inp=(k,lab,ph,u)=>`<label for="iv-fc-${k}">${lab} <input type="number" step="any" inputmode="decimal" id="iv-fc-${k}" data-fc="${k}" value="${esc(fcS[k])}" placeholder="${ph}" style="width:104px" aria-label="${lab}"> ${u}</label>`;
   const line=(lab,a,z,inv)=>{ const d=z-a; return `<tr><td>${lab}</td><td class="n">${$$(a,0)}</td><td class="n">${$$(z,0)}</td><td class="n">${Math.abs(d)<.5?'–':`<span class="pill ${(inv?d<0:d>0)?'good':'bad'}">${sg$(d)}</span>`}</td></tr>` };
   const any=['traffic','price','food','catPct','labor','rent'].some(k=>parseFloat(fcS[k]));
   return head+fcHtml+`<h2>情境模擬</h2><p class="sub">以${esc(B0.src)}為基準（每月營收 ${$$(B0.R,0)}），填想試算的變化，可以同時填好幾項。負數代表減少。</p>
