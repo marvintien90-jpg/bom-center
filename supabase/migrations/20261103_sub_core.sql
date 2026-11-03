@@ -586,3 +586,57 @@ begin
   end if;
   return new;
 end $function$;
+
+-- ---------- 每月經營健檢簡報 ----------
+create table if not exists public.sub_reports(
+  id bigint generated always as identity primary key,
+  subscription_id bigint not null references public.sub_subscriptions(id) on delete cascade,
+  user_id uuid not null,
+  month text not null check (month ~ '^\d{4}-\d{2}$'),
+  path text not null,
+  summary jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  unique (subscription_id, month)
+);
+comment on table public.sub_reports is '每月經營健檢簡報：檔案在 Storage sub-reports/<user_id>/<YYYY-MM>.pptx';
+alter table public.sub_reports enable row level security;
+drop policy if exists sub_reports_select on public.sub_reports;
+create policy sub_reports_select on public.sub_reports for select to authenticated using (user_id = (select auth.uid()) or bom_private.is_admin());
+grant select on public.sub_reports to authenticated;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('sub-reports', 'sub-reports', false, 10485760, array['application/vnd.openxmlformats-officedocument.presentationml.presentation'])
+on conflict (id) do nothing;
+drop policy if exists sub_reports_read on storage.objects;
+create policy sub_reports_read on storage.objects for select to authenticated
+  using (bucket_id = 'sub-reports' and ((storage.foldername(name))[1] = (select auth.uid())::text or bom_private.is_admin()));
+
+-- 簡報產生後由 edge function（service role）呼叫：記錄並寄信
+create or replace function public.sub_report_ready(p_sub bigint, p_month text, p_path text, p_summary jsonb) returns void
+language plpgsql security definer set search_path to '' as $$
+declare s public.sub_subscriptions;
+begin
+  select * into s from public.sub_subscriptions where id = p_sub;
+  if s.id is null then raise exception 'SUB_NONE'; end if;
+  insert into public.sub_reports (subscription_id, user_id, month, path, summary) values (s.id, s.user_id, p_month, p_path, coalesce(p_summary, '{}'::jsonb))
+  on conflict (subscription_id, month) do update set path = excluded.path, summary = excluded.summary, created_at = now();
+  begin
+    perform bom_private.send_mail('report', s.email, s.brand_name || ' ' || p_month || ' 經營健檢簡報已產生',
+      '<p>' || bom_private.esc(s.company) || '，您好：</p><p>' || bom_private.esc(s.brand_name) || ' ' || p_month || ' 的經營健檢簡報已經產生，請到<a href="https://marvintien90-jpg.github.io/bom-center/member/">會員中心</a>下載。</p>'
+      || coalesce('<p>本月最需要注意：' || bom_private.esc(p_summary->'advice'->>0) || '</p>', ''), 'marvintien90@gmail.com');
+  exception when others then null; end;
+end $$;
+revoke execute on function public.sub_report_ready(bigint, text, text, jsonb) from public, anon, authenticated;
+grant execute on function public.sub_report_ready(bigint, text, text, jsonb) to service_role;
+
+-- 每月 5 日早上 9 點（台北）產生上個月的簡報。需要先在 vault 存 sub_cron_secret，並在 edge function secrets 設同一個 SUB_CRON_SECRET
+do $$ begin
+  if exists (select 1 from cron.job where jobname = 'sub-health-deck') then perform cron.unschedule('sub-health-deck'); end if;
+  perform cron.schedule('sub-health-deck', '0 1 5 * *', $job$
+    select net.http_post(
+      url := 'https://thxqncpkkzmpktwuvzvz.supabase.co/functions/v1/health-deck',
+      headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'sub_cron_secret' limit 1)),
+      body := '{}'::jsonb)
+    where exists (select 1 from vault.decrypted_secrets where name = 'sub_cron_secret')
+  $job$);
+end $$;
