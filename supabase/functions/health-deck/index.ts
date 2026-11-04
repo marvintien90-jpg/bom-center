@@ -11,6 +11,11 @@ Deno.serve(async (req) => {
   const db = admin();
   const cron = req.headers.get('x-cron-secret'), want = Deno.env.get('SUB_CRON_SECRET');
   let allowed = !!want && cron === want;
+  // 排程金鑰存在資料庫 vault（sub_cron_secret），用只給 service role 的函式比對
+  if (!allowed && cron && cron.length >= 32) {
+    const { data: okSecret } = await db.rpc('sub_cron_secret_ok', { p: cron });
+    allowed = okSecret === true;
+  }
   if (!allowed) {
     const jwt = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
     const { data: u } = await db.auth.getUser(jwt);
@@ -24,7 +29,7 @@ Deno.serve(async (req) => {
 
   const { data: plans } = await db.from('sub_plans').select('code').eq('monthly_deck', true);
   const codes = (plans || []).map((p: { code: string }) => p.code);
-  let q = db.from('sub_subscriptions').select('*').in('status', ['trial', 'active', 'past_due', 'canceled']);
+  let q = db.from('sub_subscriptions').select('*').in('status', ['trial', 'active', 'past_due', 'canceled', 'comp']);
   if (body.subscription_id) q = db.from('sub_subscriptions').select('*').eq('id', body.subscription_id);
   else q = q.in('plan', codes);
   const { data: subs, error } = await q;
