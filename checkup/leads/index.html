@@ -57,6 +57,9 @@ details{margin-top:8px}summary{cursor:pointer;color:var(--accent);font-size:14px
 .msg{padding:10px 12px;border-radius:8px;background:var(--bad-bg);color:var(--bad);margin:8px 0}
 .ans{margin-top:10px;font-size:14px}.ans ol{margin:4px 0 0;padding-left:20px}.ans li{margin:2px 0}
 .lead.focus{box-shadow:0 0 0 2px var(--accent)}
+.bw{font-size:14px;margin-top:6px}.bw h4{margin:12px 0 4px;font-size:14px}
+.script{background:var(--good-bg);border-radius:8px;padding:10px;margin:4px 0;white-space:pre-wrap}
+.bw ol,.bw ul{margin:4px 0;padding-left:20px}.bw li{margin:3px 0}.fix{font-weight:700}
 .empty{text-align:center;color:var(--mute);padding:28px 0}
 </style>
 </head>
@@ -80,7 +83,7 @@ const STATUS=['新名單','已聯絡','已預約','已成交','不需要'];
 const OPEN=['新名單','已聯絡','已預約'];
 const CH=[['ig','Instagram'],['fb','Facebook'],['line','LINE'],['','直接分享']];
 const chName=s=>({ig:'IG',fb:'FB',line:'LINE',test:'測試'})[s]||'直接';
-let leads=[], tab='open';
+let leads=[], tab='open'; const briefs={};
 const focusId=Number(new URLSearchParams(location.search).get('id'))||null; let focused=false;
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('on'),1600)}
 async function copy(text,label){try{await navigator.clipboard.writeText(text);toast(label+' 已複製')}catch(e){prompt('請手動複製：',text)}}
@@ -116,6 +119,27 @@ function detail(l){
   h+=C.DIMS.map(d=>`<div class="ans"><b>${d.name}｜${d.full}</b><ol>${d.qs.map(([id,t])=>{const v=a[id];const cls=v===0?'bad':v===1?'warn':'';return `<li>${esc(t)}：<span class="pill ${cls}">${v==null?'未答':C.SCALE[v]}</span></li>`}).join('')}</ol></div>`).join('');
   return h;
 }
+function briefHtml(b){
+  if(!b) return '<p class="note">這筆名單沒有作業包資料。</p>';
+  let h=`<h4>第一步：邀約話術（LINE 或電話）</h4><div class="script">${esc(b.script)}</div><button data-bcopy="script">複製邀約話術</button>`;
+  h+='<h4>問題判讀與改善方案</h4>';
+  for(const w of b.weak||[]){
+    h+=`<p style="margin:8px 0 2px"><b>${esc(w.name)}｜${esc(w.full)}</b>　<span class="pill ${lv(w.score)}">${esc(w.score)} 分</span></p><ol>${(w.issues||[]).map(i=>`<li>可能問題：${esc(i.issue)}<br><span class="note">（${esc(i.q)}：${esc(i.answer)}）</span><br>改善方案：<span class="fix">${esc(i.fix)}</span></li>`).join('')}</ol>
+      <p class="note" style="margin:2px 0">對應工具：${esc(w.tool)}</p><p style="margin:4px 0 0">訪談時問：</p><ul>${(w.ask||[]).map(a=>`<li>${esc(a)}</li>`).join('')}</ul>`;
+  }
+  h+=`<h4>請業主訪談前準備</h4><ul>${(b.prep||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>`;
+  h+=`<h4>3 天沒回覆時的追蹤話術</h4><div class="script" style="background:var(--field)">${esc(b.followup)}</div><button data-bcopy="followup">複製追蹤話術</button>`;
+  return h;
+}
+async function loadBrief(el){
+  const id=Number(el.closest('.lead').dataset.id), box=el.querySelector('.bw');
+  if(!(id in briefs)){
+    const {data,error}=await sbc.rpc('checkup_brief',{p_id:id});
+    if(error){box.innerHTML=`<div class="msg">作業包讀取失敗：${esc(error.message)}</div>`;return}
+    briefs[id]=data;
+  }
+  box.innerHTML=briefHtml(briefs[id]);
+}
 function render(){
   const now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1);
   const month=leads.filter(l=>new Date(l.created_at)>=m0).length, todo=leads.filter(l=>l.status==='新名單').length, won=leads.filter(l=>l.status==='已成交').length;
@@ -132,11 +156,13 @@ function render(){
       <div class="row" style="margin-top:4px"><span class="score">${l.total??'-'}</span><span class="note">分</span>${w.map(([n,s])=>`<span class="pill ${lv(s)}">${n} ${s}</span>`).join('')}${l.biz_type?`<span class="note">${esc(l.biz_type)}${l.stores?'・'+l.stores+' 店':''}</span>`:''}</div>
       <div class="contact">${l.phone?`<a class="btn" href="tel:${esc(l.phone)}">📞 ${esc(l.phone)}</a>`:''}${l.line_id?`<button data-line="${esc(l.line_id)}">LINE ${esc(l.line_id)}</button>`:''}${l.email?`<a class="btn" href="mailto:${esc(l.email)}">${esc(l.email)}</a>`:''}</div>
       <div class="edit"><select data-status aria-label="狀態">${STATUS.map(s=>`<option ${s===l.status?'selected':''}>${s}</option>`).join('')}</select><textarea data-note placeholder="備註（離開欄位自動儲存）" aria-label="備註">${esc(l.note||'')}</textarea></div>
-      <details ${l.id===focusId?'open':''}><summary>看完整結果與答案</summary><div class="dims">${C.DIMS.map(x=>`<div>${x.name}<br><b>${(l.scores||{})[x.key]??'-'}</b></div>`).join('')}</div>
+      <details data-brief ${l.id===focusId?'open':''}><summary>顧問作業包（問題、改善方案、話術）</summary><div class="bw">${l.id in briefs?briefHtml(briefs[l.id]):'<p class="note">讀取中…</p>'}</div></details>
+      <details><summary>看完整結果與答案</summary><div class="dims">${C.DIMS.map(x=>`<div>${x.name}<br><b>${(l.scores||{})[x.key]??'-'}</b></div>`).join('')}</div>
       ${detail(l)}</details>
     </div>`;
   }
   $('#app').innerHTML=h;
+  document.querySelectorAll('details[data-brief][open]').forEach(loadBrief);
   if(focusId&&!focused){const el=document.getElementById('lead-'+focusId);if(el){focused=true;el.scrollIntoView({block:'start'})}}
 }
 async function save(id,patch){
@@ -149,6 +175,7 @@ $('#app').addEventListener('click',e=>{
   if(b.dataset.copy!==undefined) copy(link(b.dataset.copy),b.textContent+' 連結');
   else if(b.dataset.tab){tab=b.dataset.tab;render()}
   else if(b.dataset.line) copy(b.dataset.line,'LINE ID');
+  else if(b.dataset.bcopy){const id=Number(b.closest('.lead').dataset.id);copy((briefs[id]||{})[b.dataset.bcopy]||'',b.textContent.replace('複製',''))}
 });
 $('#app').addEventListener('change',async e=>{
   const card=e.target.closest('.lead'); if(!card||!e.target.matches('[data-status]'))return;
@@ -159,6 +186,7 @@ $('#app').addEventListener('focusout',e=>{
   const id=Number(card.dataset.id), v=e.target.value.trim().slice(0,500), l=leads.find(x=>x.id===id);
   if((l.note||'')!==v) save(id,{note:v||null});
 });
+$('#app').addEventListener('toggle',e=>{if(e.target.matches('details[data-brief]')&&e.target.open)loadBrief(e.target)},true);
 $('#out').onclick=async()=>{await sbc.auth.signOut();login()};
 load();
 </script>

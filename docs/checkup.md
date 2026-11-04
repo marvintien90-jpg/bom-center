@@ -35,3 +35,16 @@
 1. 套用 migration（Supabase SQL Editor 貼上 `20261104_checkup_leads.sql` 執行），再貼 migration＋`tests/checkup_leads.sql` 跑一次，最後的錯誤訊息應該是 `RESULT fail=0`。
 2. 合併 PR 後把 main 推到 gh-pages。
 3. 用自己的手機實際做一次，確認收到通知信。
+
+## 顧問作業包（2026-11-04）
+
+每筆新名單的通知信直接帶出「顧問作業包」，名單頁展開「顧問作業包」也看得到同一份：
+
+- 邀約話術（LINE／電話，一鍵複製）與 3 天沒回覆的追蹤話術
+- 最弱的兩個面向（第二個低於 75 分才列）：每個面向最多 3 個具體可能問題（答「沒有」或「偶爾」的題目）＋改善方案＋對應工具
+- 每個弱面向的 3 個訪談提問
+- 請業主訪談前準備的資料
+
+內容在 `checkup_private.pb_dim`（面向：提問、工具）與 `checkup_private.pb_q`（題目：可能問題、改善方案），改這兩張表就會同時改到信件和名單頁。
+產生邏輯是 `checkup_private.brief(id)`；名單頁透過只限管理員的 `public.checkup_brief(p_id)` 讀取。
+Migration：`supabase/migrations/20261104_checkup_brief.sql`（取代尚未套用的 v2 通知信）。
