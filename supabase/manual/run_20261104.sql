@@ -94,7 +94,58 @@ $$;
 revoke execute on function public.sub_cron_secret_ok(text) from public, anon, authenticated;
 grant execute on function public.sub_cron_secret_ok(text) to service_role;
 
--- ---------- 4. 一級棒讚主帳號設為免費招待（顧問會員方案，含每月健檢簡報） ----------
+-- ---------- 4. 電子發票（綠界 B2C） ----------
+-- invoice_mode：off＝不開；test＝綠界測試環境（只對 sandbox 訂閱）；live＝正式。預設 off。
+alter table public.sub_settings add column if not exists invoice_mode text not null default 'off';
+alter table public.sub_settings drop constraint if exists sub_settings_invoice_mode_check;
+alter table public.sub_settings add constraint sub_settings_invoice_mode_check check (invoice_mode in ('off','test','live'));
+
+-- 業主可填統編與抬頭（公司發票）；沒填就開個人發票（綠界會員載具，寄到帳號 email）
+alter table public.sub_subscriptions add column if not exists tax_id text;
+alter table public.sub_subscriptions add column if not exists invoice_title text;
+alter table public.sub_subscriptions drop constraint if exists sub_subscriptions_tax_id_check;
+alter table public.sub_subscriptions add constraint sub_subscriptions_tax_id_check check (tax_id is null or tax_id ~ '^[0-9]{8}$');
+alter table public.sub_subscriptions drop constraint if exists sub_subscriptions_invoice_title_check;
+alter table public.sub_subscriptions add constraint sub_subscriptions_invoice_title_check check (invoice_title is null or char_length(invoice_title) between 1 and 60);
+
+create table if not exists public.sub_invoices(
+  id bigint generated always as identity primary key,
+  payment_id bigint not null unique references public.sub_payments(id),
+  subscription_id bigint not null references public.sub_subscriptions(id),
+  user_id uuid not null,
+  amount int not null,
+  tax_id text,
+  status text not null check (status in ('issued','failed')),
+  invoice_no text,
+  invoice_date text,
+  random_number text,
+  error text,
+  sandbox boolean not null default false,
+  attempts int not null default 1,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.sub_invoices enable row level security;
+drop policy if exists sub_inv_select on public.sub_invoices;
+create policy sub_inv_select on public.sub_invoices for select to authenticated using (user_id = (select auth.uid()) or bom_private.is_admin());
+grant select on public.sub_invoices to authenticated;
+create index if not exists sub_invoices_user on public.sub_invoices(user_id);
+
+create or replace function public.sub_set_invoice_info(p_tax_id text, p_title text) returns jsonb
+language plpgsql security definer set search_path to '' as $$
+declare s public.sub_subscriptions; t text := nullif(trim(coalesce(p_tax_id, '')), ''); n text := nullif(trim(coalesce(p_title, '')), '');
+begin
+  select * into s from public.sub_subscriptions where user_id = (select auth.uid()) for update;
+  if s.id is null then raise exception 'SUB_NONE'; end if;
+  if t is not null and t !~ '^[0-9]{8}$' then raise exception 'SUB_BAD_TAX_ID'; end if;
+  if t is not null and n is null then raise exception 'SUB_NEED_TITLE'; end if;
+  update public.sub_subscriptions set tax_id = t, invoice_title = case when t is null then null else left(n, 60) end where id = s.id;
+  return jsonb_build_object('tax_id', t, 'invoice_title', case when t is null then null else left(n, 60) end);
+end $$;
+revoke execute on function public.sub_set_invoice_info(text, text) from public, anon;
+grant execute on function public.sub_set_invoice_info(text, text) to authenticated;
+
+-- ---------- 5. 一級棒讚主帳號設為免費招待（顧問會員方案，含每月健檢簡報） ----------
 do $$ begin
   perform set_config('request.jwt.claims', '{"sub":"9f0b31ab-f9dc-4caf-8a5c-6f453d282554","role":"authenticated"}', true);
   if not exists (select 1 from public.sub_subscriptions s join auth.users u on u.id = s.user_id where lower(u.email) = 'cmcbo.crg@gmail.com') then

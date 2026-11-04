@@ -2,6 +2,7 @@
 // 一律冪等：同一筆通知重送不會重複延長期限。回應 1|OK 綠界才不會重送。
 import { admin, settings, merchant } from '../_shared/billing_env.ts';
 import { verifyMac, parseForm, periodCancelRequest } from '../_shared/ecpay.js';
+import { issueForPayment } from '../_shared/invoice_issue.ts';
 
 const txt = (s: string, status = 200) => new Response(s, { status, headers: { 'Content-Type': 'text/plain' } });
 const tpeDate = (s?: string) => {
@@ -40,11 +41,11 @@ Deno.serve(async (req) => {
     if (!isPeriod) {
       // 首期授權
       const amt = parseInt(f.TradeAmt || '0', 10);
-      const { error: dup } = await db.from('sub_payments').insert({
+      const { data: firstRow, error: dup } = await db.from('sub_payments').insert({
         subscription_id: sub.id, user_id: sub.user_id, provider: 'ecpay', merchant_trade_no: no, trade_no: f.TradeNo || null, kind: 'first', seq: 1,
         amount: amt, plan: co.plan, stores: co.stores, status: ok ? 'paid' : 'failed', rtn_code: f.RtnCode, rtn_msg: f.RtnMsg,
         paid_at: ok ? new Date().toISOString() : null, sandbox, raw: f,
-      });
+      }).select('id').maybeSingle();
       if (dup) return txt('1|OK'); // 重送：已處理過
       if (!ok) return txt('1|OK');
       if (amt !== co.amount) { await db.from('sub_log').insert({ user_id: sub.user_id, action: 'notify_amount_mismatch', detail: { no, amt, want: co.amount } }); return txt('1|OK'); }
@@ -60,17 +61,18 @@ Deno.serve(async (req) => {
       const { error: ae } = await db.rpc('sub_apply_payment', { p_sub: sub.id, p_kind: 'first', p_paid_on: tpeDate(f.PaymentDate), p_ref: no, p_last4: last4, p_plan: co.plan, p_stores: co.stores });
       if (ae) throw ae;
       await db.from('sub_subscriptions').update({ provider: 'ecpay', sandbox: sub.sandbox }).eq('id', sub.id);
+      if (firstRow?.id) { try { await issueForPayment(db, cfg.invoice_mode, firstRow.id); } catch (e) { console.error('invoice', e); } }
       return txt('1|OK');
     }
 
     // 每期扣款
     const times = parseInt(f.TotalSuccessTimes || '0', 10);
     const seq = ok ? times : 100000 + (parseInt(f.Gwsr || f.gwsr || '0', 10) % 1000000000 || Math.floor(Date.now() / 1000) % 1000000000);
-    const { error: dup } = await db.from('sub_payments').insert({
+    const { data: periodRow, error: dup } = await db.from('sub_payments').insert({
       subscription_id: sub.id, user_id: sub.user_id, provider: 'ecpay', merchant_trade_no: no, trade_no: f.Gwsr || f.gwsr || null, kind: 'period', seq,
       amount: parseInt(f.Amount || f.amount || '0', 10), plan: co.plan, stores: co.stores, status: ok ? 'paid' : 'failed', rtn_code: f.RtnCode, rtn_msg: f.RtnMsg,
       paid_at: ok ? new Date().toISOString() : null, sandbox, raw: f,
-    });
+    }).select('id').maybeSingle();
     if (dup) return txt('1|OK');
     if (sub.provider_ref !== no) return txt('1|OK'); // 舊的、已換掉的扣款單
     // 金額和當初建立的付款單不同，就不延長期限，留紀錄給管理員查
@@ -79,6 +81,7 @@ Deno.serve(async (req) => {
     if (ok && times > 1) {
       const { error: ae } = await db.rpc('sub_apply_payment', { p_sub: sub.id, p_kind: 'period', p_paid_on: tpeDate(f.ProcessDate || f.process_date), p_ref: no, p_last4: null, p_plan: null, p_stores: null });
       if (ae) throw ae;
+      if (periodRow?.id) { try { await issueForPayment(db, cfg.invoice_mode, periodRow.id); } catch (e) { console.error('invoice', e); } }
     } else if (!ok && sub.status === 'active') {
       await db.from('sub_subscriptions').update({ status: 'past_due' }).eq('id', sub.id);
     }

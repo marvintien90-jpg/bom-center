@@ -2,13 +2,14 @@
 // 需要登入（verify_jwt 開啟）。測試模式只允許管理員標記為 sandbox 的訂閱，避免有人用公開測試金鑰偽造付款。
 import { admin, settings, merchant, SITE } from '../_shared/billing_env.ts';
 import { periodCheckout, periodCancelRequest, tradeNo, parseForm } from '../_shared/ecpay.js';
+import { issueForPayment } from '../_shared/invoice_issue.ts';
 
 const ORIGINS = ['https://marvintien90-jpg.github.io'];
 const cors = (req: Request) => {
   const o = req.headers.get('origin') || '';
   return {
     'Access-Control-Allow-Origin': ORIGINS.includes(o) ? o : ORIGINS[0],
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Vary': 'Origin',
   };
@@ -21,6 +22,24 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return reply(405, { error: 'METHOD' });
   try {
     const db = admin();
+    const body0 = await req.clone().json().catch(() => ({}));
+    // 補開發票：管理員（登入）或排程金鑰才可以
+    if (body0.action === 'invoice_retry') {
+      const cron = req.headers.get('x-cron-secret') || '';
+      let allowed = false;
+      if (cron.length >= 32) { const { data: okSecret } = await db.rpc('sub_cron_secret_ok', { p: cron }); allowed = okSecret === true; }
+      if (!allowed) {
+        const j = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+        const { data: uu } = await db.auth.getUser(j);
+        if (uu?.user) { const { data: pr } = await db.from('bom_profiles').select('role,status').eq('user_id', uu.user.id).maybeSingle(); allowed = !!pr && pr.role === 'admin' && pr.status === 'active'; }
+      }
+      if (!allowed) return reply(401, { error: 'AUTH' });
+      const cfg0 = await settings(db);
+      const pid = Number(body0.payment_id);
+      if (!Number.isInteger(pid) || pid <= 0) return reply(400, { error: 'BAD_INPUT' });
+      const r = await issueForPayment(db, cfg0.invoice_mode, pid);
+      return reply(200, r || { status: 'skipped' });
+    }
     const jwt = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
     const { data: u, error: ue } = await db.auth.getUser(jwt);
     if (ue || !u?.user) return reply(401, { error: 'LOGIN' });

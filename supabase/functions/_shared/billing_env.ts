@@ -9,7 +9,7 @@ export type Mode = 'off' | 'test' | 'live';
 export async function settings(db: ReturnType<typeof admin>) {
   const { data, error } = await db.from('sub_settings').select('*').eq('id', 1).single();
   if (error || !data) throw new Error('NO_SETTINGS');
-  return data as { billing_mode: Mode; provider: string; grace_days: number };
+  return data as { billing_mode: Mode; invoice_mode?: Mode; provider: string; grace_days: number };
 }
 
 // 正式模式一定要有正式金鑰；測試模式沒設定就用綠界公開的測試特店
@@ -27,3 +27,14 @@ export function merchant(mode: Mode) {
 }
 
 export const SITE = Deno.env.get('SUB_SITE_URL') || 'https://marvintien90-jpg.github.io/bom-center/member/';
+
+// 電子發票特店（和金流是不同的一組金鑰）
+import { EINV_TEST_MERCHANT } from './einvoice.js';
+export function invMerchant(mode: Mode) {
+  if (mode === 'live') {
+    const id = Deno.env.get('ECPAY_INV_MERCHANT_ID'), key = Deno.env.get('ECPAY_INV_HASH_KEY'), iv = Deno.env.get('ECPAY_INV_HASH_IV');
+    if (!id || !key || !iv) throw new Error('NO_LIVE_INV_KEYS');
+    return { id, key, iv };
+  }
+  return EINV_TEST_MERCHANT;
+}
