@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>健檢名單｜品牌加辣餐飲顧問</title>
+<style>
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 var(--sans)}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 2px}h2{font-size:17px;margin:0 0 8px}
+.sub{color:var(--mute);margin:0 0 10px;font-size:14px}.note{color:var(--mute);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+label{display:block;font-size:14px;margin:8px 0 4px}
+input,select,textarea{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;color:inherit}
+textarea{min-height:38px;resize:vertical}
+button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.share{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:560px){.share{grid-template-columns:1fr 1fr}}
+.share button{padding:12px 6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:24px}
+.tabs{display:flex;gap:6px;margin:12px 0 0}.tabs button.on{background:var(--accent-soft);border-color:var(--accent)}
+.lead{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0}
+.lead.new{border-left:4px solid var(--accent)}
+.lead-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.lead h3{margin:0;font-size:16px}
+.score{font-size:20px;font-weight:700}
+.pill{display:inline-block;border-radius:999px;padding:0 9px;font-size:12px;background:var(--field);border:1px solid var(--line);white-space:nowrap}
+.pill.bad{background:var(--bad-bg);color:var(--bad);border-color:transparent}.pill.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}.pill.good{background:var(--good-bg);color:var(--good);border-color:transparent}
+.contact{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.contact a,.contact button{font-size:14px;padding:5px 10px}
+.edit{display:grid;grid-template-columns:150px 1fr;gap:8px;margin-top:8px}
+@media (max-width:560px){.edit{grid-template-columns:1fr}}
+details{margin-top:8px}summary{cursor:pointer;color:var(--accent);font-size:14px}
+.dims{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:6px;text-align:center;font-size:13px}
+@media (max-width:560px){.dims{grid-template-columns:repeat(3,1fr)}}
+.dims div{background:var(--field);border-radius:6px;padding:4px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.msg{padding:10px 12px;border-radius:8px;background:var(--bad-bg);color:var(--bad);margin:8px 0}
+.empty{text-align:center;color:var(--mute);padding:28px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row" style="justify-content:space-between"><div><h1>健檢名單</h1><p class="sub">餐飲經營健檢的預約名單與分享連結</p></div><button id="out" hidden>登出</button></div>
+  <div id="app"><p class="sub">讀取中…</p></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="../score.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+const PAGE=new URL('../',location.href).href.split('?')[0];
+const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const C=window.Checkup||{DIMS:[]};
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const STATUS=['新名單','已聯絡','已預約','已成交','不需要'];
+const OPEN=['新名單','已聯絡','已預約'];
+const CH=[['ig','Instagram'],['fb','Facebook'],['line','LINE'],['','直接分享']];
+const chName=s=>({ig:'IG',fb:'FB',line:'LINE',test:'測試'})[s]||'直接';
+let leads=[], tab='open';
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('on'),1600)}
+async function copy(text,label){try{await navigator.clipboard.writeText(text);toast(label+' 已複製')}catch(e){prompt('請手動複製：',text)}}
+const link=src=>PAGE+(src?'?src='+src:'');
+
+function login(msg){
+  $('#out').hidden=true;
+  $('#app').innerHTML=`<form class="card" id="lf"><h2>登入</h2><p class="sub">用 BOM 運算中心的管理員帳號登入。</p>
+  <label for="em">Email</label><input id="em" type="email" autocomplete="email" required>
+  <label for="pw">密碼</label><input id="pw" type="password" autocomplete="current-password" required>
+  ${msg?`<div class="msg">${esc(msg)}</div>`:''}<div class="row" style="margin-top:12px"><button class="pri">登入</button></div></form>`;
+  $('#lf').onsubmit=async e=>{e.preventDefault();const {error}=await sbc.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});if(error)login('Email 或密碼不正確。');else load()};
+}
+async function load(){
+  const {data:{session}}=await sbc.auth.getSession();
+  if(!session)return login();
+  $('#out').hidden=false;
+  const {data:prof}=await sbc.from('bom_profiles').select('role').eq('user_id',session.user.id).maybeSingle();
+  if(!prof||prof.role!=='admin'){$('#app').innerHTML='<div class="card"><p>這個頁面只限管理員使用。</p></div>';return}
+  const {data,error}=await sbc.from('checkup_leads').select('*').order('created_at',{ascending:false}).limit(500);
+  if(error){$('#app').innerHTML=`<div class="msg">讀取失敗：${esc(error.message)}</div>`;return}
+  leads=data||[]; render();
+}
+function weak(sc){const d=C.DIMS.map(x=>[x.name,Number((sc||{})[x.key])]).filter(x=>!isNaN(x[1])).sort((a,b)=>a[1]-b[1]);return d.slice(0,2)}
+const lv=s=>s>=75?'good':s>=50?'warn':'bad';
+function render(){
+  const now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1);
+  const month=leads.filter(l=>new Date(l.created_at)>=m0).length, todo=leads.filter(l=>l.status==='新名單').length, won=leads.filter(l=>l.status==='已成交').length;
+  const list=leads.filter(l=>tab==='all'||OPEN.includes(l.status));
+  let h=`<div class="card"><h2>分享健檢</h2><p class="sub">點一下就複製連結，貼到對應的地方。名單會自動標出是從哪裡來的。</p>
+    <div class="share">${CH.map(([s,n])=>`<button data-copy="${s}">${n}</button>`).join('')}</div></div>
+    <div class="stats"><div class="stat"><span class="note">待聯絡</span><b>${todo}</b></div><div class="stat"><span class="note">本月名單</span><b>${month}</b></div><div class="stat"><span class="note">已成交</span><b>${won}</b></div></div>
+    <div class="tabs"><button data-tab="open" class="${tab==='open'?'on':''}">待處理</button><button data-tab="all" class="${tab==='all'?'on':''}">全部（${leads.length}）</button></div>`;
+  if(!list.length) h+=`<div class="empty">${leads.length?'沒有待處理的名單。':'還沒有名單。先用上面的按鈕把健檢分享出去。'}</div>`;
+  for(const l of list){
+    const w=weak(l.scores), d=new Date(l.created_at);
+    h+=`<div class="lead ${l.status==='新名單'?'new':''}" data-id="${l.id}">
+      <div class="lead-top"><h3>${esc(l.brand||'（未填品牌）')}｜${esc(l.contact_name)}</h3><span class="note">${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}・${chName(l.source)}</span></div>
+      <div class="row" style="margin-top:4px"><span class="score">${l.total??'-'}</span><span class="note">分</span>${w.map(([n,s])=>`<span class="pill ${lv(s)}">${n} ${s}</span>`).join('')}${l.biz_type?`<span class="note">${esc(l.biz_type)}${l.stores?'・'+l.stores+' 店':''}</span>`:''}</div>
+      <div class="contact">${l.phone?`<a class="btn" href="tel:${esc(l.phone)}">📞 ${esc(l.phone)}</a>`:''}${l.line_id?`<button data-line="${esc(l.line_id)}">LINE ${esc(l.line_id)}</button>`:''}${l.email?`<a class="btn" href="mailto:${esc(l.email)}">${esc(l.email)}</a>`:''}</div>
+      <div class="edit"><select data-status aria-label="狀態">${STATUS.map(s=>`<option ${s===l.status?'selected':''}>${s}</option>`).join('')}</select><textarea data-note placeholder="備註（離開欄位自動儲存）" aria-label="備註">${esc(l.note||'')}</textarea></div>
+      <details><summary>看六構面分數</summary><div class="dims">${C.DIMS.map(x=>`<div>${x.name}<br><b>${(l.scores||{})[x.key]??'-'}</b></div>`).join('')}</div>
+      ${l.finance&&l.finance.revenue?`<p class="note">月營業額 ${esc(l.finance.revenue)}・食材 ${esc(l.finance.food||'-')}・人事 ${esc(l.finance.labor||'-')}・租金 ${esc(l.finance.rent||'-')}</p>`:''}</details>
+    </div>`;
+  }
+  $('#app').innerHTML=h;
+}
+async function save(id,patch){
+  const {error}=await sbc.from('checkup_leads').update(patch).eq('id',id);
+  if(error){toast('儲存失敗，請重試');return false}
+  Object.assign(leads.find(l=>l.id===id),patch); toast('已儲存'); return true;
+}
+$('#app').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  if(b.dataset.copy!==undefined) copy(link(b.dataset.copy),b.textContent+' 連結');
+  else if(b.dataset.tab){tab=b.dataset.tab;render()}
+  else if(b.dataset.line) copy(b.dataset.line,'LINE ID');
+});
+$('#app').addEventListener('change',async e=>{
+  const card=e.target.closest('.lead'); if(!card||!e.target.matches('[data-status]'))return;
+  if(await save(Number(card.dataset.id),{status:e.target.value})) render();
+});
+$('#app').addEventListener('focusout',e=>{
+  const card=e.target.closest('.lead'); if(!card||!e.target.matches('[data-note]'))return;
+  const id=Number(card.dataset.id), v=e.target.value.trim().slice(0,500), l=leads.find(x=>x.id===id);
+  if((l.note||'')!==v) save(id,{note:v||null});
+});
+$('#out').onclick=async()=>{await sbc.auth.signOut();login()};
+load();
+</script>
+</body>
+</html>
