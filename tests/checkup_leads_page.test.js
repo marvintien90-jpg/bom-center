@@ -4,6 +4,7 @@ const { chromium } = require('playwright'); const path = require('path'); const 
 const html = fs.readFileSync(path.join(__dirname, '../checkup/leads/index.html'), 'utf8');
 const js = fs.readFileSync(path.join(__dirname, '../checkup/score.js'), 'utf8');
 const L = [
+  { id: 3, created_at: '2026-10-20T03:00:00Z', status_at: new Date(Date.now()-5*864e5).toISOString(), brand: '追蹤店', contact_name: '陳', phone: null, line_id: 'chen', email: null, total: 55, scores: { prod: 50 }, finance: {}, answers: {}, source: 'fb', status: '已聯絡', note: null },
   { id: 2, created_at: new Date().toISOString(), brand: '好吃鍋', contact_name: '王老闆', phone: '0912', line_id: 'wang', email: null, biz_type: '火鍋／鍋物', stores: 2, total: 48, scores: { prod: 60, mkt: 40, hr: 30, rd: 50, fin: 55, info: 53 }, finance: { revenue: '600000', food: '220000', labor: '150000', rent: '60000' }, answers: {}, source: 'ig', status: '新名單', note: null },
   { id: 1, created_at: '2026-10-01T03:00:00Z', brand: '舊客', contact_name: '李', phone: null, line_id: null, email: 'a@b.c', total: 80, scores: {}, finance: {}, answers: { p1: 3, p2: 0 }, source: '', status: '不需要', note: 'x' },
 ];
@@ -16,7 +17,7 @@ return {from:q,rpc:async(n,a)=>{(window.__rpc=window.__rpc||[]).push([n,a]);retu
 const cases = [
   ['未登入', { user: null, tables: {} }, ['登入', '管理員帳號']],
   ['非管理員', { user: { id: 'u' }, tables: { bom_profiles: [{ user_id: 'u', role: 'client' }] } }, ['只限管理員']],
-  ['管理員', { user: { id: 'a' }, tables: { bom_profiles: [{ user_id: 'a', role: 'admin' }], checkup_leads: L }, brief: BRIEF }, ['分享健檢', 'Instagram', '好吃鍋｜王老闆', '待聯絡', '人 30', '銷 40']],
+  ['管理員', { user: { id: 'a' }, tables: { bom_profiles: [{ user_id: 'a', role: 'admin' }], checkup_leads: L }, brief: BRIEF }, ['分享健檢', 'Instagram', '好吃鍋｜王老闆', '待聯絡', '人 30', '銷 40', '5 天沒進展，該追蹤']],
 ];
 (async () => {
   const br = await chromium.launch(); let fail = 0;
@@ -51,7 +52,7 @@ const cases = [
         const t1 = await pg.innerText('#lead-1'); assert.ok(t1.includes('每道菜都有標準食譜') && t1.includes('完整且持續'), 'answers shown');
         await pg.goto('https://ck.test/bom-center/checkup/leads/?id=2'); await pg.waitForTimeout(250);
         await pg.click('#lead-2 details:not([data-brief]) summary'); assert.ok((await pg.innerText('#lead-2')).includes('兩平營業額'), 'kpi shown');
-        if (vw.width === 375) await pg.screenshot({ path: path.join(process.env.SHOT_DIR || __dirname, 'leads-mobile.png'), fullPage: true });
+        if (vw.width === 375) await pg.screenshot({ path: path.join(process.env.SHOT_DIR || require('os').tmpdir(), 'leads-mobile.png'), fullPage: true });
       }
       assert.deepStrictEqual(errs, []); console.log('PASS', name, vw.width);
     } catch (e) { fail++; console.log('FAIL', name, vw.width, e.message, errs); }
