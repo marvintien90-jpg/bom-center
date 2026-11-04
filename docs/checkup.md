@@ -56,3 +56,10 @@ Migration：`supabase/migrations/20261104_checkup_brief.sql`（取代尚未套�
 - 每天台灣 8:30（pg_cron `checkup-daily-reminder`）寄提醒給 Marvin：新名單超過 1 天沒聯絡、已聯絡超過 3 天沒進展（附追蹤話術）。沒有要處理的就不寄。
 - 名單頁同樣標出「N 天沒聯絡」「N 天沒進展，該追蹤」。
 - Migration：`supabase/migrations/20261104_checkup_owner_followup.sql`。
+
+## ② 菜單工程（2026-11-04，BOM 運算中心進階版）
+
+- 「產品四象限」加上「銷量來源」：可選任一次 POS 銷量匯入，用實際份數換算 30 天來分類（不會改到品項配方的月銷量）。
+- 下方新增「調整試算」：耕馬要調多少錢、每月多賺多少；謎題每月要多賣幾份才變明星；瘦狗下架少多少毛利。
+- 新頁「新品試算」（成本與定價）：草稿存在品牌資料 `drafts`，算一份成本、成本率、建議售價、和同分類平均毛利比較、預測上市後象限；按「加入品項配方」才變成正式品項。
+- 測試：`node tests/menu.test.js /abs/index.html`。
