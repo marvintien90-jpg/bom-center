@@ -7,14 +7,16 @@ const L = [
   { id: 2, created_at: new Date().toISOString(), brand: '好吃鍋', contact_name: '王老闆', phone: '0912', line_id: 'wang', email: null, biz_type: '火鍋／鍋物', stores: 2, total: 48, scores: { prod: 60, mkt: 40, hr: 30, rd: 50, fin: 55, info: 53 }, finance: { revenue: '600000', food: '220000', labor: '150000', rent: '60000' }, answers: {}, source: 'ig', status: '新名單', note: null },
   { id: 1, created_at: '2026-10-01T03:00:00Z', brand: '舊客', contact_name: '李', phone: null, line_id: null, email: 'a@b.c', total: 80, scores: {}, finance: {}, answers: { p1: 3, p2: 0 }, source: '', status: '不需要', note: 'x' },
 ];
+const BRIEF = { weak: [{ dim: 'mkt', name: '銷', full: '行銷與營收', score: 40, issues: [{ q: '清楚知道目標客群', answer: '沒有', issue: '定位不清楚<b>', fix: '做一次客群與競品調研' }], ask: ['客人大多從哪裡知道你們？'], tool: '品牌調研' }],
+  strong: '資訊與數據', script: '王老闆您好，我是品牌加辣餐飲顧問 Marvin', followup: '王老闆您好，上次健檢提到', prep: ['目前的菜單與售價'] };
 const fake = (st) => `window.supabase={createClient(){const S=${JSON.stringify(st)};window.__upd=[];
 const q=(t)=>{let rows=(S.tables[t]||[]).slice();let up=null;const o={select(){return o},eq(k,v){if(up){window.__upd.push([t,up,k,v]);return Promise.resolve({error:null})}rows=rows.filter(r=>r[k]===v);return o},order(){return o},limit(){return Promise.resolve({data:rows,error:null})},
 maybeSingle(){return Promise.resolve({data:rows[0]||null})},update(p){up=p;return o}};return o};
-return {from:q,auth:{getSession:async()=>({data:{session:S.user?{user:S.user}:null}}),signInWithPassword:async()=>({error:{message:'bad'}}),signOut:async()=>{}}}}}`;
+return {from:q,rpc:async(n,a)=>{(window.__rpc=window.__rpc||[]).push([n,a]);return S.brief?{data:S.brief,error:null}:{data:null,error:{message:'not allowed'}}},auth:{getSession:async()=>({data:{session:S.user?{user:S.user}:null}}),signInWithPassword:async()=>({error:{message:'bad'}}),signOut:async()=>{}}}}}`;
 const cases = [
   ['未登入', { user: null, tables: {} }, ['登入', '管理員帳號']],
   ['非管理員', { user: { id: 'u' }, tables: { bom_profiles: [{ user_id: 'u', role: 'client' }] } }, ['只限管理員']],
-  ['管理員', { user: { id: 'a' }, tables: { bom_profiles: [{ user_id: 'a', role: 'admin' }], checkup_leads: L } }, ['分享健檢', 'Instagram', '好吃鍋｜王老闆', '待聯絡', '人 30', '銷 40']],
+  ['管理員', { user: { id: 'a' }, tables: { bom_profiles: [{ user_id: 'a', role: 'admin' }], checkup_leads: L }, brief: BRIEF }, ['分享健檢', 'Instagram', '好吃鍋｜王老闆', '待聯絡', '人 30', '銷 40']],
 ];
 (async () => {
   const br = await chromium.launch(); let fail = 0;
@@ -40,11 +42,15 @@ const cases = [
         assert.deepStrictEqual(upd, [['checkup_leads', { status: '已聯絡' }, 'id', 2], ['checkup_leads', { note: '週五回電' }, 'id', 2]]);
         // 通知信連結：?id=1（已結案）→ 自動切到全部、展開答案
         await pg.goto('https://ck.test/bom-center/checkup/leads/?id=1'); await pg.waitForTimeout(250);
-        assert.ok(await pg.$eval('#lead-1 details', d => d.open), 'focus details open');
+        assert.ok(await pg.$eval('#lead-1 details[data-brief]', d => d.open), 'focus brief open');
+        const b1 = await pg.innerText('#lead-1'); assert.ok(b1.includes('邀約話術') && b1.includes('做一次客群與競品調研') && b1.includes('定位不清楚<b>') && b1.includes('客人大多從哪裡知道你們'), 'brief shown');
+        await pg.click('#lead-1 [data-bcopy=script]'); assert.strictEqual(await pg.evaluate(() => navigator.clipboard.readText()), BRIEF.script);
+        assert.deepStrictEqual(await pg.evaluate(() => window.__rpc), [['checkup_brief', { p_id: 1 }]]);
+        await pg.click('#lead-1 details:not([data-brief]) summary');
         assert.ok(await pg.$eval('[data-tab=all]', b => b.classList.contains('on')), 'switched to all');
         const t1 = await pg.innerText('#lead-1'); assert.ok(t1.includes('每道菜都有標準食譜') && t1.includes('完整且持續'), 'answers shown');
         await pg.goto('https://ck.test/bom-center/checkup/leads/?id=2'); await pg.waitForTimeout(250);
-        assert.ok((await pg.innerText('#lead-2')).includes('兩平營業額'), 'kpi shown');
+        await pg.click('#lead-2 details:not([data-brief]) summary'); assert.ok((await pg.innerText('#lead-2')).includes('兩平營業額'), 'kpi shown');
         if (vw.width === 375) await pg.screenshot({ path: path.join(process.env.SHOT_DIR || __dirname, 'leads-mobile.png'), fullPage: true });
       }
       assert.deepStrictEqual(errs, []); console.log('PASS', name, vw.width);
