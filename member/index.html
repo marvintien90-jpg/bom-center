@@ -122,11 +122,12 @@ ${s.card_last4?`<tr><th>扣款卡片</th><td>末四碼 ${esc(s.card_last4)}</td>
 </tbody></table></div>
 <div class="row"><a href="${BOM}"><button>開啟 BOM 運算中心</button></a><a href="${PL}"><button>開啟損益分析中心</button></a></div></div>
 <div class="card"><h2>${s.status==='trial'?'選方案並綁卡（試用結束才開始扣款）':s.status==='active'?'換方案或店數':'選方案並綁卡續用'}</h2>
+<p class="sub">① 在下面三個方案中按「選這個」　② 填門市數　③ 按最下面的綁卡按鈕。目前選的是：<b>${esc((plans.find(x=>x.code===pick.plan)||{}).name||pick.plan)}</b>。</p>
 ${planCards(pick.plan,true)}
 <div class="grid2"><div><label for="ns2">門市數</label><input id="ns2" type="number" min="1" max="50" value="${pick.stores}"></div></div>
 <p class="note">每月 ${money(t)}，信用卡每月自動扣款，可以隨時取消，取消後用到已付期間結束。${s.status==='trial'?'現在綁卡會先刷第一期，期限從試用結束日接著算，試用天數不會浪費。':''}${s.status==='active'&&changing?'換方案會用新的金額重新綁卡，舊的自動扣款會自動停止。':''}</p>
 <div class="row">${s.status==='trial'&&changing?'<button data-act="setplan">只改試用方案</button>':''}
-${canPay?`<button class="pri" data-act="pay" ${s.status==='active'&&s.auto_renew&&!changing?'disabled':''}>${s.status==='active'&&changing?'換方案並重新綁卡':'綁定信用卡自動扣款'}</button>`:`<span class="note">線上付款即將開放，現在要續用請用 LINE 聯絡我們。</span>`}
+${canPay?`<button class="pri" data-act="pay" ${s.status==='active'&&s.auto_renew&&!changing?'disabled':''}>${s.status==='active'&&changing?'換方案並重新綁卡':'綁定信用卡自動扣款'}：${esc((plans.find(x=>x.code===pick.plan)||{}).name||'')} ${money(t)}／月</button>`:`<span class="note">線上付款即將開放，現在要續用請用 LINE 聯絡我們。</span>`}
 ${s.auto_renew?'<button class="del" data-act="cancel">取消自動扣款</button>':''}</div></div>
 ${reps.length||p.monthly_deck?`<div class="card"><h2>每月經營健檢簡報</h2>${reps.length?`<div class="scroll"><table><tbody>${reps.map(r=>`<tr><td>${esc(r.month)}</td><td style="white-space:normal">${esc(((r.summary||{}).advice||[])[0]||'')}</td><td><button data-rep="${esc(r.path)}">下載簡報</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="sub">每月 5 日會依上個月的損益月報自動產生，產生後會寄信通知。請先在損益分析中心上傳月報。</p>'}</div>`:''}
 ${pays.length?`<div class="card"><h2>扣款紀錄</h2><div class="scroll"><table><thead><tr><th>時間</th><th>項目</th><th>金額</th><th>結果</th></tr></thead><tbody>${pays.map(x=>`<tr><td>${esc((x.paid_at||x.created_at||'').slice(0,16).replace('T',' '))}</td><td>${{first:'首期',period:'每月扣款',cancel:'取消自動扣款'}[x.kind]||x.kind}</td><td>${x.amount?money(x.amount):'–'}</td><td>${x.status==='paid'?'<span class="pill good">成功</span>':x.status==='canceled'?'<span class="pill warn">已停用</span>':'<span class="pill bad">失敗</span> '+esc(x.rtn_msg||'')}</td></tr>`).join('')}</tbody></table></div></div>`:''}
