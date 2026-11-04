@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>餐飲經營健檢｜品牌加辣餐飲顧問</title>
+<meta name="description" content="10 分鐘、30 題，從產銷人發財資六個面向看出你的店哪裡最該先改善。">
+<style>
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8; --grid:#c9d1cd;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; --grid:#3a4843; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
+.wrap{max-width:880px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:0 0 8px}h3{font-size:16px;margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
+label{display:block;font-size:14px;margin:10px 0 4px}
+input,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit;color:inherit}
+input[type=checkbox]{width:auto;margin-right:6px}
+button{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:9px 16px;cursor:pointer}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button:disabled{opacity:.6;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+.msg{padding:10px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}
+.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:13px;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+.steps span{font-size:13px;padding:2px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.steps span.on{border-color:var(--accent);color:var(--fg);background:var(--accent-soft)}
+.q{padding:12px 0;border-top:1px solid var(--line)}.q:first-of-type{border-top:0}
+.q p{margin:0 0 8px}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media (max-width:560px){.opts{grid-template-columns:1fr 1fr}}
+.opts label{margin:0;display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--line);border-radius:6px;padding:7px 4px;font-size:13px;cursor:pointer;background:var(--field);min-height:40px}
+.opts input{position:absolute;opacity:0;pointer-events:none}
+.opts input:checked+span{font-weight:600}
+.opts label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.opts label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:1px}
+.miss{border-left:3px solid var(--bad);padding-left:10px}
+.dimhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.big{font-size:44px;font-weight:700;line-height:1}
+.result-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
+@media (max-width:640px){.result-top{grid-template-columns:1fr}}
+.radar{width:100%;max-width:380px;display:block;margin:0 auto}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+td.num{text-align:right;white-space:nowrap}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.rec{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0}
+.rec .tool{font-size:13px;color:var(--accent);font-weight:600}
+ol.gaps{margin:6px 0 0;padding-left:20px}
+.hidden{display:none}
+.dimtbl td,.dimtbl th{white-space:nowrap}
+@media (max-width:560px){.dimtbl td:nth-child(3),.dimtbl th:nth-child(3){display:none}}
+.brand{font-size:13px;color:var(--mute);letter-spacing:.04em}
+@media print{
+  body{background:#fff;color:#000;font-size:12px}
+  .wrap{max-width:none;padding:0}
+  .noprint{display:none!important}
+  .card{border:1px solid #ccc;break-inside:avoid;margin:8px 0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">品牌加辣餐飲顧問｜實戰派・可複製輔導・總部思維</div>
+  <h1>餐飲經營健檢</h1>
+  <p class="sub">10 分鐘、30 題，從「產銷人發財資」六個面向看出你的店哪裡最該先改善。結果當場顯示，不用先留資料。</p>
+  <div class="steps noprint" id="steps"><span data-s="1">1 基本資料</span><span data-s="2">2 六構面問卷</span><span data-s="3">3 營運數字（選填）</span><span data-s="4">4 健檢結果</span></div>
+
+  <form id="f1" class="card step" data-step="1">
+    <h2>基本資料</h2>
+    <div class="grid2">
+      <div><label for="brand">品牌或店名</label><input id="brand" maxlength="60" autocomplete="organization" placeholder="例：好吃鍋物"></div>
+      <div><label for="biz">業態</label><select id="biz">
+        <option value="">請選擇</option><option>火鍋／鍋物</option><option>中式餐館</option><option>日式／韓式</option><option>西式／早午餐</option><option>小吃／麵食</option><option>飲料／咖啡／甜點</option><option>燒肉／燒烤</option><option>其他</option></select></div>
+      <div><label for="stores">門市數</label><input id="stores" type="number" min="1" max="999" inputmode="numeric" value="1"></div>
+      <div><label for="years">開業幾年</label><select id="years"><option value="">請選擇</option><option>未滿 1 年</option><option>1–3 年</option><option>3–5 年</option><option>5 年以上</option></select></div>
+    </div>
+    <div class="row"><button type="submit" class="pri">開始作答</button></div>
+  </form>
+
+  <form id="f2" class="step hidden" data-step="2">
+    <div id="qs"></div>
+    <div id="qmsg"></div>
+    <div class="row noprint"><button type="button" data-go="1">上一步</button><button type="submit" class="pri">下一步</button><span class="note" id="progress"></span></div>
+  </form>
+
+  <form id="f3" class="card step hidden" data-step="3">
+    <h2>營運數字（選填）</h2>
+    <p class="sub">填上個月或近三個月的月平均（新台幣，全部門市合計）。填了就會算食材、人事、租金占比與兩平營業額；不填也能看結果。</p>
+    <div class="grid2">
+      <div><label for="revenue">月營業額</label><input id="revenue" inputmode="numeric" placeholder="例：600000"></div>
+      <div><label for="food">食材成本（進貨）</label><input id="food" inputmode="numeric"></div>
+      <div><label for="labor">人事費（含正職、兼職、勞健保）</label><input id="labor" inputmode="numeric"></div>
+      <div><label for="rent">租金</label><input id="rent" inputmode="numeric"></div>
+      <div><label for="other">其他固定費用（水電瓦斯、平台費、雜支）</label><input id="other" inputmode="numeric"></div>
+    </div>
+    <div id="fmsg"></div>
+    <div class="row noprint"><button type="button" data-go="2">上一步</button><button type="submit" class="pri">看健檢結果</button></div>
+  </form>
+
+  <div id="result" class="step hidden" data-step="4"></div>
+
+  <form id="lead" class="card hidden noprint">
+    <h2>預約免費 30 分鐘結果解讀</h2>
+    <p class="sub">留下聯絡方式，顧問會依你的健檢結果，說明最該先做的三件事。資料只用於這次聯繫，不會轉給第三方。</p>
+    <div class="grid2">
+      <div><label for="cname">稱呼</label><input id="cname" maxlength="40" autocomplete="name"></div>
+      <div><label for="phone">手機</label><input id="phone" maxlength="20" inputmode="tel" autocomplete="tel"></div>
+      <div><label for="line">LINE ID</label><input id="line" maxlength="40"></div>
+      <div><label for="email">Email</label><input id="email" type="email" maxlength="120" autocomplete="email"></div>
+    </div>
+    <label><input type="checkbox" id="consent">我同意品牌加辣餐飲顧問以上述方式與我聯絡，並保存這份健檢結果。</label>
+    <div id="lmsg"></div>
+    <div class="row"><button type="submit" class="pri" id="lsend">送出預約</button></div>
+  </form>
+  <p class="note">財務參考值為餐飲業常見範圍，屬顧問經驗值，實際標準依業態不同。健檢結果僅供參考。</p>
+</div>
+<script src="score.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+const C=window.Checkup, $=s=>document.querySelector(s);
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Number(n).toLocaleString('zh-TW');
+const KEY='checkup-draft-v1';
+let state={step:1,info:{},answers:{},fin:{}}, last=null;
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.answers)state={...state,...s,step:s.step||1}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+
+// 問卷
+$('#qs').innerHTML=C.DIMS.map(d=>`<section class="card" id="dim-${d.key}"><div class="dimhead"><h2>${d.name}｜${d.full}</h2><span class="note" data-cnt="${d.key}"></span></div>`+
+  d.qs.map(([id,t],i)=>`<div class="q" id="q-${id}"><p>${i+1}. ${esc(t)}</p><div class="opts" role="radiogroup" aria-label="${esc(t)}">`+
+  C.SCALE.map((s,v)=>`<label><input type="radio" name="${id}" value="${v}"><span>${s}</span></label>`).join('')+`</div></div>`).join('')+`</section>`).join('');
+
+function fill(){
+  for(const k of ['brand','biz','stores','years']) if(state.info[k]!=null) $('#'+k).value=state.info[k];
+  for(const k of ['revenue','food','labor','rent','other']) if(state.fin[k]!=null) $('#'+k).value=state.fin[k];
+  for(const [id,v] of Object.entries(state.answers)){const el=document.querySelector(`input[name="${id}"][value="${v}"]`);if(el)el.checked=true}
+  counts();
+}
+function counts(){
+  let n=0; for(const d of C.DIMS){const c=d.qs.filter(([id])=>state.answers[id]!=null).length;n+=c;const el=document.querySelector(`[data-cnt="${d.key}"]`);if(el)el.textContent=`${c}／${d.qs.length}`}
+  $('#progress').textContent=`已答 ${n}／${C.QUESTION_COUNT} 題`;
+}
+function go(s){
+  state.step=s; save();
+  document.querySelectorAll('.step').forEach(el=>el.classList.toggle('hidden',Number(el.dataset.step)!==s));
+  document.querySelectorAll('#steps span').forEach(el=>el.classList.toggle('on',Number(el.dataset.s)===s));
+  $('#lead').classList.toggle('hidden',s!==4);
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(Number(b.dataset.go))));
+$('#qs').addEventListener('change',e=>{if(e.target.type==='radio'){state.answers[e.target.name]=Number(e.target.value);e.target.closest('.q').classList.remove('miss');save();counts()}});
+$('#f1').addEventListener('submit',e=>{e.preventDefault();state.info={brand:$('#brand').value.trim(),biz:$('#biz').value,stores:$('#stores').value,years:$('#years').value};go(2)});
+$('#f2').addEventListener('submit',e=>{e.preventDefault();
+  const miss=[];for(const d of C.DIMS)for(const [id] of d.qs)if(state.answers[id]==null)miss.push(id);
+  document.querySelectorAll('.q').forEach(q=>q.classList.toggle('miss',miss.includes(q.id.slice(2))));
+  if(miss.length){$('#qmsg').innerHTML=`<div class="msg bad">還有 ${miss.length} 題沒答，已用紅線標出。</div>`;document.getElementById('q-'+miss[0]).scrollIntoView({block:'center'});return}
+  $('#qmsg').innerHTML='';go(3)});
+$('#f3').addEventListener('submit',e=>{e.preventDefault();
+  const fin={};for(const k of ['revenue','food','labor','rent','other'])fin[k]=$('#'+k).value.trim();
+  const n=v=>Number(String(v).replace(/[,\s]/g,''));
+  const bad=Object.entries(fin).filter(([k,v])=>v!==''&&!(n(v)>=0));
+  if(bad.length){$('#fmsg').innerHTML='<div class="msg bad">數字格式不正確，請只填數字。</div>';return}
+  if(fin.revenue===''&&Object.values(fin).some(v=>v!=='')){$('#fmsg').innerHTML='<div class="msg bad">要算占比，請先填月營業額。</div>';return}
+  const costs=['food','labor','rent','other'].reduce((s,k)=>s+(n(fin[k])||0),0);
+  if(fin.revenue!==''&&costs>n(fin.revenue)*3){$('#fmsg').innerHTML='<div class="msg bad">成本超過營業額三倍，請確認單位是否一致（都填「元」）。</div>';return}
+  $('#fmsg').innerHTML='';state.fin=fin;show();go(4)});
+
+function radar(dims){
+  const cx=190,cy=180,R=120,n=dims.length,pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+r*Math.cos(a),cy+r*Math.sin(a)]};
+  let g='';for(const f of [.25,.5,.75,1])g+=`<polygon points="${dims.map((_,i)=>pt(i,R*f).join(',')).join(' ')}" fill="none" stroke="var(--grid)" stroke-width="1"/>`;
+  dims.forEach((_,i)=>{const [x,y]=pt(i,R);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--grid)"/>`});
+  const poly=dims.map((d,i)=>pt(i,R*d.score/100).join(',')).join(' ');
+  g+=`<polygon points="${poly}" fill="var(--accent)" fill-opacity=".18" stroke="var(--accent)" stroke-width="2"/>`;
+  dims.forEach((d,i)=>{const [x,y]=pt(i,R*d.score/100);g+=`<circle cx="${x}" cy="${y}" r="4" fill="var(--accent)"/>`;
+    const [lx,ly]=pt(i,R+28);g+=`<text x="${lx}" y="${ly-2}" text-anchor="middle" font-size="15" font-weight="600" fill="var(--fg)">${d.name}</text><text x="${lx}" y="${ly+15}" text-anchor="middle" font-size="12" fill="var(--mute)">${d.score}</text>`});
+  return `<svg class="radar" viewBox="0 0 380 360" role="img" aria-label="六構面分數雷達圖：${dims.map(d=>d.name+d.score).join('、')}">${g}</svg>`;
+}
+const pill=lv=>`<span class="pill ${lv}">${C.LEVEL_NAME[lv]}</span>`;
+function show(){
+  const r=C.score(state.answers,state.fin); last=r;
+  const nm=state.info.brand?esc(state.info.brand)+'　':'';
+  let h=`<div class="card"><div class="result-top"><div><h2>${nm}健檢結果</h2><p class="sub">${new Date().toLocaleDateString('zh-TW')}${state.info.biz?'｜'+esc(state.info.biz):''}${state.info.stores?'｜'+esc(state.info.stores)+' 家門市':''}</p>
+    <div class="big">${r.total}<small style="font-size:16px;font-weight:400"> ／100</small></div><p>${pill(r.level)}　六構面平均。75 分以上良好，50–74 需加強，50 以下優先改善。</p></div>${radar(r.dims)}</div>
+    <div class="scroll"><table class="dimtbl"><thead><tr><th>構面</th><th>分數</th><th></th><th>狀態</th></tr></thead><tbody>${r.dims.map(d=>`<tr><td>${d.name}｜${d.full}</td><td class="num">${d.score}</td><td style="width:40%"><div class="bar"><i style="width:${d.score}%"></i></div></td><td>${pill(d.level)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  if(r.recs.length) h+=`<div class="card"><h2>最該先改善的${r.recs.length===1?'一':r.recs.length===2?'兩':'三'}個面向</h2>${r.recs.map((x,i)=>`<div class="rec"><h3>${i+1}. ${x.name}｜${x.full}（${x.score} 分）</h3><p style="margin:0 0 4px">${esc(x.tip)}</p><div class="tool">對應工具：${esc(x.tool)}</div></div>`).join('')}</div>`;
+  else h+=`<div class="card"><h2>六個面向都在良好範圍</h2><p>下一步適合做的是展店前的財務試算與標準化複製。</p></div>`;
+  if(r.gaps.length) h+=`<div class="card"><h2>最先處理的 ${r.gaps.length} 件事</h2><p class="sub">你回答「沒有」或「偶爾」的項目，依嚴重程度排列。</p><ol class="gaps">${r.gaps.map(g=>`<li>【${g.dim}】${esc(g.text)}<span class="note">（${C.SCALE[g.value]}）</span></li>`).join('')}</ol></div>`;
+  if(r.kpis){const k=r.kpis;
+    h+=`<div class="card"><h2>營運數字</h2><div class="scroll"><table><thead><tr><th>指標</th><th>你的店</th><th>參考值</th><th>狀態</th></tr></thead><tbody>${k.list.map(x=>`<tr><td>${x.name}</td><td class="num">${x.value}%</td><td class="num">${x.dir==='low'?'≤ '+x.good+'%':'≥ '+x.good+'%'}</td><td>${pill(x.level)}</td></tr>`).join('')}</tbody></table></div>
+    <p>${k.breakeven!=null?`每月損益兩平營業額約 <b>NT$${fmt(k.breakeven)}</b>，安全邊際 <b>${k.safety}%</b>${k.safety<10?'，營收掉一成就可能虧損。':'。'}`:'變動成本高於營業額，無法計算兩平點，請確認數字。'}</p>
+    <p class="note">兩平營業額＝（人事＋租金＋其他固定費用）÷（1－食材成本率）。人事費在此視為固定成本。財務分數已併入「財」構面（問卷 60%、數字 40%）。</p></div>`}
+  else h+=`<div class="card"><h2>營運數字</h2><p class="sub">這次沒有填數字。填上月營業額與成本，可以算出三大成本占比與兩平營業額。</p><button type="button" class="noprint" data-go2="3">補填數字</button></div>`;
+  h+=`<div class="row noprint"><button type="button" class="pri" id="print">下載報告（PDF）</button><button type="button" data-go2="2">修改答案</button><button type="button" id="restart">重新健檢</button></div>`;
+  $('#result').innerHTML=h;
+  $('#print').onclick=()=>window.print();
+  $('#restart').onclick=()=>{if(confirm('清除所有答案，重新開始？')){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}};
+  document.querySelectorAll('[data-go2]').forEach(b=>b.onclick=()=>go(Number(b.dataset.go2)));
+}
+
+// 預約
+$('#lead').addEventListener('submit',async e=>{e.preventDefault();
+  const v={name:$('#cname').value.trim(),phone:$('#phone').value.trim(),line:$('#line').value.trim(),email:$('#email').value.trim()};
+  const m=$('#lmsg');
+  if(!v.name){m.innerHTML='<div class="msg bad">請填稱呼。</div>';return}
+  if(!v.phone&&!v.line&&!v.email){m.innerHTML='<div class="msg bad">手機、LINE ID、Email 至少填一個。</div>';return}
+  if(v.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)){m.innerHTML='<div class="msg bad">Email 格式不正確。</div>';return}
+  if(!$('#consent').checked){m.innerHTML='<div class="msg bad">請勾選同意聯絡。</div>';return}
+  const btn=$('#lsend');btn.disabled=true;m.innerHTML='<div class="msg">送出中…</div>';
+  try{
+    if(!window.supabase)throw new Error('offline');
+    const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    const r=last||C.score(state.answers,state.fin);
+    const {data,error}=await sbc.rpc('checkup_submit',{p:{contact:v,consent:true,info:state.info,answers:state.answers,fin:state.fin,
+      scores:Object.fromEntries(r.dims.map(d=>[d.key,d.score])),total:r.total,source:new URLSearchParams(location.search).get('src')||''}});
+    if(error)throw error;
+    m.innerHTML='<div class="msg">已收到，顧問會在 2 個工作天內與你聯絡。</div>';$('#lead').querySelectorAll('input,button').forEach(x=>x.disabled=true);
+  }catch(err){
+    const t=String(err&&err.message||'');
+    m.innerHTML=`<div class="msg bad">${/limit|上限/.test(t)?'今天的預約已滿，請明天再試。':'送出失敗，請稍後再試，或直接下載報告後聯絡我們。'}</div>`;btn.disabled=false;
+  }
+});
+
+fill(); if(state.step===4&&Object.keys(state.answers).length===C.QUESTION_COUNT){show();go(4)} else if(state.step>1&&state.step<4) go(state.step); else go(1);
+</script>
+</body>
+</html>
