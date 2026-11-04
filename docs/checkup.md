@@ -48,3 +48,11 @@
 內容在 `checkup_private.pb_dim`（面向：提問、工具）與 `checkup_private.pb_q`（題目：可能問題、改善方案），改這兩張表就會同時改到信件和名單頁。
 產生邏輯是 `checkup_private.brief(id)`；名單頁透過只限管理員的 `public.checkup_brief(p_id)` 讀取。
 Migration：`supabase/migrations/20261104_checkup_brief.sql`（取代尚未套用的 v2 通知信）。
+
+## 業主結果信與自動提醒（2026-11-04）
+
+- 業主送出時有留 Email → 自動收到結果摘要（總分、六構面、最強面向、最該先改的兩個面向與建議做法、Marvin 會聯絡的說明）。同一個 Email 一天最多寄 3 次。
+- `checkup_leads.status_at` 記錄狀態最後變更時間（trigger 自動更新）。
+- 每天台灣 8:30（pg_cron `checkup-daily-reminder`）寄提醒給 Marvin：新名單超過 1 天沒聯絡、已聯絡超過 3 天沒進展（附追蹤話術）。沒有要處理的就不寄。
+- 名單頁同樣標出「N 天沒聯絡」「N 天沒進展，該追蹤」。
+- Migration：`supabase/migrations/20261104_checkup_owner_followup.sql`。
