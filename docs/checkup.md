@@ -1,6 +1,8 @@
 # 餐飲經營健檢（顧問入口）
 
-網址（上線後）：`https://marvintien90-jpg.github.io/bom-center/checkup/`，可加 `?src=ig`、`?src=line` 追蹤來源。
+- 健檢頁（給業主）：`https://marvintien90-jpg.github.io/bom-center/checkup/`
+- 名單管理（只限管理員，用 BOM 管理員帳號登入）：`https://marvintien90-jpg.github.io/bom-center/checkup/leads/`
+  一鍵複製 IG／FB／LINE／直接分享連結（自動帶來源標記）、看待聯絡數、直接改狀態與備註。
 
 ## 組成
 
@@ -9,7 +11,8 @@
 | 頁面 | `checkup/index.html` | 公開頁，不用登入。基本資料 → 30 題 → 營運數字（選填）→ 結果 → 預約解讀。答案存在訪客瀏覽器，重新整理不會不見 |
 | 題庫與評分 | `checkup/score.js` | 產銷人發財資各 5 題，每題 0–3 分；構面分數 0–100；財構面有填數字時＝問卷 60%＋財務指標 40% |
 | 名單 | `supabase/migrations/20261104_checkup_leads.sql` | 表 `checkup_leads`＋函式 `checkup_submit()`；每筆寄通知信給 Marvin |
-| 測試 | `tests/checkup.test.js`、`tests/checkup_leads.sql` | 評分單元測試＋頁面桌機／手機測試；資料庫權限測試（交易內跑完全部回復） |
+| 名單管理 | `checkup/leads/index.html` | 管理員登入後看名單、改狀態（新名單→已聯絡→已預約→已成交／不需要）、寫備註；預設只顯示待處理 |
+| 測試 | `tests/checkup.test.js`、`tests/checkup_leads_page.test.js`、`tests/checkup_leads.sql` | 評分單元測試＋頁面桌機／手機測試；資料庫權限測試（交易內跑完全部回復） |
 
 ## 結果頁給什麼
 
