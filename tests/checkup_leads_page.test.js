@@ -52,7 +52,7 @@ const cases = [
         const t1 = await pg.innerText('#lead-1'); assert.ok(t1.includes('每道菜都有標準食譜') && t1.includes('完整且持續'), 'answers shown');
         await pg.goto('https://ck.test/bom-center/checkup/leads/?id=2'); await pg.waitForTimeout(250);
         await pg.click('#lead-2 details:not([data-brief]) summary'); assert.ok((await pg.innerText('#lead-2')).includes('兩平營業額'), 'kpi shown');
-        if (vw.width === 375) await pg.screenshot({ path: path.join(process.env.SHOT_DIR || __dirname, 'leads-mobile.png'), fullPage: true });
+        if (vw.width === 375) await pg.screenshot({ path: path.join(process.env.SHOT_DIR || require('os').tmpdir(), 'leads-mobile.png'), fullPage: true });
       }
       assert.deepStrictEqual(errs, []); console.log('PASS', name, vw.width);
     } catch (e) { fail++; console.log('FAIL', name, vw.width, e.message, errs); }
