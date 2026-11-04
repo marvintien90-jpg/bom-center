@@ -55,6 +55,8 @@ details{margin-top:8px}summary{cursor:pointer;color:var(--accent);font-size:14px
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 .msg{padding:10px 12px;border-radius:8px;background:var(--bad-bg);color:var(--bad);margin:8px 0}
+.ans{margin-top:10px;font-size:14px}.ans ol{margin:4px 0 0;padding-left:20px}.ans li{margin:2px 0}
+.lead.focus{box-shadow:0 0 0 2px var(--accent)}
 .empty{text-align:center;color:var(--mute);padding:28px 0}
 </style>
 </head>
@@ -79,6 +81,7 @@ const OPEN=['新名單','已聯絡','已預約'];
 const CH=[['ig','Instagram'],['fb','Facebook'],['line','LINE'],['','直接分享']];
 const chName=s=>({ig:'IG',fb:'FB',line:'LINE',test:'測試'})[s]||'直接';
 let leads=[], tab='open';
+const focusId=Number(new URLSearchParams(location.search).get('id'))||null; let focused=false;
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('on'),1600)}
 async function copy(text,label){try{await navigator.clipboard.writeText(text);toast(label+' 已複製')}catch(e){prompt('請手動複製：',text)}}
 const link=src=>PAGE+(src?'?src='+src:'');
@@ -99,10 +102,20 @@ async function load(){
   if(!prof||prof.role!=='admin'){$('#app').innerHTML='<div class="card"><p>這個頁面只限管理員使用。</p></div>';return}
   const {data,error}=await sbc.from('checkup_leads').select('*').order('created_at',{ascending:false}).limit(500);
   if(error){$('#app').innerHTML=`<div class="msg">讀取失敗：${esc(error.message)}</div>`;return}
-  leads=data||[]; render();
+  leads=data||[];
+  const f=focusId&&leads.find(l=>l.id===focusId); if(f&&!OPEN.includes(f.status))tab='all';
+  render();
 }
 function weak(sc){const d=C.DIMS.map(x=>[x.name,Number((sc||{})[x.key])]).filter(x=>!isNaN(x[1])).sort((a,b)=>a[1]-b[1]);return d.slice(0,2)}
 const lv=s=>s>=75?'good':s>=50?'warn':'bad';
+function detail(l){
+  let h='';
+  const k=C.kpis?C.kpis(l.finance||{}):null;
+  if(k) h+=`<p class="note" style="margin:8px 0 0">月營業額 NT$${Number(k.revenue).toLocaleString('zh-TW')}　${k.list.map(x=>`${x.name.replace(/（.*）/,'')} ${x.value}%`).join('　')}${k.breakeven?`　兩平營業額 NT$${k.breakeven.toLocaleString('zh-TW')}`:''}</p>`;
+  const a=l.answers||{};
+  h+=C.DIMS.map(d=>`<div class="ans"><b>${d.name}｜${d.full}</b><ol>${d.qs.map(([id,t])=>{const v=a[id];const cls=v===0?'bad':v===1?'warn':'';return `<li>${esc(t)}：<span class="pill ${cls}">${v==null?'未答':C.SCALE[v]}</span></li>`}).join('')}</ol></div>`).join('');
+  return h;
+}
 function render(){
   const now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1);
   const month=leads.filter(l=>new Date(l.created_at)>=m0).length, todo=leads.filter(l=>l.status==='新名單').length, won=leads.filter(l=>l.status==='已成交').length;
@@ -114,16 +127,17 @@ function render(){
   if(!list.length) h+=`<div class="empty">${leads.length?'沒有待處理的名單。':'還沒有名單。先用上面的按鈕把健檢分享出去。'}</div>`;
   for(const l of list){
     const w=weak(l.scores), d=new Date(l.created_at);
-    h+=`<div class="lead ${l.status==='新名單'?'new':''}" data-id="${l.id}">
+    h+=`<div class="lead ${l.status==='新名單'?'new':''}${l.id===focusId?' focus':''}" data-id="${l.id}" id="lead-${l.id}">
       <div class="lead-top"><h3>${esc(l.brand||'（未填品牌）')}｜${esc(l.contact_name)}</h3><span class="note">${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}・${chName(l.source)}</span></div>
       <div class="row" style="margin-top:4px"><span class="score">${l.total??'-'}</span><span class="note">分</span>${w.map(([n,s])=>`<span class="pill ${lv(s)}">${n} ${s}</span>`).join('')}${l.biz_type?`<span class="note">${esc(l.biz_type)}${l.stores?'・'+l.stores+' 店':''}</span>`:''}</div>
       <div class="contact">${l.phone?`<a class="btn" href="tel:${esc(l.phone)}">📞 ${esc(l.phone)}</a>`:''}${l.line_id?`<button data-line="${esc(l.line_id)}">LINE ${esc(l.line_id)}</button>`:''}${l.email?`<a class="btn" href="mailto:${esc(l.email)}">${esc(l.email)}</a>`:''}</div>
       <div class="edit"><select data-status aria-label="狀態">${STATUS.map(s=>`<option ${s===l.status?'selected':''}>${s}</option>`).join('')}</select><textarea data-note placeholder="備註（離開欄位自動儲存）" aria-label="備註">${esc(l.note||'')}</textarea></div>
-      <details><summary>看六構面分數</summary><div class="dims">${C.DIMS.map(x=>`<div>${x.name}<br><b>${(l.scores||{})[x.key]??'-'}</b></div>`).join('')}</div>
-      ${l.finance&&l.finance.revenue?`<p class="note">月營業額 ${esc(l.finance.revenue)}・食材 ${esc(l.finance.food||'-')}・人事 ${esc(l.finance.labor||'-')}・租金 ${esc(l.finance.rent||'-')}</p>`:''}</details>
+      <details ${l.id===focusId?'open':''}><summary>看完整結果與答案</summary><div class="dims">${C.DIMS.map(x=>`<div>${x.name}<br><b>${(l.scores||{})[x.key]??'-'}</b></div>`).join('')}</div>
+      ${detail(l)}</details>
     </div>`;
   }
   $('#app').innerHTML=h;
+  if(focusId&&!focused){const el=document.getElementById('lead-'+focusId);if(el){focused=true;el.scrollIntoView({block:'start'})}}
 }
 async function save(id,patch){
   const {error}=await sbc.from('checkup_leads').update(patch).eq('id',id);
