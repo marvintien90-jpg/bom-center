@@ -110,6 +110,10 @@ async function load(){
   render();
 }
 function weak(sc){const d=C.DIMS.map(x=>[x.name,Number((sc||{})[x.key])]).filter(x=>!isNaN(x[1])).sort((a,b)=>a[1]-b[1]);return d.slice(0,2)}
+function due(l){const day=864e5,now=Date.now();
+  if(l.status==='新名單'){const d=Math.floor((now-new Date(l.created_at))/day);return d>=1?`<span class="pill bad">${d} 天沒聯絡</span>`:''}
+  if(l.status==='已聯絡'){const d=Math.floor((now-new Date(l.status_at||l.created_at))/day);return d>=3?`<span class="pill warn">${d} 天沒進展，該追蹤</span>`:''}
+  return ''}
 const lv=s=>s>=75?'good':s>=50?'warn':'bad';
 function detail(l){
   let h='';
@@ -153,7 +157,7 @@ function render(){
     const w=weak(l.scores), d=new Date(l.created_at);
     h+=`<div class="lead ${l.status==='新名單'?'new':''}${l.id===focusId?' focus':''}" data-id="${l.id}" id="lead-${l.id}">
       <div class="lead-top"><h3>${esc(l.brand||'（未填品牌）')}｜${esc(l.contact_name)}</h3><span class="note">${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}・${chName(l.source)}</span></div>
-      <div class="row" style="margin-top:4px"><span class="score">${l.total??'-'}</span><span class="note">分</span>${w.map(([n,s])=>`<span class="pill ${lv(s)}">${n} ${s}</span>`).join('')}${l.biz_type?`<span class="note">${esc(l.biz_type)}${l.stores?'・'+l.stores+' 店':''}</span>`:''}</div>
+      <div class="row" style="margin-top:4px"><span class="score">${l.total??'-'}</span><span class="note">分</span>${w.map(([n,s])=>`<span class="pill ${lv(s)}">${n} ${s}</span>`).join('')}${due(l)}${l.biz_type?`<span class="note">${esc(l.biz_type)}${l.stores?'・'+l.stores+' 店':''}</span>`:''}</div>
       <div class="contact">${l.phone?`<a class="btn" href="tel:${esc(l.phone)}">📞 ${esc(l.phone)}</a>`:''}${l.line_id?`<button data-line="${esc(l.line_id)}">LINE ${esc(l.line_id)}</button>`:''}${l.email?`<a class="btn" href="mailto:${esc(l.email)}">${esc(l.email)}</a>`:''}</div>
       <div class="edit"><select data-status aria-label="狀態">${STATUS.map(s=>`<option ${s===l.status?'selected':''}>${s}</option>`).join('')}</select><textarea data-note placeholder="備註（離開欄位自動儲存）" aria-label="備註">${esc(l.note||'')}</textarea></div>
       <details data-brief ${l.id===focusId?'open':''}><summary>顧問作業包（問題、改善方案、話術）</summary><div class="bw">${l.id in briefs?briefHtml(briefs[l.id]):'<p class="note">讀取中…</p>'}</div></details>

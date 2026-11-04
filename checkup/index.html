@@ -232,7 +232,7 @@ $('#lead').addEventListener('submit',async e=>{e.preventDefault();
     const {data,error}=await sbc.rpc('checkup_submit',{p:{contact:v,consent:true,info:state.info,answers:state.answers,fin:state.fin,
       scores:Object.fromEntries(r.dims.map(d=>[d.key,d.score])),total:r.total,source:new URLSearchParams(location.search).get('src')||''}});
     if(error)throw error;
-    m.innerHTML='<div class="msg">已收到，顧問會在 2 個工作天內與你聯絡。</div>';$('#lead').querySelectorAll('input,button').forEach(x=>x.disabled=true);
+    m.innerHTML='<div class="msg">已收到，顧問會在 2 個工作天內與你聯絡。'+(v.email?'結果摘要也寄到你的 Email 了。':'')+'</div>';$('#lead').querySelectorAll('input,button').forEach(x=>x.disabled=true);
   }catch(err){
     const t=String(err&&err.message||'');
     m.innerHTML=`<div class="msg bad">${/limit|上限/.test(t)?'今天的預約已滿，請明天再試。':'送出失敗，請稍後再試，或直接下載報告後聯絡我們。'}</div>`;btn.disabled=false;
