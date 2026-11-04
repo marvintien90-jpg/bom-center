@@ -4,8 +4,8 @@ const { chromium } = require('playwright'); const path = require('path'); const 
 const html = fs.readFileSync(path.join(__dirname, '../checkup/leads/index.html'), 'utf8');
 const js = fs.readFileSync(path.join(__dirname, '../checkup/score.js'), 'utf8');
 const L = [
-  { id: 2, created_at: new Date().toISOString(), brand: '好吃鍋', contact_name: '王老闆', phone: '0912', line_id: 'wang', email: null, biz_type: '火鍋／鍋物', stores: 2, total: 48, scores: { prod: 60, mkt: 40, hr: 30, rd: 50, fin: 55, info: 53 }, finance: { revenue: '600000', food: '220000' }, source: 'ig', status: '新名單', note: null },
-  { id: 1, created_at: '2026-10-01T03:00:00Z', brand: '舊客', contact_name: '李', phone: null, line_id: null, email: 'a@b.c', total: 80, scores: {}, finance: {}, source: '', status: '不需要', note: 'x' },
+  { id: 2, created_at: new Date().toISOString(), brand: '好吃鍋', contact_name: '王老闆', phone: '0912', line_id: 'wang', email: null, biz_type: '火鍋／鍋物', stores: 2, total: 48, scores: { prod: 60, mkt: 40, hr: 30, rd: 50, fin: 55, info: 53 }, finance: { revenue: '600000', food: '220000', labor: '150000', rent: '60000' }, answers: {}, source: 'ig', status: '新名單', note: null },
+  { id: 1, created_at: '2026-10-01T03:00:00Z', brand: '舊客', contact_name: '李', phone: null, line_id: null, email: 'a@b.c', total: 80, scores: {}, finance: {}, answers: { p1: 3, p2: 0 }, source: '', status: '不需要', note: 'x' },
 ];
 const fake = (st) => `window.supabase={createClient(){const S=${JSON.stringify(st)};window.__upd=[];
 const q=(t)=>{let rows=(S.tables[t]||[]).slice();let up=null;const o={select(){return o},eq(k,v){if(up){window.__upd.push([t,up,k,v]);return Promise.resolve({error:null})}rows=rows.filter(r=>r[k]===v);return o},order(){return o},limit(){return Promise.resolve({data:rows,error:null})},
@@ -38,6 +38,13 @@ const cases = [
         await pg.fill('.lead[data-id="2"] [data-note]', '週五回電'); await pg.click('h1'); await pg.waitForTimeout(100);
         const upd = await pg.evaluate(() => window.__upd);
         assert.deepStrictEqual(upd, [['checkup_leads', { status: '已聯絡' }, 'id', 2], ['checkup_leads', { note: '週五回電' }, 'id', 2]]);
+        // 通知信連結：?id=1（已結案）→ 自動切到全部、展開答案
+        await pg.goto('https://ck.test/bom-center/checkup/leads/?id=1'); await pg.waitForTimeout(250);
+        assert.ok(await pg.$eval('#lead-1 details', d => d.open), 'focus details open');
+        assert.ok(await pg.$eval('[data-tab=all]', b => b.classList.contains('on')), 'switched to all');
+        const t1 = await pg.innerText('#lead-1'); assert.ok(t1.includes('每道菜都有標準食譜') && t1.includes('完整且持續'), 'answers shown');
+        await pg.goto('https://ck.test/bom-center/checkup/leads/?id=2'); await pg.waitForTimeout(250);
+        assert.ok((await pg.innerText('#lead-2')).includes('兩平營業額'), 'kpi shown');
         if (vw.width === 375) await pg.screenshot({ path: path.join(process.env.SHOT_DIR || __dirname, 'leads-mobile.png'), fullPage: true });
       }
       assert.deepStrictEqual(errs, []); console.log('PASS', name, vw.width);
