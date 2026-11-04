@@ -681,7 +681,7 @@ V.home=(b,c)=>{ const t=b.settings.targetRate/100; let sales=0,cost=0,over=0; b.
   const rows=(logRows||[]).filter(r=>r.brand_id===cur).slice(0,5), who={admin:'顧問',client:'業主',system:'系統'};
   return `<div class="head"><div><h2>${esc(b.name)}</h2><p class="sub">${done?'資料已經建好，下面是目前的重點數字。':'照下面的順序做，三步就能看到每道菜的成本和毛利。'}</p></div></div>
 ${allowed('po')&&invEnsure()?(()=>{ const E=stockEst(b,c), n=E&&E!=='loading'?E.rows.filter(r=>r.need).length:0; return n?`<div class="board"><b>庫存提醒</b><span>有 ${n} 樣食材推估撐不到下次叫貨。</span><div class="brandbar"><button data-tab="po">去看並開採購單</button></div></div>`:'' })():''}
-${!isAdmin()&&left!==null&&left<=30?`<p class="sample">你的使用授權將在 ${left} 天後（${esc(prof.expires_on)}）到期。到期後資料會保留，但需要續約才能繼續使用，請聯絡 ${LICENSOR}。</p>`:''}
+${!isAdmin()&&left!==null&&left<=30?`<p class="sample">你的使用授權將在 ${left} 天後（${esc(prof.expires_on)}）到期。到期後資料會保留，但需要續約才能繼續使用：可到<a href="member/">會員中心</a>選方案綁卡，或聯絡 ${LICENSOR}。</p>`:''}
 ${pend?`<p class="sample">有 ${pend} 位業主註冊後在等你開通。 <button data-tab="admin">前往授權管理</button></p>`:''}
 ${isAdmin()&&(ups||[]).some(u=>u.status==='new')?`<p class="sample">有 ${(ups||[]).filter(u=>u.status==='new').length} 個業主上傳的檔案等你處理。 <button data-tab="io">前往查看</button></p>`:''}
 ${RO()?'<p class="note">你的帳號是「只能看」權限，可以瀏覽數字和使用試算，但不能修改資料。</p>':''}
@@ -948,7 +948,7 @@ async function loadAll(){ try{
   catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
 
 function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.classList.toggle('bare',!app); if(!app) sh.classList.remove('open');
-  ub.innerHTML=me&&app?`<span>${esc(me.email)}</span><span class="status">${isAdmin()?'管理員':PLAN_NAME[prof.plan]+' · '+(RO()?'只能看':'可編輯')+(prof.expires_on?' · 到期 '+prof.expires_on:'')}</span><div class="brandbar"><button data-tab="account">我的帳號</button><button data-auth="out">登出</button></div>`:'';
+  ub.innerHTML=me&&app?`<span>${esc(me.email)}</span><span class="status">${isAdmin()?'管理員':PLAN_NAME[prof.plan]+' · '+(RO()?'只能看':'可編輯')+(prof.expires_on?' · 到期 '+prof.expires_on:'')}</span><div class="brandbar"><button data-tab="account">我的帳號</button><a href="member/"><button type="button">會員中心／訂閱</button></a><button data-auth="out">登出</button></div>`:'';
   if(!app){ $('#nav').innerHTML=''; $('#banner').innerHTML=''; $('#main').innerHTML=gate(); return }
   if(!V[tab]) tab='home';
   renderApp();
