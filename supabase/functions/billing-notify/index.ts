@@ -30,6 +30,7 @@ Deno.serve(async (req) => {
     if (!sub) return txt('1|OK');
     const sandbox = cfg.billing_mode !== 'live';
     if (sandbox && !sub.sandbox) { await db.from('sub_log').insert({ user_id: sub.user_id, action: 'notify_sandbox_refused', detail: { no } }); return txt('1|OK'); }
+    if (sub.status === 'comp') { await db.from('sub_log').insert({ user_id: sub.user_id, action: 'notify_on_comp', detail: { no, rtn: f.RtnCode } }); return txt('1|OK'); }
     if (f.SimulatePaid === '1') { await db.from('sub_log').insert({ user_id: sub.user_id, action: 'notify_simulated', detail: { no } }); return txt('1|OK'); }
     const ok = f.RtnCode === '1';
     // 首期通知（ReturnURL）帶 TradeAmt／PaymentType；每期通知（PeriodReturnURL）沒有，且欄位是 Amount、Gwsr、ProcessDate。
@@ -72,6 +73,9 @@ Deno.serve(async (req) => {
     });
     if (dup) return txt('1|OK');
     if (sub.provider_ref !== no) return txt('1|OK'); // 舊的、已換掉的扣款單
+    // 金額和當初建立的付款單不同，就不延長期限，留紀錄給管理員查
+    const periodAmt = parseInt(f.Amount || f.amount || '0', 10);
+    if (ok && periodAmt !== co.amount) { await db.from('sub_log').insert({ user_id: sub.user_id, action: 'notify_amount_mismatch', detail: { no, amt: periodAmt, want: co.amount, period: true } }); return txt('1|OK'); }
     if (ok && times > 1) {
       const { error: ae } = await db.rpc('sub_apply_payment', { p_sub: sub.id, p_kind: 'period', p_paid_on: tpeDate(f.ProcessDate || f.process_date), p_ref: no, p_last4: null, p_plan: null, p_stores: null });
       if (ae) throw ae;

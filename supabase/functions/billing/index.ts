@@ -31,6 +31,8 @@ Deno.serve(async (req) => {
     const { data: sub } = await db.from('sub_subscriptions').select('*').eq('user_id', uid).maybeSingle();
     if (!sub) return reply(400, { error: 'SUB_NONE' });
     if (cfg.billing_mode === 'test' && !sub.sandbox) return reply(400, { error: 'BILLING_TEST_ONLY' });
+    // 免費招待的帳號不建付款單，也不需要取消扣款
+    if (sub.status === 'comp') return reply(400, { error: 'SUB_COMP' });
     const m = merchant(cfg.billing_mode);
 
     if (body.action === 'checkout') {
