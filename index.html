@@ -583,10 +583,10 @@ const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','news','accou
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['qsc','shift','cash','order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
-const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',qsc:'門市稽核',shift:'排班與人力成本',cash:'現金流預估',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['qsc','shift','cash','grow','order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
+const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',qsc:'門市稽核',shift:'排班與人力成本',cash:'現金流預估',grow:'顧客成長',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
-const TIP={cash:['填今天帳戶和現金的總餘額，再確認每週收入、每月固定支出和哪天付款。系統排出未來 13 週每週剩多少錢，提早告訴你哪一週會不夠。','be'],shift:['先建員工和時薪／月薪，再排一週的標準班表。系統會算出每週人力成本、占營收幾 %，並標出人手不夠的時段和工時太長的人。','pl'],qsc:['用手機巡店，每一項點「符合／部分／不符合」。不符合和部分的項目會自動進到下面的改善追蹤，填好負責人和期限，改好按完成。','order'],fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
+const TIP={grow:['每月月底從 POS 抄四個數字：來客數、客單價、會員回訪率、Google 評分。系統會看出營收是哪一項在掉，也能試算活動到底有沒有賺。','cash'],cash:['填今天帳戶和現金的總餘額，再確認每週收入、每月固定支出和哪天付款。系統排出未來 13 週每週剩多少錢，提早告訴你哪一週會不夠。','be'],shift:['先建員工和時薪／月薪，再排一週的標準班表。系統會算出每週人力成本、占營收幾 %，並標出人手不夠的時段和工時太長的人。','pl'],qsc:['用手機巡店，每一項點「符合／部分／不符合」。不符合和部分的項目會自動進到下面的改善追蹤，填好負責人和期限，改好按完成。','order'],fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['有匯入 POS 銷量就能選「銷量來源」用實際銷量分類；沒有的話用品項配方填的月銷量。','newp'],newp:['新品上市前先在這裡算成本、建議售價，並和同分類的菜比賺不賺。確定上市再按「加入品項配方」。','matrix'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
@@ -1767,6 +1767,42 @@ V.cash=(b,c)=>{ cfInit(b,c); const C=b.cash, R=cfCalc(b), sf=+C.safety||0, md=x=
 document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset; if(!(d.cfadd||d.cfreset)) return; const b=B(); if(!b) return;
   if(d.cfreset){ const keep=b.cash?{start:b.cash.start,from:b.cash.from,safety:b.cash.safety}:null; delete b.cash; cfInit(b,ctx(b)); if(keep) Object.assign(b.cash,keep) }
   else { cfInit(b,ctx(b)); b.cash.rows.push({id:uid('c'),name:d.cfadd==='in'?'其他收入':'其他支出',kind:d.cfadd,freq:'once',date:b.cash.from,amt:0}) }
+  touch(); render() });
+
+/* ===== ⑥ 顧客成長 ===== */
+function grInit(b){ if(!b.growth) b.growth={months:[],camps:[],sim:{g:5,t:3,r:5}}; b.growth.sim=b.growth.sim||{g:5,t:3,r:5} }
+function grMargin(b,c){ try{ const f=foodRate(b,c).r, v=(b.be&&+b.be.varPct||0)/100; const m=1-f-v; return isFinite(m)&&m>0?m:0.6 }catch(e){ return 0.6 } }
+const grRev=m=>(+m.guests||0)*(+m.ticket||0);
+V.grow=(b,c)=>{ grInit(b); const G=b.growth, M=G.months.slice().sort((x,z)=>String(x.m).localeCompare(String(z.m))), mg=grMargin(b,c);
+  let h='<div class="head"><div><h2>顧客成長</h2><p class="sub">營收 = 來客數 × 客單價。每月記下這幾個數字，就知道營收是哪裡在掉、該先拉哪一個。</p></div><button class="pri" data-grm="1">加這個月</button></div>';
+  const L=M[M.length-1], P=M[M.length-2];
+  if(L){ const d=(a,z)=>z?((a-z)/z*100):null, ch=v=>v==null?'':'<span class="pill '+(v>=0?'good':'bad')+'">'+(v>=0?'+':'')+nf(v,1)+'%</span>';
+    const dg=P?d(+L.guests,+P.guests):null, dt=P?d(+L.ticket,+P.ticket):null, dr=P?d(grRev(L),grRev(P)):null;
+    h+='<div class="tiles"><div class="tile"><span>'+esc(L.m)+' 營收</span><b>'+nf(grRev(L),0)+' 元</b><span>'+(P?'比上月 '+ch(dr):'再記一個月就能比較')+'</span></div><div class="tile"><span>來客數</span><b>'+nf(+L.guests||0,0)+' 人</b><span>'+ch(dg)+'</span></div><div class="tile"><span>客單價</span><b>'+nf(+L.ticket||0,0)+' 元</b><span>'+ch(dt)+'</span></div><div class="tile"><span>回訪率／評分</span><b>'+(L.repeat!=null&&L.repeat!==''?nf(+L.repeat,0)+'%':'—')+'</b><span>Google '+(L.star?nf(+L.star,1)+' 星':'—')+(L.reviews?'，'+nf(+L.reviews,0)+' 則':'')+'</span></div></div>';
+    if(P&&dr!=null&&dr<0){ const gl=(+L.guests-(+P.guests))*(+P.ticket), tl=(+L.ticket-(+P.ticket))*(+L.guests); h+='<div class="board"><b>營收少了 '+nf(grRev(P)-grRev(L),0)+' 元，主要原因</b><span>'+(gl<tl?'來客變少（影響 '+nf(-gl,0)+' 元）。先查：評價有沒有掉、附近有沒有新店、外送平台排名。':'客單價下降（影響 '+nf(-tl,0)+' 元）。先查：套餐和加點有沒有推、是不是促銷折扣太多。')+'</span></div>' } }
+  else h+='<p class="sub">還沒有資料。按「加這個月」，從 POS 抄這個月的來客數和客單價。</p>';
+  // 月紀錄表
+  if(G.months.length) h+='<h2 style="margin-top:16px">每月紀錄</h2><div class="scroll"><table><thead><tr><th>月份</th><th class="n">來客數</th><th class="n">客單價</th><th class="n">營收</th><th class="n">回訪率 %</th><th class="n">Google 星</th><th class="n">評論則數</th><th></th></tr></thead><tbody>'
+    +G.months.map((m,i)=>'<tr><td><input type="month" data-p="growth.months.'+i+'.m" value="'+esc(m.m)+'" aria-label="月份"></td><td class="n">'+num('growth.months.'+i+'.guests',m.guests,{label:'來客數'})+'</td><td class="n">'+num('growth.months.'+i+'.ticket',m.ticket,{label:'客單價'})+'</td><td class="n">'+nf(grRev(m),0)+'</td><td class="n">'+num('growth.months.'+i+'.repeat',m.repeat,{label:'回訪率',nul:1})+'</td><td class="n">'+num('growth.months.'+i+'.star',m.star,{label:'Google 星',step:'0.1',nul:1})+'</td><td class="n">'+num('growth.months.'+i+'.reviews',m.reviews,{label:'評論則數',nul:1})+'</td><td>'+del('growth.months.'+i)+'</td></tr>').join('')+'</tbody></table></div>';
+  // 成長試算
+  const base=L?grRev(L):(()=>{ const t=theory(b,c); return t.sales||0 })(), S=G.sim, nr=base*(1+(+S.g||0)/100)*(1+(+S.t||0)/100)*(1+(+S.r||0)/100*0.5), add=nr-base;
+  h+='<h2 style="margin-top:18px">成長試算</h2><p class="sub">以'+(L?esc(L.m)+'的實際營收':'品項配方估的月營收')+' '+nf(base,0)+' 元為基礎，試試每一項拉高一點，每月能多賺多少（毛利率以 '+nf(mg*100,0)+'% 計）。</p>'
+   +'<div class="params"><label>來客數 +% '+num('growth.sim.g',S.g,{label:'來客成長%'})+'</label><label>客單價 +% '+num('growth.sim.t',S.t,{label:'客單成長%'})+'</label><label>回訪率 +百分點 '+num('growth.sim.r',S.r,{label:'回訪成長'})+'</label></div>'
+   +'<div class="tiles"><div class="tile"><span>每月多的營收</span><b>'+nf(add,0)+' 元</b><span>一年 '+nf(add*12,0)+' 元</span></div><div class="tile"><span>每月多的毛利</span><b>'+nf(add*mg,0)+' 元</b><span>扣掉食材和抽成後</span></div></div>'
+   +'<div class="note">做法參考：來客靠 Google 評論和外送曝光；客單價靠套餐、加點和推薦話術；回訪靠會員集點、生日禮和 LINE 官方帳號定期推播。</div>';
+  // 活動成效
+  h+='<h2 style="margin-top:18px">行銷活動成效</h2><p class="sub">填活動期間和平常的每日營收，系統算出活動多賺的毛利有沒有超過花費。</p><div style="display:grid;gap:8px">'
+   +G.camps.map((x,i)=>{ const days=x.start&&x.end?Math.max(1,Math.round((new Date(x.end)-new Date(x.start))/864e5)+1):0, lift=((+x.during||0)-(+x.base||0))*days, prof=lift*mg-(+x.cost||0), roi=+x.cost?prof/(+x.cost)*100:null;
+     return '<div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel)"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span style="flex:1;min-width:140px">'+txt('growth.camps.'+i+'.name',x.name,'活動名稱')+'</span><input type="date" data-p="growth.camps.'+i+'.start" value="'+esc(x.start||'')+'" aria-label="開始">–<input type="date" data-p="growth.camps.'+i+'.end" value="'+esc(x.end||'')+'" aria-label="結束">'+del('growth.camps.'+i)+'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px"><label>花費 '+num('growth.camps.'+i+'.cost',x.cost,{label:'花費'})+'</label><label>平常日均營收 '+num('growth.camps.'+i+'.base',x.base,{label:'平常日均'})+'</label><label>活動期間日均營收 '+num('growth.camps.'+i+'.during',x.during,{label:'活動日均'})+'</label></div>'
+      +(days?'<div style="margin-top:6px">'+days+' 天多了 '+nf(lift,0)+' 元營收，毛利 '+nf(lift*mg,0)+' 元，扣掉花費 <b>'+(prof>=0?'賺 ':'虧 ')+nf(Math.abs(prof),0)+' 元</b>'+(roi!=null?' <span class="pill '+(prof>=0?'good':'bad')+'">投報率 '+nf(roi,0)+'%</span>':'')+'</div>':'<div class="note">填開始和結束日期就會算。</div>')+'</div>' }).join('')
+   +'</div><button data-grc="1" style="margin-top:8px">加一個活動</button>';
+  return h };
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset; if(!(d.grm||d.grc)) return; const b=B(); if(!b) return; grInit(b);
+  if(d.grm){ const n=new Date(), m=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'), last=b.growth.months.slice().sort((x,z)=>String(x.m).localeCompare(String(z.m))).slice(-1)[0];
+    let mm=m; if(last&&/^\d{4}-\d{2}$/.test(last.m)){ const [y,mo]=last.m.split('-').map(Number); const x=new Date(y,mo,1); mm=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0') }
+    b.growth.months.push({m:mm,guests:last?last.guests:0,ticket:last?last.ticket:0,repeat:null,star:null,reviews:null}) }
+  else b.growth.camps.push({id:uid('g'),name:'新活動',start:'',end:'',cost:0,base:0,during:0});
   touch(); render() });
 
 siteBoot();
