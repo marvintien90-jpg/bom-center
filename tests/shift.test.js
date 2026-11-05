@@ -1,0 +1,51 @@
+/* ④ 排班與人力成本：員工、週班表、人力成本占比、尖峰缺人、工時提醒。node shift.test.js /abs/index.html */
+const {chromium}=require('playwright'); const fs=require('fs'), path=require('path');
+const SITE=process.argv[2], MOCK=fs.readFileSync(path.join(__dirname,'mock.js'),'utf8'), BIG=fs.readFileSync(path.join(__dirname,'bigdata.js'),'utf8'), XL=fs.readFileSync(path.join(__dirname,'node_modules/xlsx/dist/xlsx.full.min.js'),'utf8');
+let fails=0; const ok=(c,m)=>{ if(c) console.log('  ✓ '+m); else { fails++; console.log('  ✗ '+m) } };
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function open(br,role,w){ const ctx=await br.newContext({viewport:{width:w||1280,height:900}}); const pg=await ctx.newPage(); const errs=[];
+  pg.on('pageerror',e=>errs.push(e.message));
+  await pg.route('**/*',r=>{ const u=r.request().url();
+    if(u.includes('supabase-js')) return r.fulfill({contentType:'application/javascript',body:BIG+`\nwindow.__MOCK=${JSON.stringify({role})};\n`+MOCK});
+    if(u.includes('xlsx')) return r.fulfill({contentType:'application/javascript',body:XL});
+    if(u.startsWith('file:')) return r.continue(); return r.fulfill({status:404,body:''}) });
+  await pg.goto('file://'+SITE); await sleep(600); return {pg,errs} }
+const tab=async(pg,id)=>{ await pg.evaluate(id=>document.querySelector(`#nav [data-tab="${id}"]`).click(),id); await sleep(200) };
+const main=pg=>pg.$eval('#main',e=>e.innerText);
+const bad=t=>/NaN|undefined|\[object|Infinity|null 分/.test(t);
+const click=async(pg,s)=>{ await pg.click(s); await sleep(120) };
+const fill=async(pg,p,v)=>{ await pg.fill(`[data-p="${p}"]`,v); await pg.press(`[data-p="${p}"]`,'Tab'); await sleep(150) };
+(async()=>{ const br=await chromium.launch();
+  for(const [role,w] of [['admin',1280],['pro',375]]){ console.log(role+' '+w); const {pg,errs}=await open(br,role,w);
+    await tab(pg,'shift'); let t=await main(pg);
+    ok(!bad(t)&&t.includes('排班與人力成本')&&t.includes('還沒有員工'),'排班頁正常');
+    ok(await pg.evaluate(()=>B().shiftSet.rev[0]>0),'每天營收預設由品項月銷量估出');
+    await pg.evaluate(()=>{ const r=B().shiftSet.rev; for(let i=0;i<7;i++) r[i]=10000; });
+    await click(pg,'[data-shstaff]'); await click(pg,'[data-shstaff]'); await click(pg,'[data-shstaff]');
+    await pg.selectOption('[data-p="staff.2.pay"]','m'); await sleep(150); await fill(pg,'staff.2.rate','36000');
+    await fill(pg,'staff.0.rate','200');
+    // 週一排兩個時薪班 + 一個月薪
+    await click(pg,'[data-shnew="0"]'); await click(pg,'[data-shnew="0"]'); await click(pg,'[data-shnew="0"]');
+    ok(await pg.evaluate(()=>{ const s=B().shifts; return s.length===3&&new Set(s.map(x=>x.staff)).size===3 }),'加班時自動帶不同員工');
+    await fill(pg,'shifts.0.start','10:00'); await fill(pg,'shifts.0.end','20:00');
+    await fill(pg,'shifts.1.start','11:00'); await fill(pg,'shifts.1.end','15:00');
+    await fill(pg,'shifts.2.start','10:00'); await fill(pg,'shifts.2.end','21:00');
+    const r=await pg.evaluate(()=>{ const R=shCalc(B()); return {wk:Math.round(R.wk),short:R.short.length} });
+    const want=Math.round((10*200+4*196)*1.15+36000*12/52*1.15);
+    ok(r.wk===want,'每週人力成本 '+r.wk+'（應為 '+want+'）');
+    t=await main(pg); ok(t.includes('人力成本占營收')&&t.includes('%'),'有占營收 %');
+    await click(pg,'[data-shcopy="0"]');
+    ok(await pg.evaluate(()=>B().shifts.length===21),'套用到其他 6 天');
+    t=await main(pg); ok(t.includes('超過 40 小時')&&t.includes('7 天都有班'),'工時提醒：超過 40 小時、沒休假');
+    ok(t.includes('超過目標'),'人力成本超標提示');
+    ok(/人手不夠的時段\s*21 個小時/.test(t),'晚餐 17–20 只有 2 人，每天缺 3 小時');
+    await fill(pg,'shiftSet.need.1.n','2'); t=await main(pg);
+    ok(await pg.evaluate(()=>shCalc(B()).short.length===0)&&t.includes('尖峰時段人數都夠'),'尖峰 3 人都夠');
+    await fill(pg,'shiftSet.need.0.n','4'); t=await main(pg);
+    ok(/人手不夠的時段\s*21 個小時/.test(t),'尖峰改 4 人後標出缺人（每天 11–14 共 3 小時 × 7）');
+    ok(await pg.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),'沒有水平捲動');
+    t=await main(pg); ok(!bad(t),'畫面沒有錯誤字樣');
+    ok(!errs.length,'沒有頁面錯誤'+(errs.length?'：'+errs.join(' | '):''));
+    if(w===375) await pg.screenshot({path:path.join(process.env.SHOT_DIR||require('os').tmpdir(),'shift-mobile.png'),fullPage:true});
+  }
+  await br.close(); console.log(fails?`\n${fails} 項失敗`:'\n全部通過'); process.exit(fails?1:0) })();
