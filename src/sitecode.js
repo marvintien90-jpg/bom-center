@@ -6,10 +6,10 @@ const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','news','accou
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['qsc','shift','order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
-const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',qsc:'門市稽核',shift:'排班與人力成本',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['qsc','shift','cash','order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
+const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',qsc:'門市稽核',shift:'排班與人力成本',cash:'現金流預估',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
-const TIP={shift:['先建員工和時薪／月薪，再排一週的標準班表。系統會算出每週人力成本、占營收幾 %，並標出人手不夠的時段和工時太長的人。','pl'],qsc:['用手機巡店，每一項點「符合／部分／不符合」。不符合和部分的項目會自動進到下面的改善追蹤，填好負責人和期限，改好按完成。','order'],fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
+const TIP={cash:['填今天帳戶和現金的總餘額，再確認每週收入、每月固定支出和哪天付款。系統排出未來 13 週每週剩多少錢，提早告訴你哪一週會不夠。','be'],shift:['先建員工和時薪／月薪，再排一週的標準班表。系統會算出每週人力成本、占營收幾 %，並標出人手不夠的時段和工時太長的人。','pl'],qsc:['用手機巡店，每一項點「符合／部分／不符合」。不符合和部分的項目會自動進到下面的改善追蹤，填好負責人和期限，改好按完成。','order'],fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['有匯入 POS 銷量就能選「銷量來源」用實際銷量分類；沒有的話用品項配方填的月銷量。','newp'],newp:['新品上市前先在這裡算成本、建議售價，並和同分類的菜比賺不賺。確定上市再按「加入品項配方」。','matrix'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
@@ -1137,6 +1137,59 @@ document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t
   else if(d.shnew){ const prev=b.shifts.filter(x=>String(x.day)===d.shnew).slice(-1)[0]; b.shifts.push({id:uid('h'),day:d.shnew,staff:(b.staff.find(p=>!b.shifts.some(x=>String(x.day)===d.shnew&&x.staff===p.id))||{}).id||'',start:prev?prev.start:'10:00',end:prev?prev.end:'14:00'}) }
   else if(d.shcopy){ const src=b.shifts.filter(x=>String(x.day)===d.shcopy); b.shifts=b.shifts.filter(x=>String(x.day)===d.shcopy); for(let k=0;k<7;k++){ if(String(k)===d.shcopy) continue; src.forEach(x=>b.shifts.push(Object.assign({},x,{id:uid('h'),day:String(k)}))) } }
   else if(d.shneed){ b.shiftSet.need.push({from:'11:00',to:'14:00',n:2}) }
+  touch(); render() });
+
+/* ===== ⑤ 現金流預估（13 週） ===== */
+const CF_FREQ=[['w','每週'],['m','每月'],['once','一次']];
+function cfMon(d){ const x=new Date(d+'T00:00:00'); const k=(x.getDay()+6)%7; x.setDate(x.getDate()-k); return x }
+const cfIso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+function cfInit(b,c){ if(b.cash) return; const t=theory(b,c), wk=x=>Math.round(x*7/30/100)*100, rows=[];
+  rows.push({id:uid('c'),name:'營業收入',kind:'in',freq:'w',amt:wk(t.sales||0)});
+  rows.push({id:uid('c'),name:'食材進貨',kind:'out',freq:'w',amt:wk(t.cost||0)});
+  if(b.staff&&b.staff.length&&typeof shCalc==='function'){ const R=shCalc(b); rows.push({id:uid('c'),name:'薪資',kind:'out',freq:'m',day:5,amt:Math.round(R.mo/100)*100}) } else rows.push({id:uid('c'),name:'薪資',kind:'out',freq:'m',day:5,amt:0});
+  (b.fixed||[]).forEach(f=>{ if(+f.amount) rows.push({id:uid('c'),name:f.name||'固定費用',kind:'out',freq:'m',day:/租/.test(f.name||'')?1:10,amt:+f.amount}) });
+  if(!(b.fixed||[]).some(f=>/租/.test(f.name||''))) rows.push({id:uid('c'),name:'房租',kind:'out',freq:'m',day:1,amt:0});
+  if(b.be&&+b.be.varPct) rows.push({id:uid('c'),name:'平台抽成等變動費用',kind:'out',freq:'w',amt:wk((t.sales||0)*b.be.varPct/100)});
+  b.cash={start:0,from:cfIso(cfMon(cfIso(new Date()))),safety:0,rows} }
+function cfCalc(b){ const C=b.cash, m0=cfMon(C.from||cfIso(new Date())), W=[]; let bal=+C.start||0;
+  for(let k=0;k<13;k++){ const a=new Date(m0); a.setDate(a.getDate()+7*k); const days=[...Array(7)].map((_,i)=>{ const x=new Date(a); x.setDate(x.getDate()+i); return x });
+    let inn=0,out=0; const hit=[];
+    C.rows.forEach(r=>{ const v=+r.amt||0; if(!v) return; let n=0;
+      if(r.freq==='w') n=1;
+      else if(r.freq==='m'){ const d=Math.max(1,Math.min(31,+r.day||1)); n=days.filter(x=>{ const last=new Date(x.getFullYear(),x.getMonth()+1,0).getDate(); return x.getDate()===Math.min(d,last) }).length }
+      else if(r.freq==='once') n=days.some(x=>cfIso(x)===r.date)?1:0;
+      if(!n) return; if(r.kind==='in') inn+=v*n; else { out+=v*n; if(r.freq!=='w') hit.push(r.name) } });
+    bal+=inn-out; W.push({a,inn,out,bal,hit}) }
+  const low=W.reduce((m,w)=>w.bal<m.bal?w:m,W[0]), first=W.find(w=>w.bal<(+C.safety||0));
+  return {W,low,first} }
+V.cash=(b,c)=>{ cfInit(b,c); const C=b.cash, R=cfCalc(b), sf=+C.safety||0, md=x=>(x.getMonth()+1)+'/'+x.getDate();
+  let h='<div class="head"><div><h2>現金流預估</h2><p class="sub">損益表賺錢不代表戶頭有錢。這裡排出未來 13 週每週會收進、付出多少，提早看到哪一週現金會不夠。</p></div></div>';
+  h+='<div class="params"><label>今天的現金＋存款總額 '+num('cash.start',C.start,{label:'目前現金'})+'</label><label>從哪一週開始 <input type="date" data-p="cash.from" value="'+esc(C.from)+'" aria-label="開始日期"></label><label>安全水位（至少要留） '+num('cash.safety',C.safety,{label:'安全水位'})+'</label></div>';
+  const end=R.W[12];
+  h+='<div class="tiles"><div class="tile"><span>13 週後餘額</span><b>'+nf(end.bal,0)+' 元</b><span>'+(end.bal>=(+C.start||0)?'比現在多 ':'比現在少 ')+nf(Math.abs(end.bal-(+C.start||0)),0)+' 元</span></div>'
+   +'<div class="tile"><span>最低的一週</span><b>'+nf(R.low.bal,0)+' 元</b><span>'+md(R.low.a)+' 那週'+(R.low.hit.length?'（要付 '+esc(R.low.hit.slice(0,3).join('、'))+'）':'')+'</span></div>'
+   +'<div class="tile"><span>現金狀況</span><b>'+(R.first?(R.first.bal<0?'會透支':'低於安全水位'):'安全')+'</b><span>'+(R.first?md(R.first.a)+' 那週開始，差 '+nf(sf-R.first.bal,0)+' 元':'13 週內都在安全水位以上')+'</span></div></div>';
+  if(R.first){ const gap=sf-R.low.bal; h+='<div class="board"><b>提早準備</b><span>最缺的時候差 '+nf(gap,0)+' 元。可以：和供應商談月結或延後付款、把大筆支出移到收入多的週、先準備週轉金，或在那之前加推促銷。</span></div>' }
+  { const z=C.rows.filter(r=>r.kind==='out'&&!+r.amt); if(z.length) h+='<div class="note">還有 '+z.length+' 筆支出是 0 元（'+esc(z.map(r=>r.name).join('、'))+'），填上實際金額，預估才準。</div>' }
+  // 圖
+  const Wd=620,H=170,L=56,Rr=8,T=10,Bm=22, vals=R.W.map(w=>w.bal).concat([sf,0]), mx=Math.max(...vals), mn=Math.min(...vals), span=(mx-mn)||1, Y=v=>T+(mx-v)/span*(H-T-Bm), bw=(Wd-L-Rr)/13;
+  h+='<div class="scroll" style="padding:8px;margin-top:10px"><svg viewBox="0 0 '+Wd+' '+H+'" role="img" aria-label="每週期末現金餘額" style="width:100%;max-width:720px;height:auto">'
+   +'<line x1="'+L+'" x2="'+(Wd-Rr)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="var(--line)"/><text x="'+(L-4)+'" y="'+(Y(0)+4)+'" text-anchor="end" font-size="10" fill="var(--mute)">0</text>'
+   +(sf?'<line x1="'+L+'" x2="'+(Wd-Rr)+'" y1="'+Y(sf)+'" y2="'+Y(sf)+'" stroke="var(--warn)" stroke-dasharray="4 3"/><text x="'+(L-4)+'" y="'+(Y(sf)+4)+'" text-anchor="end" font-size="10" fill="var(--mute)">安全</text>':'')
+   +R.W.map((w,i)=>{ const y=Y(Math.max(w.bal,0)), y0=Y(Math.min(w.bal,0)); return '<rect x="'+(L+i*bw+3)+'" y="'+y+'" width="'+(bw-6)+'" height="'+Math.max(1,y0-y)+'" rx="2" fill="var('+(w.bal<0?'--bad':w.bal<sf?'--warn':'--accent')+')"/><text x="'+(L+i*bw+bw/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="var(--mute)">'+md(w.a)+'</text>' }).join('')+'</svg></div>';
+  h+='<div class="scroll"><table><thead><tr><th>週（週一）</th><th class="n">收入</th><th class="n">支出</th><th class="n">期末餘額</th><th>大筆付款</th></tr></thead><tbody>'
+   +R.W.map(w=>'<tr><td>'+md(w.a)+'</td><td class="n">'+nf(w.inn,0)+'</td><td class="n">'+nf(w.out,0)+'</td><td class="n" style="'+(w.bal<sf?'color:var(--bad);font-weight:600':'')+'">'+nf(w.bal,0)+'</td><td style="white-space:normal">'+esc(w.hit.join('、'))+'</td></tr>').join('')+'</tbody></table></div>';
+  // 收支項目
+  h+='<h2 style="margin-top:18px">收支項目</h2><p class="sub">第一次打開時已用品項配方、排班和損益兩平的固定費用幫你估好，請改成實際金額和付款日。「每月」要填幾號付；一次性的（年終、設備、繳稅）選「一次」並填日期。</p><div style="display:grid;gap:8px">'
+   +C.rows.map((r,i)=>'<div style="border:1px solid var(--line);border-left:4px solid var('+(r.kind==='in'?'--good':'--bad')+');border-radius:8px;padding:8px 10px;background:var(--panel);display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+     +'<span style="min-width:130px;flex:1">'+txt('cash.rows.'+i+'.name',r.name,'項目')+'</span>'+sel('cash.rows.'+i+'.kind',r.kind,[['in','收入'],['out','支出']],'收或付')+sel('cash.rows.'+i+'.freq',r.freq,CF_FREQ,'頻率')
+     +(r.freq==='m'?'<label>每月 '+num('cash.rows.'+i+'.day',r.day,{label:'幾號'})+' 號</label>':r.freq==='once'?'<input type="date" data-p="cash.rows.'+i+'.date" value="'+esc(r.date||'')+'" aria-label="日期">':'')
+     +'<label>金額 '+num('cash.rows.'+i+'.amt',r.amt,{label:'金額'})+'</label>'+del('cash.rows.'+i)+'</div>').join('')+'</div>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button data-cfadd="in">加一筆收入</button><button data-cfadd="out">加一筆支出</button><button data-cfreset="1">重新用系統資料估算</button></div>';
+  return h };
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset; if(!(d.cfadd||d.cfreset)) return; const b=B(); if(!b) return;
+  if(d.cfreset){ const keep=b.cash?{start:b.cash.start,from:b.cash.from,safety:b.cash.safety}:null; delete b.cash; cfInit(b,ctx(b)); if(keep) Object.assign(b.cash,keep) }
+  else { cfInit(b,ctx(b)); b.cash.rows.push({id:uid('c'),name:d.cfadd==='in'?'其他收入':'其他支出',kind:d.cfadd,freq:'once',date:b.cash.from,amt:0}) }
   touch(); render() });
 
 siteBoot();
