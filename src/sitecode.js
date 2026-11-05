@@ -6,10 +6,10 @@ const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','news','accou
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
-const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['qsc','shift','order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
+const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',qsc:'門市稽核',shift:'排班與人力成本',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
-const TIP={fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
+const TIP={shift:['先建員工和時薪／月薪，再排一週的標準班表。系統會算出每週人力成本、占營收幾 %，並標出人手不夠的時段和工時太長的人。','pl'],qsc:['用手機巡店，每一項點「符合／部分／不符合」。不符合和部分的項目會自動進到下面的改善追蹤，填好負責人和期限，改好按完成。','order'],fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['有匯入 POS 銷量就能選「銷量來源」用實際銷量分類；沒有的話用品項配方填的月銷量。','newp'],newp:['新品上市前先在這裡算成本、建議售價，並和同分類的菜比賺不賺。確定上市再按「加入品項配方」。','matrix'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
@@ -1032,5 +1032,111 @@ document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t
   const it=b.drafts.find(x=>x.id===npSel); if(!it) return;
   if(d.npline){ const first=b.ingredients[0]?'i:'+b.ingredients[0].id:(b.semis[0]?'s:'+b.semis[0].id:null); if(first){ it.lines.push({ref:first,qty:0}); touch(); render() } return }
   if(d.npgo){ const m={id:uid('m'),name:it.name,cat:it.cat,price:+it.price||0,monthlySales:+it.monthlySales||0,lines:it.lines.map(l=>({ref:l.ref,qty:+l.qty||0}))}; b.items.push(m); b.drafts=b.drafts.filter(x=>x.id!==it.id); npSel=null; selItem=m.id; tab='recipe'; try{history.replaceState(null,'','#recipe')}catch(x){} touch(); render(); return } });
+
+/* ===== ③ 門市稽核（QSC） ===== */
+const QSC_DEF=[['品質','出餐份量符合食譜卡'],['品質','出餐溫度正確（熱食夠熱、冷食夠冰）'],['品質','擺盤符合標準照'],['品質','食材效期標示清楚，沒有過期品'],['品質','冷藏 0–7°C、冷凍 −18°C 以下，並有溫度紀錄'],['品質','食材先進先出'],
+ ['服務','客人入座 1 分鐘內有人招呼'],['服務','出餐時間符合標準'],['服務','員工服裝儀容整齊、名牌配戴'],['服務','結帳正確，發票或收據有開立'],['服務','客訴有紀錄並處理到結案'],['服務','外送包裝完整、封口、附餐具'],
+ ['清潔','用餐區桌椅、地面乾淨'],['清潔','廁所定時巡檢並有紀錄'],['清潔','廚房地面與排水溝沒有油污積水'],['清潔','抽油煙機、濾網定期清潔'],['清潔','垃圾分類並加蓋'],['清潔','沒有蟑螂、老鼠等病媒跡象'],['清潔','員工洗手，戴帽子、口罩'],['清潔','刀具砧板生熟分開'],
+ ['管理','開店／收店檢核表有填'],['管理','交班事項有紀錄'],['管理','上次稽核的缺失已改善']];
+const QS_V=[['符合','good',2],['部分','warn',1],['不符合','bad',0]];
+let qsSel=null, qsEdit=false;
+function qsInit(b){ if(!b.qscItems) b.qscItems=QSC_DEF.map((x,i)=>({id:'q'+(i+1),cat:x[0],text:x[1]})); b.audits=b.audits||[] }
+function qsScore(a,items){ let got=0,max=0; items.forEach(it=>{ const r=a.res[it.id]; if(r&&r.s!=null&&r.s!==''){ got+=+r.s; max+=2 } }); return max?Math.round(got/max*100):null }
+function qsOpen(b){ const out=[]; b.audits.forEach(a=>{ if(!a.done) return; Object.keys(a.res).forEach(k=>{ const r=a.res[k]; if(r&&r.s!=null&&+r.s<2&&!r.ok) out.push({a,k,r}) }) }); return out }
+V.qsc=(b,c)=>{ qsInit(b); const items=b.qscItems, cats=[...new Set(items.map(i=>i.cat||'其他'))];
+  const head='<div class="head"><div><h2>門市稽核</h2><p class="sub">巡店時用手機逐項檢查品質、服務、清潔、管理。系統自動算分，不符合的項目會變成改善追蹤，直到改好為止。</p></div><button class="pri" data-qsnew="1">開始新稽核</button></div>';
+  const ai=b.audits.findIndex(a=>a.id===qsSel), a=b.audits[ai];
+  if(a&&!a.done){ const sc=qsScore(a,items), n=items.filter(it=>a.res[it.id]&&a.res[it.id].s!=null).length;
+    return head+'<div class="params"><label>日期 <input type="date" data-p="audits.'+ai+'.date" value="'+esc(a.date)+'" aria-label="日期"></label><label>門市 '+txt('audits.'+ai+'.store',a.store,'門市')+'</label><label>稽核人 '+txt('audits.'+ai+'.by',a.by,'稽核人')+'</label></div>'
+     +'<div class="tiles"><div class="tile"><span>目前分數</span><b>'+(sc==null?'—':sc+' 分')+'</b><span>已檢查 '+n+' / '+items.length+' 項</span></div></div>'
+     +cats.map(ct=>'<h2 style="margin-top:16px">'+esc(ct)+'</h2><div style="display:grid;gap:8px">'+items.filter(it=>(it.cat||'其他')===ct).map(it=>{ const r=a.res[it.id]||{}; return '<div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel)"><div>'+esc(it.text)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'
+       +QS_V.map(v=>'<button data-qsv="'+esc(a.id)+'|'+esc(it.id)+'|'+v[2]+'" class="'+(r.s===v[2]?'pri':'')+'" aria-pressed="'+(r.s===v[2])+'">'+v[0]+'</button>').join('')+'</div>'
+       +(r.s!=null&&r.s<2?'<input type="text" data-p="audits.'+ai+'.res.'+it.id+'.n" value="'+esc(r.n||'')+'" placeholder="哪裡不符合？（例：冷藏 9°C）" aria-label="缺失說明" style="margin-top:6px;width:100%">':'')+'</div>' }).join('')+'</div>').join('')
+     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="pri" data-qsdone="1">完成稽核</button><button data-qsback="1">先存著，回列表</button>'+del('audits.'+ai)+'</div>' }
+  // 列表＋改善追蹤
+  const done=b.audits.filter(x=>x.done).sort((x,z)=>String(z.date).localeCompare(String(x.date)));
+  const open=qsOpen(b), drafts=b.audits.filter(x=>!x.done);
+  const today=new Date().toISOString().slice(0,10);
+  let h=head;
+  if(drafts.length) h+='<div class="tiles">'+drafts.map(x=>'<div class="tile"><span>進行中</span><b>'+esc(x.store||'未填門市')+'</b><span>'+esc(x.date)+'　<button data-qspick="'+esc(x.id)+'">繼續</button></span></div>').join('')+'</div>';
+  const last=done[0], prev=done.find(x=>x!==last&&(x.store||'')===(last&&last.store||''));
+  h+='<div class="tiles"><div class="tile"><span>最近一次分數</span><b>'+(last?qsScore(last,items)+' 分':'—')+'</b><span>'+(last?esc(last.store||'')+' '+esc(last.date):'還沒有稽核紀錄')+(last&&prev?'（上次 '+qsScore(prev,items)+' 分）':'')+'</span></div><div class="tile"><span>待改善</span><b>'+open.length+' 項</b><span>'+open.filter(o=>o.r.due&&o.r.due<today).length+' 項已超過期限</span></div></div>';
+  h+='<h2 style="margin-top:18px">改善追蹤</h2>';
+  if(!open.length) h+='<p class="sub">目前沒有待改善的項目。</p>';
+  else h+='<div style="display:grid;gap:8px">'+open.sort((x,z)=>String(x.r.due||'9').localeCompare(String(z.r.due||'9'))).map(o=>{ const it=items.find(i=>i.id===o.k), x=b.audits.indexOf(o.a), late=o.r.due&&o.r.due<today;
+      return '<div style="border:1px solid var(--line);border-left:4px solid var('+(late?'--bad':'--warn')+');border-radius:8px;padding:10px 12px;background:var(--panel)"><b>'+esc(it?it.text:'（項目已刪除）')+'</b> <span class="pill '+(+o.r.s===0?'bad':'warn')+'">'+(+o.r.s===0?'不符合':'部分')+'</span>'+(late?' <span class="pill bad">已逾期</span>':'')
+       +'<div class="note">'+esc(o.a.store||'')+' '+esc(o.a.date)+(o.r.n?'：'+esc(o.r.n):'')+'</div>'
+       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center"><input type="text" data-p="audits.'+x+'.res.'+o.k+'.who" value="'+esc(o.r.who||'')+'" placeholder="負責人" aria-label="負責人" style="width:110px"><input type="date" data-p="audits.'+x+'.res.'+o.k+'.due" value="'+esc(o.r.due||'')+'" aria-label="改善期限"><button data-qsok="'+esc(o.a.id)+'|'+esc(o.k)+'">已改善</button></div></div>' }).join('')+'</div>';
+  h+='<h2 style="margin-top:18px">稽核紀錄</h2>';
+  if(!done.length) h+='<p class="sub">按「開始新稽核」做第一次巡店。</p>';
+  else { const pts=done.slice(0,12).reverse(), W=560,H=150,L=30,R=10,T=10,Bm=24, X=i=>L+(pts.length<2?(W-L-R)/2:i*(W-L-R)/(pts.length-1)), Y=v=>T+(100-v)/100*(H-T-Bm);
+    h+='<div class="scroll" style="padding:8px"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="稽核分數趨勢" style="width:100%;max-width:640px;height:auto">'+[100,80,60].map(v=>'<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)"/><text x="'+(L-4)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+v+'</text>').join('')
+      +'<polyline fill="none" stroke="var(--accent)" stroke-width="2" points="'+pts.map((x,i)=>X(i)+','+Y(qsScore(x,items)||0)).join(' ')+'"/>'+pts.map((x,i)=>'<circle cx="'+X(i)+'" cy="'+Y(qsScore(x,items)||0)+'" r="4" fill="var(--accent)"/><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="var(--mute)">'+esc(String(x.date).slice(5))+'</text>').join('')+'</svg></div>';
+    h+='<div class="scroll"><table><thead><tr><th>日期</th><th>門市</th><th>稽核人</th><th class="n">分數</th><th class="n">缺失</th><th></th></tr></thead><tbody>'+done.map(x=>{ const bad=Object.values(x.res).filter(r=>r&&r.s!=null&&+r.s<2).length; return '<tr><td>'+esc(x.date)+'</td><td>'+esc(x.store||'')+'</td><td>'+esc(x.by||'')+'</td><td class="n">'+qsScore(x,items)+'</td><td class="n">'+bad+'</td><td><button data-qsreopen="'+esc(x.id)+'">修改</button></td></tr>' }).join('')+'</tbody></table></div>' }
+  h+='<h2 style="margin-top:18px">稽核項目</h2><p class="sub">預設 '+QSC_DEF.length+' 項，可以依門市需求改字、增加或刪除。</p><button data-qsedit="1">'+(qsEdit?'收起':'編輯稽核項目')+'</button>';
+  if(qsEdit) h+='<div class="scroll" style="margin-top:8px"><table><thead><tr><th>分類</th><th>檢查項目</th><th></th></tr></thead><tbody>'+items.map((it,i)=>'<tr><td>'+txt('qscItems.'+i+'.cat',it.cat,'分類')+'</td><td style="min-width:220px">'+txt('qscItems.'+i+'.text',it.text,'檢查項目')+'</td><td>'+del('qscItems.'+i)+'</td></tr>').join('')+'</tbody></table></div><button data-qsadd="1">加一個項目</button>';
+  return h };
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset; if(!(d.qsnew||d.qsv||d.qsdone||d.qsback||d.qspick||d.qsok||d.qsreopen||d.qsedit||d.qsadd)) return; const b=B(); if(!b) return; qsInit(b);
+  if(d.qsnew){ const last=b.audits.filter(x=>x.done).slice(-1)[0], a={id:uid('a'),date:new Date().toISOString().slice(0,10),store:last?last.store:'',by:(me&&me.email)||'',done:false,res:{}}; b.qscItems.forEach(it=>a.res[it.id]={}); b.audits.push(a); qsSel=a.id; touch(); render(); window.scrollTo(0,0); return }
+  if(d.qspick||d.qsreopen){ const a=b.audits.find(x=>x.id===(d.qspick||d.qsreopen)); if(a){ a.done=false; b.qscItems.forEach(it=>{ if(!a.res[it.id]) a.res[it.id]={} }); qsSel=a.id; if(d.qsreopen) touch() } render(); window.scrollTo(0,0); return }
+  if(d.qsback){ qsSel=null; render(); return }
+  if(d.qsedit){ qsEdit=!qsEdit; render(); return }
+  if(d.qsadd){ b.qscItems.push({id:uid('q'),cat:'其他',text:'新的檢查項目'}); touch(); render(); return }
+  if(d.qsv){ const [aid,iid,v]=d.qsv.split('|'), a=b.audits.find(x=>x.id===aid); if(!a) return; a.res[iid]=a.res[iid]||{}; a.res[iid].s=+v; if(+v===2){ delete a.res[iid].n } touch(); render(); return }
+  if(d.qsdone){ const a=b.audits.find(x=>x.id===qsSel); if(a){ a.done=true; const due=new Date(Date.now()+7*864e5).toISOString().slice(0,10); Object.values(a.res).forEach(r=>{ if(r&&r.s!=null&&+r.s<2&&!r.due) r.due=due }) } qsSel=null; touch(); render(); window.scrollTo(0,0); return }
+  if(d.qsok){ const [aid,iid]=d.qsok.split('|'), a=b.audits.find(x=>x.id===aid); if(a&&a.res[iid]){ a.res[iid].ok=new Date().toISOString().slice(0,10); touch(); render() } return } });
+
+/* ===== ④ 排班與人力成本 ===== */
+const SH_DAY=['一','二','三','四','五','六','日'], SH_MINW=196, SH_MINM=29500;
+function shInit(b){ b.staff=b.staff||[]; b.shifts=b.shifts||[]; if(!b.shiftSet){ const m=b.items.reduce((a,i)=>a+(+i.price||0)*(+i.monthlySales||0),0), d=Math.round(m/30/100)*100;
+  b.shiftSet={open:'10:00',close:'21:00',oncost:15,target:30,rev:[d,d,d,d,Math.round(d*1.2/100)*100,Math.round(d*1.3/100)*100,Math.round(d*1.2/100)*100],need:[{from:'11:00',to:'14:00',n:3},{from:'17:00',to:'20:00',n:3}]} } }
+const shT=t=>{ const m=/^(\d{1,2}):(\d{2})$/.exec(t||''); return m?(+m[1])+(+m[2])/60:null };
+const shLen=x=>{ const a=shT(x.start), z=shT(x.end); if(a==null||z==null) return 0; let h=z-a; if(h<=0) h+=24; return Math.max(0,h-(+x.brk||0)) };
+function shCalc(b){ const S=b.shiftSet, per={}; b.staff.forEach(p=>per[p.id]={h:0,days:new Set(),max:0});
+  b.shifts.forEach(x=>{ const r=per[x.staff]; if(!r) return; const h=shLen(x); r.h+=h; r.days.add(String(x.day)); r.max=Math.max(r.max,h) });
+  const on=1+(+S.oncost||0)/100; let wk=0; const day=[0,0,0,0,0,0,0];
+  b.staff.forEach(p=>{ const r=per[p.id]; if(p.pay==='m'){ const c=(+p.rate||0)*12/52*on; r.cost=c; wk+=c; const days=[...r.days]; days.forEach(d=>day[+d]+=c/days.length) } else { r.cost=0 } });
+  b.shifts.forEach(x=>{ const p=b.staff.find(s=>s.id===x.staff); if(!p||p.pay==='m') return; const c=shLen(x)*(+p.rate||0)*on; per[p.id].cost+=c; wk+=c; day[+x.day]+=c });
+  const rev=(S.rev||[]).reduce((a,v)=>a+(+v||0),0);
+  // 每小時人數
+  const o=shT(S.open)??10, cl=shT(S.close)??21, hrs=[]; for(let t=Math.floor(o);t<Math.ceil(cl<=o?cl+24:cl);t++) hrs.push(t);
+  const cov=SH_DAY.map((_,d)=>hrs.map(t=>b.shifts.filter(x=>String(x.day)===String(d)&&b.staff.some(s=>s.id===x.staff)).filter(x=>{ const a=shT(x.start), z0=shT(x.end); if(a==null||z0==null) return false; const z=z0<=a?z0+24:z0; return t+0.5>a&&t+0.5<z }).length));
+  const need=t=>{ let n=0; (S.need||[]).forEach(r=>{ const a=shT(r.from), z=shT(r.to); if(a!=null&&z!=null&&t+0.5>a&&t+0.5<z) n=Math.max(n,+r.n||0) }); return n };
+  const short=[]; cov.forEach((row,d)=>row.forEach((n,i)=>{ const k=need(hrs[i]); if(n<k) short.push({d,t:hrs[i],n,k}) }));
+  return {per,wk,day,rev,hrs,cov,need,short,mo:wk*52/12} }
+V.shift=(b,c)=>{ shInit(b); const S=b.shiftSet, R=shCalc(b), pct=R.rev?R.wk/R.rev*100:null, tg=+S.target||30;
+  const opts=[['','（選員工）']].concat(b.staff.map(p=>[p.id,p.name||'未命名']));
+  const h0=n=>String(n%24).padStart(2,'0')+':00';
+  let h='<div class="head"><div><h2>排班與人力成本</h2><p class="sub">排一週的標準班表，系統算出人力成本占營收幾 %，標出人手不夠的時段和工時太長的人。</p></div></div>';
+  h+='<div class="tiles"><div class="tile"><span>每週人力成本</span><b>'+nf(R.wk,0)+' 元</b><span>約每月 '+nf(R.mo,0)+' 元（含勞健保勞退 '+nf(+S.oncost||0,0)+'%）</span></div>'
+   +'<div class="tile"><span>人力成本占營收</span><b>'+(pct==null?'—':nf(pct,1)+'%')+'</b><span>'+(pct==null?'先填下面每天預估營收':pct>tg?'<span class="pill bad">超過目標 '+tg+'%</span>':'<span class="pill good">在目標 '+tg+'% 內</span>')+'</span></div>'
+   +'<div class="tile"><span>人手不夠的時段</span><b>'+R.short.length+' 個小時</b><span>'+(R.short.length?R.short.slice(0,3).map(x=>'週'+SH_DAY[x.d]+' '+h0(x.t)+' 缺 '+(x.k-x.n)+' 人').join('、')+(R.short.length>3?'…':''):'尖峰時段人數都夠')+'</span></div></div>';
+  if(pct!=null&&pct>tg&&R.rev) h+='<div class="note">要降到 '+tg+'%，每週人力成本要少 '+nf(R.wk-R.rev*tg/100,0)+' 元，大約是 '+nf((R.wk-R.rev*tg/100)/(SH_MINW*(1+(+S.oncost||0)/100)),0)+' 個時薪人員工時。先從離峰時段減人。</div>';
+  // 員工
+  const warn=[]; b.staff.forEach(p=>{ const r=R.per[p.id]; if(p.pay!=='m'&&r.h>40) warn.push(esc(p.name)+' 一週排 '+nf(r.h,1)+' 小時，超過 40 小時要算加班費'); if(r.max>12) warn.push(esc(p.name)+' 有一天排超過 12 小時'); if(r.days.size>6) warn.push(esc(p.name)+' 一週 7 天都有班，至少要休 1 天'); if(p.pay!=='m'&&+p.rate&&+p.rate<SH_MINW) warn.push(esc(p.name)+' 時薪低於基本工資 '+SH_MINW+' 元'); if(p.pay==='m'&&+p.rate&&+p.rate<SH_MINM) warn.push(esc(p.name)+' 月薪低於基本工資 '+nf(SH_MINM,0)+' 元') });
+  if(warn.length) h+='<div class="board"><b>工時與薪資提醒</b>'+warn.map(w=>'<span>'+w+'</span>').join('')+'</div>';
+  h+='<h2 style="margin-top:16px">員工</h2><div class="scroll"><table><thead><tr><th>姓名</th><th>職務</th><th>計薪</th><th class="n">時薪／月薪</th><th class="n">本週工時</th><th class="n">本週成本</th><th></th></tr></thead><tbody>'
+   +(b.staff.map((p,i)=>{ const r=R.per[p.id]; return '<tr><td style="min-width:90px">'+txt('staff.'+i+'.name',p.name,'姓名')+'</td><td style="min-width:80px">'+txt('staff.'+i+'.role',p.role,'職務')+'</td><td>'+sel('staff.'+i+'.pay',p.pay||'h',[['h','時薪'],['m','月薪']],'計薪')+'</td><td class="n">'+num('staff.'+i+'.rate',p.rate,{label:'薪資'})+'</td><td class="n">'+nf(r.h,1)+'</td><td class="n">'+nf(r.cost,0)+'</td><td>'+del('staff.'+i)+'</td></tr>' }).join('')||'<tr><td colspan="7">還沒有員工，按下面「加一位員工」。</td></tr>')+'</tbody></table></div><button data-shstaff="1">加一位員工</button>';
+  // 班表（每天一張卡）
+  h+='<h2 style="margin-top:18px">一週標準班表</h2><p class="sub">每天排好後可以按「複製到其他天」，再微調週末。</p><div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">'
+   +SH_DAY.map((dn,d)=>{ const list=b.shifts.map((x,i)=>[x,i]).filter(([x])=>String(x.day)===String(d)); const sh=R.short.filter(x=>x.d===d);
+     return '<div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel)"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>星期'+dn+'</b><span class="note">人力 '+nf(R.day[d],0)+' 元／營收 '+nf(+S.rev[d]||0,0)+'</span></div>'
+      +(sh.length?'<div><span class="pill bad">'+sh.map(x=>h0(x.t)).join('、')+' 人手不夠</span></div>':'')
+      +list.map(([x,i])=>'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px">'+sel('shifts.'+i+'.staff',x.staff||'',opts,'員工')+'<input type="time" data-p="shifts.'+i+'.start" value="'+esc(x.start)+'" aria-label="上班" style="width:118px">–<input type="time" data-p="shifts.'+i+'.end" value="'+esc(x.end)+'" aria-label="下班" style="width:118px"><span class="note">'+nf(shLen(x),1)+'h</span>'+del('shifts.'+i)+'</div>').join('')
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button data-shnew="'+d+'">加一個班</button>'+(list.length?'<button data-shcopy="'+d+'">套用到其他 6 天（會取代）</button>':'')+'</div></div>' }).join('')+'</div>';
+  // 人數熱度表
+  h+='<h2 style="margin-top:18px">每小時在班人數</h2><div class="scroll"><table><thead><tr><th>時段</th>'+SH_DAY.map(d=>'<th class="n">'+d+'</th>').join('')+'<th class="n">需要</th></tr></thead><tbody>'
+   +R.hrs.map((t,i)=>'<tr><td>'+h0(t)+'</td>'+R.cov.map(row=>{ const n=row[i], k=R.need(t); return '<td class="n" style="'+(n<k?'background:color-mix(in srgb,var(--bad) 18%,transparent);font-weight:600':'')+'">'+n+'</td>' }).join('')+'<td class="n">'+(R.need(t)||'')+'</td></tr>').join('')+'</tbody></table></div>';
+  // 設定
+  h+='<h2 style="margin-top:18px">營業與目標設定</h2><div class="params"><label>開店 <input type="time" data-p="shiftSet.open" value="'+esc(S.open)+'" aria-label="開店"></label><label>打烊 <input type="time" data-p="shiftSet.close" value="'+esc(S.close)+'" aria-label="打烊"></label><label>勞健保勞退雇主負擔 % '+num('shiftSet.oncost',S.oncost,{label:'雇主負擔%'})+'</label><label>人力成本目標 % '+num('shiftSet.target',S.target,{label:'目標%'})+'</label></div>'
+   +'<p class="sub">每天預估營收（預設用品項配方的月銷量估算，週五到週日多抓兩到三成）</p><div class="params">'+SH_DAY.map((d,i)=>'<label>週'+d+' '+num('shiftSet.rev.'+i,S.rev[i],{label:'週'+d+'營收'})+'</label>').join('')+'</div>'
+   +'<p class="sub">尖峰時段至少要幾個人</p>'+(S.need||[]).map((r,i)=>'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px"><input type="time" data-p="shiftSet.need.'+i+'.from" value="'+esc(r.from)+'" aria-label="從" style="width:118px">–<input type="time" data-p="shiftSet.need.'+i+'.to" value="'+esc(r.to)+'" aria-label="到" style="width:118px">至少 '+num('shiftSet.need.'+i+'.n',r.n,{label:'人數'})+' 人'+del('shiftSet.need.'+i)+'</div>').join('')+'<button data-shneed="1" style="margin-top:8px">加一個尖峰時段</button>';
+  return h };
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset; if(!(d.shstaff||d.shnew||d.shcopy||d.shneed)) return; const b=B(); if(!b) return; shInit(b);
+  if(d.shstaff){ b.staff.push({id:uid('p'),name:'員工 '+(b.staff.length+1),role:'',pay:'h',rate:SH_MINW}) }
+  else if(d.shnew){ const prev=b.shifts.filter(x=>String(x.day)===d.shnew).slice(-1)[0]; b.shifts.push({id:uid('h'),day:d.shnew,staff:(b.staff.find(p=>!b.shifts.some(x=>String(x.day)===d.shnew&&x.staff===p.id))||{}).id||'',start:prev?prev.start:'10:00',end:prev?prev.end:'14:00'}) }
+  else if(d.shcopy){ const src=b.shifts.filter(x=>String(x.day)===d.shcopy); b.shifts=b.shifts.filter(x=>String(x.day)===d.shcopy); for(let k=0;k<7;k++){ if(String(k)===d.shcopy) continue; src.forEach(x=>b.shifts.push(Object.assign({},x,{id:uid('h'),day:String(k)}))) } }
+  else if(d.shneed){ b.shiftSet.need.push({from:'11:00',to:'14:00',n:2}) }
+  touch(); render() });
 
 siteBoot();
