@@ -2,7 +2,7 @@
 // 並寄信通知。由每月排程（帶 x-cron-secret）或管理員（帶登入 JWT）呼叫。body 可帶 { subscription_id, month, force } 只跑一筆。
 import pptxgen from 'npm:pptxgenjs@3.12.0';
 import { admin } from '../_shared/billing_env.ts';
-import { computeHealth, buildDeck } from '../_shared/health_deck.js';
+import { computeHealth, buildDeck, targetMonth, isStale } from '../_shared/health_deck.js';
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
@@ -42,8 +42,15 @@ Deno.serve(async (req) => {
       const rows: { m: string; s: string; c: string; a: number }[] = [];
       for (const x of st || []) for (const i of (x as any).pl_line_items || []) rows.push({ m: String(x.period_month).slice(0, 7), s: i.section, c: i.category || '', a: Number(i.amount) || 0 });
       if (!rows.length) { done.push({ id: s.id, skipped: 'no_data' }); continue; }
-      const H = computeHealth(rows, body.month);
+      // 排程（沒指定月份）只做上個月；資料還沒更新到上個月就跳過，不寄舊月份的簡報
+      const target = body.month || targetMonth();
+      const H = computeHealth(rows, target);
       if (!H) { done.push({ id: s.id, skipped: 'no_data' }); continue; }
+      if (!body.month && !body.force && isStale(H, target)) {
+        await db.from('sub_log').insert({ user_id: s.user_id, action: 'deck_stale', detail: { sub: s.id, latest: H.month, want: target } });
+        done.push({ id: s.id, skipped: 'stale', latest: H.month, want: target });
+        continue;
+      }
       const { data: had } = await db.from('sub_reports').select('id').eq('subscription_id', s.id).eq('month', H.month).maybeSingle();
       if (had && !body.force) { done.push({ id: s.id, skipped: 'exists', month: H.month }); continue; }
       const deck = buildDeck(pptxgen, H, { brand: s.brand_name });
