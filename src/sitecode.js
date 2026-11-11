@@ -6,10 +6,10 @@ const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','news','accou
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['qsc','shift','cash','grow','order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
-const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',qsc:'門市稽核',shift:'排班與人力成本',cash:'現金流預估',grow:'顧客成長',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['mrep','qsc','shift','cash','grow','order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
+const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',mrep:'每月經營月報',qsc:'門市稽核',shift:'排班與人力成本',cash:'現金流預估',grow:'顧客成長',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
-const TIP={grow:['每月月底從 POS 抄四個數字：來客數、客單價、會員回訪率、Google 評分。系統會看出營收是哪一項在掉，也能試算活動到底有沒有賺。','cash'],cash:['填今天帳戶和現金的總餘額，再確認每週收入、每月固定支出和哪天付款。系統排出未來 13 週每週剩多少錢，提早告訴你哪一週會不夠。','be'],shift:['先建員工和時薪／月薪，再排一週的標準班表。系統會算出每週人力成本、占營收幾 %，並標出人手不夠的時段和工時太長的人。','pl'],qsc:['用手機巡店，每一項點「符合／部分／不符合」。不符合和部分的項目會自動進到下面的改善追蹤，填好負責人和期限，改好按完成。','order'],fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
+const TIP={mrep:['這頁自動彙整其他頁面的數字，不用另外填。每月月底看一次，照「本月優先三件事」去做；要給業主就按列印或複製文字。','pl'],grow:['每月月底從 POS 抄四個數字：來客數、客單價、會員回訪率、Google 評分。系統會看出營收是哪一項在掉，也能試算活動到底有沒有賺。','cash'],cash:['填今天帳戶和現金的總餘額，再確認每週收入、每月固定支出和哪天付款。系統排出未來 13 週每週剩多少錢，提早告訴你哪一週會不夠。','be'],shift:['先建員工和時薪／月薪，再排一週的標準班表。系統會算出每週人力成本、占營收幾 %，並標出人手不夠的時段和工時太長的人。','pl'],qsc:['用手機巡店，每一項點「符合／部分／不符合」。不符合和部分的項目會自動進到下面的改善追蹤，填好負責人和期限，改好按完成。','order'],fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['有匯入 POS 銷量就能選「銷量來源」用實際銷量分類；沒有的話用品項配方填的月銷量。','newp'],newp:['新品上市前先在這裡算成本、建議售價，並和同分類的菜比賺不賺。確定上市再按「加入品項配方」。','matrix'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
@@ -1227,5 +1227,56 @@ document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t
     b.growth.months.push({m:mm,guests:last?last.guests:0,ticket:last?last.ticket:0,repeat:null,star:null,reviews:null}) }
   else b.growth.camps.push({id:uid('g'),name:'新活動',start:'',end:'',cost:0,base:0,during:0});
   touch(); render() });
+
+/* ===== 每月經營月報 ===== */
+function mrData(b,c){ const out=[], todo=[], t=(b.settings&&+b.settings.targetRate||35)/100;
+  const add=(key,tab,title,st,lines,act)=>{ out.push({key,tab,title,st,lines}); if(act) todo.push({w:st==='bad'?2:1,tab,act}) };
+  // 1 損益
+  const ps=b.periods||[]; if(ps.length){ const L=ps[ps.length-1], P=ps[ps.length-2], R=sumA(L.revenue), F=sumA(L.purchases), E=sumA(L.expenses), N=R-F-E, nm=R?N/R:0, fr=R?F/R:0;
+      const lab=sumA((L.expenses||[]).filter(x=>fcKind(x.name||'')==='labor')), lr=R?lab/R:0;
+      const pr=P?sumA(P.revenue):0, dR=pr?(R-pr)/pr:null;
+      const st=nm<0?'bad':nm<0.08||fr>t+0.03?'warn':'good';
+      add('pl','pl','損益（'+esc(L.label||L.period)+'）',st,['營收 '+nf(R,0)+' 元'+(dR!=null?'（比上期 '+(dR>=0?'+':'')+nf(dR*100,1)+'%）':''),'食材成本率 '+nf(fr*100,1)+'%（目標 '+nf(t*100,0)+'%）','人事費用率 '+nf(lr*100,1)+'%','淨利 '+nf(N,0)+' 元，淨利率 '+nf(nm*100,1)+'%'],
+        nm<0?'本月虧損 '+nf(-N,0)+' 元：先看損益兩平要做多少營收，再從食材和人事兩大項下手':fr>t+0.03?'食材成本率比目標高 '+nf((fr-t)*100,1)+' 個百分點：查進價、耗損和份量（用量差異頁）':nm<0.08?'淨利率只有 '+nf(nm*100,1)+'%：找出可以調價或降成本的品項':null) }
+  else add('pl','pl','損益',null,['還沒有導入損益表'],null);
+  // 2 菜單
+  if(b.items&&b.items.length){ let over=0,worst=null; b.items.forEach(it=>{ const k=itemCalc(it,c); if(it.price>0){ const r=k.fr/it.price; if(r>t+0.03){ over++; if(!worst||r>worst.r) worst={n:it.name,r} } } });
+      const th=theory(b,c).rate;
+      add('menu','matrix','菜單與成本',over>3?'bad':over?'warn':'good',['配方理論成本率 '+(isFinite(th)?nf(th*100,1)+'%':'—'),'超過目標成本的品項 '+over+' 道'+(worst?'（最高：'+esc(worst.n)+' '+nf(worst.r*100,0)+'%）':'')],
+        over?'有 '+over+' 道菜成本超標：到產品四象限看哪些是「耕馬」該調價'+(worst?'，先從'+esc(worst.n)+'開始':''):null) }
+  // 3 稽核
+  const au=(b.audits||[]).filter(a=>a.done).sort((x,z)=>String(z.date).localeCompare(String(x.date)));
+  if(au.length&&typeof qsScore==='function'){ const its=b.qscItems||[], sc=qsScore(au[0],its), open=qsOpen(b), today=new Date().toISOString().slice(0,10), late=open.filter(o=>o.r.due&&o.r.due<today).length;
+      add('qsc','qsc','門市稽核',sc<70||late?'bad':sc<85||open.length?'warn':'good',['最近一次 '+esc(au[0].date)+' '+esc(au[0].store||'')+'：'+sc+' 分','待改善 '+open.length+' 項，其中 '+late+' 項已逾期'],
+        late?late+' 項稽核缺失已過期還沒改：今天請負責人回報':sc<85?'稽核只有 '+sc+' 分：下次巡店前把缺失改完':null) }
+  else add('qsc','qsc','門市稽核',null,['這個月還沒有稽核紀錄'],'這個月還沒巡店：排一次門市稽核');
+  // 4 排班
+  if(b.staff&&b.staff.length&&typeof shCalc==='function'){ const R=shCalc(b), S=b.shiftSet||{}, pc=R.rev?R.wk/R.rev*100:null, tg=+S.target||30;
+      add('shift','shift','排班與人力',pc!=null&&pc>tg+3?'bad':(pc!=null&&pc>tg)||R.short.length?'warn':'good',['每週人力成本 '+nf(R.wk,0)+' 元'+(pc!=null?'，占營收 '+nf(pc,1)+'%（目標 '+tg+'%）':''),'人手不夠的時段 '+R.short.length+' 個小時'],
+        pc!=null&&pc>tg?'人力成本占 '+nf(pc,1)+'%，超過目標：先減離峰時段的班':R.short.length?'尖峰有 '+R.short.length+' 個小時人手不夠：調班或加兼職':null) }
+  // 5 現金流
+  if(b.cash&&typeof cfCalc==='function'){ const R=cfCalc(b), sf=+b.cash.safety||0, md=x=>(x.getMonth()+1)+'/'+x.getDate();
+      add('cash','cash','現金流（未來 13 週）',R.first?(R.first.bal<0?'bad':'warn'):'good',['最低的一週 '+md(R.low.a)+'：'+nf(R.low.bal,0)+' 元','13 週後餘額 '+nf(R.W[12].bal,0)+' 元'],
+        R.first?md(R.first.a)+' 那週現金會'+(R.first.bal<0?'透支':'低於安全水位')+'，差 '+nf(sf-R.low.bal,0)+' 元：提早談付款期限或準備週轉金':null) }
+  // 6 顧客成長
+  const gm=((b.growth&&b.growth.months)||[]).slice().sort((x,z)=>String(x.m).localeCompare(String(z.m)));
+  if(gm.length){ const L=gm[gm.length-1], P=gm[gm.length-2], r=x=>(+x.guests||0)*(+x.ticket||0), d=P&&r(P)?(r(L)-r(P))/r(P):null, dg=P&&+P.guests?(+L.guests-(+P.guests))/(+P.guests):null;
+      add('grow','grow','顧客成長（'+esc(L.m)+'）',d!=null&&d<-0.05?'bad':d!=null&&d<0?'warn':'good',['來客 '+nf(+L.guests||0,0)+' 人'+(dg!=null?'（'+(dg>=0?'+':'')+nf(dg*100,1)+'%）':'')+'，客單 '+nf(+L.ticket||0,0)+' 元',(L.star?'Google '+nf(+L.star,1)+' 星':'')+(L.repeat!=null&&L.repeat!==''?'　回訪率 '+nf(+L.repeat,0)+'%':'')],
+        d!=null&&d<0?(dg!=null&&dg<0?'來客比上月少 '+nf(-dg*100,1)+'%：先查 Google 評價和外送平台排名':'客單價下滑：推套餐和加點'):null) }
+  todo.sort((x,z)=>z.w-x.w); return {out,todo:todo.slice(0,3),all:todo.length} }
+function mrText(b,c){ const D=mrData(b,c), ym=new Date().toISOString().slice(0,7);
+  return '【'+b.name+'　'+ym+' 經營月報】\n\n本月優先三件事：\n'+(D.todo.length?D.todo.map((x,i)=>(i+1)+'. '+x.act.replace(/<[^>]+>/g,'')).join('\n'):'目前各項都在目標內，維持就好。')+'\n\n'+D.out.map(o=>'■ '+o.title.replace(/<[^>]+>/g,'')+(o.st?'（'+({good:'良好',warn:'注意',bad:'要處理'})[o.st]+'）':'')+'\n'+o.lines.filter(Boolean).map(l=>'・'+l.replace(/<[^>]+>/g,'')).join('\n')).join('\n\n') }
+V.mrep=(b,c)=>{ const D=mrData(b,c), ym=new Date().toISOString().slice(0,7), lab={good:'良好',warn:'注意',bad:'要處理'};
+  let h='<div class="head"><div><h2>每月經營月報　'+ym+'</h2><p class="sub">自動彙整損益、菜單、稽核、排班、現金流、顧客成長，不用另外填。每月看一次，照「本月優先三件事」去做。</p></div><div class="brandbar"><button class="pri" data-mrprint="1">列印／存成 PDF</button><button data-mrcopy="1">複製文字（貼到 LINE）</button></div></div>';
+  h+='<div class="board"><b>本月優先三件事</b>'+(D.todo.length?D.todo.map((x,i)=>'<span>'+(i+1)+'. '+x.act+' <button data-tab="'+x.tab+'">去處理</button></span>').join(''):'<span>目前各項都在目標內，維持就好。</span>')+'</div>';
+  h+='<div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));margin-top:12px">'+D.out.map(o=>'<div style="border:1px solid var(--line);border-left:4px solid var('+(o.st==='bad'?'--bad':o.st==='warn'?'--warn':o.st==='good'?'--good':'--line')+');border-radius:8px;padding:10px 12px;background:var(--panel)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>'+o.title+'</b>'+(o.st?'<span class="pill '+o.st+'">'+lab[o.st]+'</span>':'<span class="pill">未使用</span>')+'</div>'+o.lines.filter(Boolean).map(l=>'<div class="note" style="margin-top:4px">'+l+'</div>').join('')+'<div style="margin-top:6px"><button data-tab="'+o.tab+'">看明細</button></div></div>').join('')+'</div>';
+  const unused=[['qsc','門市稽核'],['shift','排班'],['cash','現金流'],['grow','顧客成長']].filter(x=>!D.out.some(o=>o.tab===x[0]&&o.st));
+  if(unused.length) h+='<p class="note" style="margin-top:10px">還沒開始用：'+unused.map(x=>'<button data-tab="'+x[0]+'">'+x[1]+'</button>').join(' ')+'　用了之後月報會更完整。</p>';
+  return h };
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset; if(!(d.mrprint||d.mrcopy)) return; const b=B(); if(!b) return;
+  if(d.mrprint){ document.body.classList.add('mrprint'); window.print(); setTimeout(()=>document.body.classList.remove('mrprint'),500); return }
+  const txt=mrText(b,ctx(b)); const done=()=>{ t.textContent='已複製'; setTimeout(()=>{ t.textContent='複製文字（貼到 LINE）' },1500) };
+  try{ navigator.clipboard.writeText(txt).then(done,()=>{ window.__mrText=txt; t.textContent='請手動複製' }) }catch(x){ window.__mrText=txt } });
+(()=>{ const st=document.createElement('style'); st.textContent='@media print{body.mrprint #nav,body.mrprint #userbar,body.mrprint .tip,body.mrprint button,body.mrprint #status{display:none!important}body.mrprint #shell{display:block!important}body.mrprint #main{box-shadow:none;border:0}}'; document.head.appendChild(st) })();
 
 siteBoot();
