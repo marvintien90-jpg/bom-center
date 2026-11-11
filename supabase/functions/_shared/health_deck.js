@@ -46,6 +46,18 @@ export function monthStats(rows, m) {
   };
 }
 
+// 每月排程要做的月份：台北時間的上個月（YYYY-MM）
+export function targetMonth(now = new Date()) {
+  const t = new Date(now.getTime() + 8 * 3600e3);
+  const y = t.getUTCFullYear(), m = t.getUTCMonth(); // m 是本月（0 起算），上個月就是 m
+  return m === 0 ? `${y - 1}-12` : `${y}-${String(m).padStart(2, '0')}`;
+}
+
+// 排程時資料最新月份比目標月份舊 → 不產生舊月份的簡報（避免 11 月寄出 6 月的健檢）
+export function isStale(H, target) {
+  return !H || H.month < target;
+}
+
 export function computeHealth(rows, month) {
   const months = [...new Set(rows.map(r => r.m))].sort();
   if (!months.length) return null;
