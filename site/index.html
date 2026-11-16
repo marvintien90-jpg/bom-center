@@ -107,9 +107,15 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 let FULL=false, WHO=null;
 async function access(){try{if(!window.supabase) return; const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY); const {data:{session}}=await sbc.auth.getSession(); if(!session) return; WHO=session.user.email;
   const pr=await sbc.from('bom_profiles').select('role,status').eq('user_id',session.user.id).maybeSingle(); if(pr.data&&pr.data.role==='admin'&&pr.data.status==='active'){FULL=true;return}
-  const s=await sbc.from('sub_subscriptions').select('status').eq('user_id',session.user.id).maybeSingle(); FULL=!!(s.data&&['trial','active','past_due','comp','canceled'].includes(s.data.status));
+  // 與 sub_private.access_until 相同規則：comp 永久；trial 到試用結束；canceled 到期末；其餘期末＋寬限天數
+  const [s,g]=await Promise.all([sbc.from('sub_subscriptions').select('status,period_end,trial_ends_on').eq('user_id',session.user.id).maybeSingle(),sbc.from('sub_settings').select('grace_days').eq('id',1).maybeSingle()]);
+  const d=s.data; if(!d) return; if(d.status==='comp'){FULL=true;return} if(d.status==='expired') return;
+  const today=new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+  let until=d.status==='trial'?d.trial_ends_on:(d.period_end||d.trial_ends_on);
+  if(until&&!['trial','canceled'].includes(d.status)){const t=new Date(until+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+((g.data&&g.data.grace_days)||0));until=t.toISOString().slice(0,10)}
+  FULL=!!until&&until>=today;
 }catch(e){console.warn(e)} finally{gateNote()}}
-function gateNote(){const n=$('#gate'); if(!n) return; n.innerHTML=FULL?`已登入會員${WHO?'（'+esc(WHO)+'）':''}，可看完整報告。`:`免費版只顯示總分與重點；<a href="../member/">登入或加入會員</a>看完整報告（人口結構、競品清單、營收推估、租金建議、候選店比較）。`}
+function gateNote(){const n=$('#gate'); if(!n) return; n.innerHTML=FULL?`已登入會員${WHO?'（'+esc(WHO)+'）':''}，可看完整報告。`:`免費版只顯示總分與重點；<a href="../portal/">登入會員入口</a>看完整報告（人口結構、競品清單、營收推估、租金建議、候選店比較）。`}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nf=n=>n==null?'—':Number(n).toLocaleString('zh-TW');
 const T=0.02, C=0.002, DATA='data/';
@@ -201,7 +207,7 @@ function draw(r,ctx){
     <div class="top"><div class="ring">${ring}<div class="v"><b>${r.total}</b><span>等級 ${r.grade}</span></div></div><div>
     ${r.pros[0]?`<p class="good">優勢：${esc(r.pros[0])}</p>`:''}${r.cons[0]?`<p class="bad">風險：${esc(r.cons[0])}</p>`:''}
     <p>完整報告還有 ${Math.max(0,r.pros.length+r.cons.length-2)} 項優勢與風險、五面向分數、${r.competitors.length} 家同類競品清單、推估月營收與建議租金上限。</p>
-    <div class="row"><a href="../member/"><button class="pri">登入或加入會員看完整報告</button></a></div></div></div>`;
+    <div class="row"><a href="../portal/"><button class="pri">登入或加入會員看完整報告</button></a></div></div></div>`;
     return;
   }
   $('#out').innerHTML=`
