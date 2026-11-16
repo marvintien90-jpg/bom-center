@@ -114,7 +114,7 @@
     let flowRaw = g.conv * 6 + g.bus * 1.5 + g.school * (F.school ? 6 : 3) + g.office * (F.office ? 3 : 1.5) + g.hospital * 4 +
       g.mall * 6 + g.attract * 1.5 + g.hotel * 1 + Math.min(g.food3, 60) * 0.6;
     if (nearestStation != null) flowRaw += (subway5 ? 30 : 15) * (nearestStation < 200 ? 1.4 : nearestStation < 350 ? 1 : .6);
-    const sFlow = clamp(scale(flowRaw, [[0, 5], [15, 30], [40, 55], [80, 75], [140, 90], [220, 100]]));
+    const sFlow = clamp(scale(flowRaw, [[0, 5], [40, 30], [100, 55], [180, 72], [300, 88], [450, 100]]));
 
     // ---- 交通可及／車流 (road class at the door, stations, parking)
     let roadCls = 0, roadName = '';
@@ -204,7 +204,7 @@
       format: opt.format, label: F.label, radius: R, total, grade, dims, weights: F.w,
       numbers: { pop5: pop5.pop, pop10: pop10.pop, hh5: pop5.hh, age5: pop5.age, inc: popR.inc, home: pop5.home,
         stations: stations5.slice(0, 3).map(p => ({ name: p.name, sub: p.sub, d: Math.round(p.d) })), ...g, parking,
-        roadCls, roadName, same: sameR.length, same3, perK: +perK.toFixed(2), foodR, chains, bizRoad, bizTown, market },
+        roadCls, roadName, flowRaw: Math.round(flowRaw), same: sameR.length, same3, perK: +perK.toFixed(2), foodR, chains, bizRoad, bizTown, market },
       competitors: sameR.slice(0, 20).map(p => ({ name: p.name || '(未命名)', d: Math.round(p.d), lat: p.lat, lon: p.lon, chain: CHAINS.test(p.name || '') || CHAINS.test(p.brand || '') })),
       revenue: rev, ticket, rentRatio, rentVsMarket, pros, cons
     };

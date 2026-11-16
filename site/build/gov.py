@@ -15,7 +15,7 @@ OUT = sys.argv[1]
 os.makedirs(OUT, exist_ok=True)
 S = requests.Session()
 S.headers["User-Agent"] = "Mozilla/5.0 (site-eval data build)"
-META = {"built": datetime.date.today().isoformat()}
+META = {"built": datetime.date.today().isoformat(), "errors": []}
 
 
 def get(url, **kw):
@@ -310,10 +310,13 @@ def rent():
             H = {h: i for i, h in enumerate(rows[0])}
             ti = H.get("鄉鎮市區"); ai = H.get("土地位置建物門牌"); bi = H.get("建物型態")
             ui = H.get("主要用途"); pi = H.get("總額元"); si = H.get("建物總面積平方公尺"); oi = H.get("租賃標的")
+            li = H.get("租賃層次")
             for r in rows[2:]:
                 try:
-                    kind = r[bi] + r[ui] + (r[oi] if oi is not None else "")
-                    if "店" not in kind and "商業" not in r[ui]:
+                    floor = r[li] if li is not None else ""
+                    if floor and "一層" not in floor:
+                        continue  # 只看一樓店面
+                    if "店面" not in r[bi] and not ("商業" in r[ui] and "一層" in floor):
                         continue
                     price = float(r[pi]); area = float(r[si]) * 0.3025
                     if price <= 0 or area < 3:

@@ -165,11 +165,12 @@ async function run(){
     // county / town / road keys for registry and rent lookups
     const home=SiteScore.population(site,ctx.villages,300).home;
     const c=home?home.c:norm(addr.city||addr.county), t=home?home.t:norm(addr.suburb||addr.town||addr.city_district);
-    const road=norm(addr.road||'');
+    let road=norm(addr.road||'');
+    if(!road){let best=1e9; for(const r of ctx.roads){ if(!r.name) continue; const d=SiteScore.dist(site,r); if(d<best&&d<150){best=d;road=norm(r.name)} }}
     const rb=road.replace(/(.+?(路|街|大道))([一二三四五六七八九十]+段)?.*/,'$1$3'), rbase=road.replace(/(.+?(路|街|大道)).*/,'$1');
     const biz=await j(`${DATA}biz/${c}.json`);
-    ctx.biz=biz?{road:biz[`${t}|${rb}`]||biz[`${t}|${rbase}`]||null,town:biz[`${t}|`]||null,roadName:rb}:null;
-    ctx.rent={road:RENT[`${c}|${t}|${rb}`]||RENT[`${c}|${t}|${rbase}`]||null,town:RENT[`${c}|${t}`]||null};
+    ctx.biz=biz?{road:road?(biz[`${t}|${rb}`]||biz[`${t}|${rbase}`]||null):null,town:biz[`${t}|`]||null,roadName:rb}:null;
+    ctx.rent={road:road?(RENT[`${c}|${t}|${rb}`]||RENT[`${c}|${t}|${rbase}`]||null):null,town:RENT[`${c}|${t}`]||null};
     const res=SiteScore.evaluate(site,ctx,opt);
     res.place={addr:site.label||[c,t,road].join(''),c,t,road:rb,lat:site.lat,lon:site.lon}; res.opt=opt;
     last={res,ctx}; draw(res,ctx); status(ctx.pois.length?'':'這個位置還沒有店家資料（資料可能尚在更新）',!ctx.pois.length);
