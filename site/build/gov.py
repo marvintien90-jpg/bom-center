@@ -41,41 +41,73 @@ def text(b):
     return b.decode("utf-8", "ignore")
 
 # ---------------------------------------------------------------- villages
+
+def village_shapes():
+    """(record, [ring of (lon,lat)]) from the official SHP, else the taiwan-atlas topojson (same MOI source)."""
+    try:
+        import shapefile
+        ds = dataset(7438)
+        z = zipfile.ZipFile(io.BytesIO(get(ds["distribution"][0]["resourceDownloadUrl"])))
+        base = [n[:-4] for n in z.namelist() if n.lower().endswith(".shp")][0]
+        rd = shapefile.Reader(shp=io.BytesIO(z.read(base + ".shp")), dbf=io.BytesIO(z.read(base + ".dbf")),
+                              shx=io.BytesIO(z.read(base + ".shx")), encoding="utf-8")
+        fields = [f[0] for f in rd.fields[1:]]
+        out = []
+        for sr in rd.iterShapeRecords():
+            pts = sr.shape.points; parts = list(sr.shape.parts) + [len(pts)]
+            out.append((dict(zip(fields, sr.record)), [pts[parts[i]:parts[i + 1]] for i in range(len(parts) - 1)]))
+        META["villages_boundary"] = "內政部 " + (ds.get("modifiedDate") or "")[:10]
+        return out
+    except Exception as e:
+        print("official village SHP failed, using taiwan-atlas:", e)
+    topo = json.loads(get("https://cdn.jsdelivr.net/npm/taiwan-atlas@2021.9.20/villages-10t.json"))
+    sc = topo["transform"]["scale"]; tr = topo["transform"]["translate"]
+    arcs = []
+    for arc in topo["arcs"]:
+        x = y = 0; pts = []
+        for dx, dy in arc:
+            x += dx; y += dy
+            pts.append((x * sc[0] + tr[0], y * sc[1] + tr[1]))
+        arcs.append(pts)
+    def ring(ix):
+        pts = []
+        for i in ix:
+            a = arcs[i] if i >= 0 else arcs[~i][::-1]
+            pts.extend(a if not pts else a[1:])
+        return pts
+    out = []
+    for g in topo["objects"]["villages"]["geometries"]:
+        props = g.get("properties", {})
+        if g["type"] == "Polygon":
+            rings = [ring(r) for r in g["arcs"][:1]]
+        elif g["type"] == "MultiPolygon":
+            rings = [ring(p[0]) for p in g["arcs"]]
+        else:
+            continue
+        out.append((props, rings))
+    META["villages_boundary"] = "taiwan-atlas 2021（內政部村里界）"
+    print("atlas props sample", out[0][0] if out else None)
+    return out
+
 def villages():
-    import shapefile  # pyshp
     from pyproj import Geod
     geod = Geod(ellps="GRS80")
-    ds = dataset(7438)
-    url = ds["distribution"][0]["resourceDownloadUrl"]
-    z = zipfile.ZipFile(io.BytesIO(get(url)))
-    names = z.namelist()
-    base = [n[:-4] for n in names if n.lower().endswith(".shp")][0]
-    rd = shapefile.Reader(shp=io.BytesIO(z.read(base + ".shp")), dbf=io.BytesIO(z.read(base + ".dbf")),
-                          shx=io.BytesIO(z.read(base + ".shx")), encoding="utf-8")
-    fields = [f[0] for f in rd.fields[1:]]
     V = {}
-    for sr in rd.iterShapeRecords():
-        rec = dict(zip(fields, sr.record))
-        pts = sr.shape.points
-        if not pts:
-            continue
-        parts = list(sr.shape.parts) + [len(pts)]
+    for rec, rings in village_shapes():
         area = 0.0; cx = cy = wsum = 0.0
-        for i in range(len(parts) - 1):
-            ring = pts[parts[i]:parts[i + 1]]
+        for ring in rings:
             if len(ring) < 3:
                 continue
             lons, lats = zip(*ring)
             a, _ = geod.polygon_area_perimeter(lons, lats)
-            area += a  # signed: holes subtract
             aw = abs(a)
+            area += aw
             cx += aw * sum(lons) / len(lons); cy += aw * sum(lats) / len(lats); wsum += aw
         if not wsum:
             continue
         key = (norm(rec["COUNTYNAME"]), norm(rec["TOWNNAME"]), norm(rec["VILLNAME"]))
-        V[key] = {"code": rec["VILLCODE"], "c": key[0], "t": key[1], "v": key[2],
-                  "lat": round(cy / wsum, 5), "lon": round(cx / wsum, 5), "km2": round(abs(area) / 1e6, 4)}
-    META["villages_boundary"] = ds.get("modifiedDate")
+        V[key] = {"code": rec.get("VILLCODE"), "c": key[0], "t": key[1], "v": key[2],
+                  "lat": round(cy / wsum, 5), "lon": round(cx / wsum, 5), "km2": round(area / 1e6, 4)}
     print("village shapes", len(V))
 
     # population by single age (latest month)
