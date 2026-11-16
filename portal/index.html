@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>業主入口｜品牌加辣餐飲顧問工作室</title>
+<style>
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
+.wrap{max-width:920px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:0 0 6px}h3{font-size:17px;margin:0}
+.sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px;margin:6px 0 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.app{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px;min-height:200px}
+.app.on{border-color:var(--accent)}
+.app .ic{width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:15px}
+.app p{margin:0;color:var(--mute);font-size:14px}
+.app .go{margin-top:auto}
+label{display:block;font-size:14px;margin:10px 0 4px}
+input{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit;color:inherit}
+button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button:disabled{opacity:.6;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.who{font-size:14px;color:var(--mute);text-align:right}
+.msg{padding:10px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:13px;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mute{background:var(--field);color:var(--mute);border:1px solid var(--line)}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+a{color:var(--accent)}
+@media (max-width:560px){.who{text-align:left}.who .row{justify-content:flex-start!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div><h1>業主入口</h1><p class="sub">品牌加辣餐飲顧問工作室｜一組帳號，進入你可以使用的所有系統</p></div><div class="who" id="who"></div></div>
+  <div id="app"><p class="sub">讀取中…</p></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+const BOM='https://marvintien90-jpg.github.io/bom-center/', PL='https://marvintien90-jpg.github.io/pl-center/', MEMBER=BOM+'member/';
+const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const SUB={trial:['試用中','good'],active:['訂閱中','good'],past_due:['扣款失敗，寬限中','warn'],canceled:['已取消續訂','warn'],expired:['已到期','bad'],comp:['免費招待','good']};
+const PLAN={basic:'基本版',pro:'進階版',member:'顧問會員'};
+/* 其他系統卡片：加一筆就會出現在入口。rule：'any' = BOM 或損益中心任一個可使用（含管理員）就能進入。
+   例：{ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢與案例引導。',url:BOM+'hr/',rule:'any'} */
+const EXTRA=[{ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢與案例引導。',url:BOM+'hr/',rule:'any'}];
+
+let me=null, bom=null, pl=null, sub=null, isAdmin=false, all=null, mode='login', msg='', bad=false;
+
+/* 授權狀態：ok 可進入；pending 等待開通；off 已到期或停用；none 沒有這個系統的帳號 */
+function access(p, needConfirm){
+  if(!p) return {k:'none'};
+  if(p.role==='admin'&&p.status==='active') return {k:'ok',admin:true};
+  if(p.status==='pending') return {k:'pending'};
+  if(p.status!=='active') return {k:'off',why:'已停用'};
+  if(p.expires_on&&p.expires_on<today()) return {k:'off',why:'已於 '+p.expires_on+' 到期'};
+  if(needConfirm&&me&&!me.email_confirmed_at) return {k:'pending',why:'請先到信箱點驗證信'};
+  return {k:'ok',until:p.expires_on||null};
+}
+const pillOf=a=>a.k==='ok'?`<span class="pill good">${a.admin?'管理員':'可使用'+(a.until?'・到 '+esc(a.until):'')}</span>`:a.k==='pending'?`<span class="pill warn">${esc(a.why||'等待開通')}</span>`:a.k==='off'?`<span class="pill bad">${esc(a.why)}</span>`:'<span class="pill mute">未開通</span>';
+
+async function load(){
+  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; bom=pl=sub=all=null; isAdmin=false;
+  if(me){
+    const [b,p,s]=await Promise.all([
+      sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(),
+      sbc.from('pl_profiles').select('*').eq('user_id',me.id).maybeSingle(),
+      sbc.from('sub_subscriptions').select('*').eq('user_id',me.id).maybeSingle()]);
+    bom=b.data||null; pl=p.data||null; sub=s.data||null;
+    isAdmin=!!(bom&&bom.role==='admin'&&bom.status==='active');
+    if(isAdmin) await loadAll();
+  }
+  render();
+}
+async function loadAll(){
+  const [b,p,s]=await Promise.all([sbc.from('bom_profiles').select('*'),sbc.from('pl_profiles').select('*'),sbc.from('sub_subscriptions').select('*')]);
+  const rows={}; const add=(r,k)=>{ if(!r||!r.user_id) return; (rows[r.user_id]=rows[r.user_id]||{id:r.user_id})[k]=r };
+  (b.data||[]).forEach(r=>add(r,'bom')); (p.data||[]).forEach(r=>add(r,'pl')); (s.data||[]).forEach(r=>add(r,'sub'));
+  all=Object.values(rows).filter(r=>!((r.bom&&r.bom.role==='admin')||(r.pl&&r.pl.role==='admin')));
+}
+
+function viewLogin(){
+  const fg=mode==='forgot';
+  return `<div class="apps">
+${appCard('B','BOM 運算中心','食材成本、配方 BOM、叫貨與庫存。',null,'')}
+${appCard('損','損益分析中心','每月損益、成本結構與門市比較。',null,'')}
+${appCard('訂','BOM＋損益 訂閱版','線上訂閱方案、付款、發票與每月健檢簡報。',null,'')}
+</div>
+<div class="card" style="max-width:460px"><h2>${fg?'重設密碼':'登入'}</h2>${flash()}
+<form id="auth"><label for="em">Email</label><input id="em" type="email" required autocomplete="email">
+${fg?'':'<label for="pw">密碼</label><input id="pw" type="password" required minlength="6" autocomplete="current-password">'}
+<div class="row"><button class="pri" type="submit">${fg?'寄重設信':'登入'}</button>${fg?'<button type="button" data-mode="login">回到登入</button>':'<button type="button" data-mode="forgot">忘記密碼</button>'}</div></form>
+<p class="note">還沒有帳號？<a href="${MEMBER}?mode=up">到會員中心註冊</a>，可以免費試用 14 天。顧問開通的業主，請用顧問給你的 Email 登入。</p></div>`;
+}
+function appCard(ic,name,desc,a,go){
+  return `<div class="app ${a&&a.k==='ok'?'on':''}"><div class="row" style="margin:0;justify-content:space-between"><div class="ic" aria-hidden="true">${ic}</div>${a?pillOf(a):''}</div><h3>${name}</h3><p>${desc}</p>${go?`<div class="go">${go}</div>`:''}</div>`;
+}
+function viewHome(){
+  const ab=access(bom,false), ap=access(pl,true);
+  const btn=(a,url,label,alt)=>a.k==='ok'?`<a class="btn pri" href="${url}">${label}</a>`:a.k==='pending'?`<a class="btn" href="${url}">查看開通進度</a>`:alt;
+  const subA=sub?SUB[sub.status]||[sub.status,'mute']:null;
+  const subPill=subA?`<span class="pill ${subA[1]}">${subA[0]}</span>`:'<span class="pill mute">還沒訂閱</span>';
+  const subDesc=sub?`${esc(PLAN[sub.plan]||sub.plan)}・${sub.stores} 店・${sub.status==='comp'?'不限期':sub.status==='trial'?'試用到 '+esc(sub.trial_ends_on||''):'已付到 '+esc(sub.period_end||'–')}`:'線上選方案、綁卡付款、下載發票與每月健檢簡報。';
+  const renew=`<a class="btn" href="${MEMBER}">到會員中心${sub?'續訂':'訂閱'}</a>`;
+  return `${flash()}<div class="apps">
+${appCard('B','BOM 運算中心','食材成本、配方 BOM、叫貨與庫存。',ab,btn(ab,BOM,'進入 BOM 運算中心',renew))}
+${appCard('損','損益分析中心','每月損益、成本結構與門市比較。',ap,btn(ap,PL,'進入損益分析中心',renew))}
+${EXTRA.map(x=>{const a=(x.rule==='any'&&(ab.k==='ok'||ap.k==='ok'))?{k:'ok',admin:isAdmin}:{k:'none'}; return appCard(esc(x.ic),esc(x.name),esc(x.desc),a,a.k==='ok'?`<a class="btn pri" href="${esc(x.url)}">進入${esc(x.name)}</a>`:renew)}).join('')}
+<div class="app ${sub&&['trial','active','comp','past_due'].includes(sub.status)?'on':''}"><div class="row" style="margin:0;justify-content:space-between"><div class="ic" aria-hidden="true">訂</div>${isAdmin?'<span class="pill good">管理員</span>':subPill}</div><h3>BOM＋損益 訂閱版</h3><p>${isAdmin?'訂閱、試點名單、發票、設定。':subDesc}</p><div class="go"><a class="btn pri" href="${MEMBER}">${isAdmin?'進入訂閱管理':sub?'進入會員中心':'看方案、免費試用'}</a></div></div>
+</div>
+${ab.k!=='ok'&&ap.k!=='ok'&&!sub&&!isAdmin?`<div class="card"><h2>這個帳號還沒開通任何系統</h2><p class="sub">如果你已經跟顧問簽約，請等開通通知信；也可以先到會員中心開始 14 天免費試用。</p></div>`:''}
+${isAdmin?viewAdmin():''}`;
+}
+function viewAdmin(){
+  const rows=(all||[]).slice().sort((a,b)=>(mail(a)).localeCompare(mail(b)));
+  return `<div class="card"><h2>業主總覽</h2><p class="sub">每位業主可以進哪些系統。要開通、延長或停用，請到各系統的管理頁。</p>
+<div class="scroll"><table><thead><tr><th>業主</th><th>BOM 運算中心</th><th>損益分析中心</th><th>訂閱版</th></tr></thead><tbody>
+${rows.map(r=>{const s=r.sub, sa=s?SUB[s.status]||[s.status,'mute']:null; return `<tr><td>${esc(s&&s.company||'')}${s&&s.company?'<br>':''}<span class="note">${esc(mail(r))}</span></td><td>${pillOf(access(r.bom,false))}</td><td>${pillOf(access(r.pl,false))}</td><td>${sa?`<span class="pill ${sa[1]}">${sa[0]}</span> ${esc(PLAN[s.plan]||s.plan)}`:'<span class="pill mute">沒有</span>'}</td></tr>`}).join('')||'<tr><td colspan="4">還沒有業主。</td></tr>'}
+</tbody></table></div>
+<div class="row"><a class="btn" href="${BOM}">BOM 帳號管理</a><a class="btn" href="${PL}">損益中心帳號管理</a><a class="btn" href="${MEMBER}">訂閱管理</a></div></div>`;
+}
+const mail=r=>(r.sub&&r.sub.email)||(r.bom&&r.bom.email)||(r.pl&&r.pl.email)||'';
+const flash=()=>msg?`<div class="msg ${bad?'bad':''}" role="status">${esc(msg)}</div>`:'';
+
+function render(){
+  $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:6px"><button data-act="out">登出</button></div>`:'';
+  $('#app').innerHTML=me?viewHome():viewLogin();
+}
+const say=(t,b)=>{msg=t;bad=!!b;render()};
+const errMsg=e=>{const m=(e&&(e.message||e))+''; if(/Invalid login/i.test(m)) return 'Email 或密碼不正確。'; if(/Email not confirmed/i.test(m)) return '這個 Email 還沒驗證，請先到信箱點驗證信。'; return '登入失敗，請稍後再試。（'+m.slice(0,80)+'）'};
+
+document.addEventListener('click',async ev=>{
+  const b=ev.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.mode){ mode=d.mode; msg=''; return render() }
+  if(d.act==='out'){ await sbc.auth.signOut(); msg=''; mode='login'; return load() }
+});
+document.addEventListener('submit',async ev=>{
+  if(ev.target.id!=='auth') return; ev.preventDefault();
+  const btn=ev.target.querySelector('button[type=submit]'); btn.disabled=true;
+  const em=$('#em').value.trim();
+  try{
+    if(mode==='forgot'){ const {error}=await sbc.auth.resetPasswordForEmail(em,{redirectTo:BOM}); if(error) throw error; mode='login'; return say('如果這個 Email 有註冊過，重設信已經寄出。請在一小時內點信裡的連結。') }
+    const {error}=await sbc.auth.signInWithPassword({email:em,password:$('#pw').value}); if(error) throw error; msg=''; await load();
+  }catch(e){ say(errMsg(e),true) }finally{ btn.disabled=false }
+});
+sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
+load();
+</script>
+</body>
+</html>

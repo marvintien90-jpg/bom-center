@@ -47,6 +47,7 @@ th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-
 </head>
 <body>
 <div class="wrap">
+  <p class="note" style="margin:0 0 6px"><a href="../portal/">← 業主入口（所有系統）</a></p>
   <h1>會員中心</h1>
   <p class="sub">BOM 運算中心＋損益分析中心｜品牌加辣餐飲顧問工作室</p>
   <div id="app"><p class="sub">讀取中…</p></div>
@@ -152,7 +153,7 @@ function viewAdmin(){
   return `<div class="card"><h2>管理：訂閱</h2>${flash()}<div class="tabs">${tabs.map(t=>`<button data-atab="${t[0]}" class="${admTab===t[0]?'on':''}">${t[1]}</button>`).join('')}</div>${body}</div><div class="row"><button data-act="out">登出</button></div>`;
 }
 function render(){
-  const q=new URLSearchParams(location.search);
+  const q=new URLSearchParams(location.search); if(q.get('mode')==='up'&&!me){ mode='up'; history.replaceState(null,'',location.pathname) }
   if(q.get('paid')&&!msg){ msg='付款完成後約 1 分鐘內會更新狀態，若沒更新請重新整理。'; history.replaceState(null,'',location.pathname) }
   $('#app').innerHTML=!me?viewAuth():isAdmin?viewAdmin():sub?viewSub():(me.email_confirmed_at?viewTrial():`<div class="card"><h2>請先驗證 Email</h2><p class="sub">我們寄了一封驗證信到 ${esc(me.email)}，點信裡的連結後回到這裡重新整理。</p><div class="row"><button data-act="out">登出</button></div></div>`);
 }
