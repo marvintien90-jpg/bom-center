@@ -1,0 +1,58 @@
+name: 立地評估資料更新
+
+# Builds the open-data files the site-evaluation page reads (site/data/).
+# On the development branch it commits them back to that branch; once merged,
+# the monthly schedule keeps them fresh.
+on:
+  workflow_dispatch:
+    inputs:
+      parts:
+        description: "osm / villages / biz / rent (space separated, empty = all)"
+        required: false
+        default: ""
+  schedule:
+    - cron: "30 19 3 * *"   # 每月 4 日 03:30 台灣時間
+  push:
+    branches: [claude/site-eval]
+    paths: ["site/build/**", ".github/workflows/site-data.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: site-data-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install osmium pyshp pyproj requests
+      - name: OSM 店家／站點／道路
+        if: ${{ inputs.parts == '' || contains(inputs.parts, 'osm') }}
+        run: |
+          curl -sSLf -o /tmp/tw.pbf https://download.geofabrik.de/asia/taiwan-latest.osm.pbf
+          rm -rf site/data/tiles
+          python site/build/osm.py /tmp/tw.pbf site/data/tiles
+          du -sh site/data/tiles
+      - name: 政府開放資料（人口、所得、稅籍、租金）
+        run: |
+          P="${{ inputs.parts }}"
+          P="${P//osm/}"
+          if [ -n "$(echo $P | tr -d ' ')" ] || [ -z "${{ inputs.parts }}" ]; then
+            python site/build/gov.py site/data $P
+          fi
+          ls -la site/data; du -sh site/data
+      - name: Commit data
+        run: |
+          git config user.name "site-data-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/data
+          git diff --cached --quiet && echo "no change" && exit 0
+          git commit -m "立地評估資料更新 $(date +%F)"
+          git push
