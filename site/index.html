@@ -73,6 +73,7 @@ details summary{cursor:pointer;color:var(--accent)}
       <div><label>店面坪數</label><input id="ping" type="number" min="0" placeholder="選填"></div>
     </div>
     <div class="row"><button class="pri" id="go">開始評估</button><button id="cmpAdd" disabled>加入比較</button><button id="print" disabled>列印／存 PDF</button><span class="note" id="status"></span></div>
+    <p class="note" id="gate"></p>
   </div>
 
   <div class="card"><div id="map"></div>
@@ -97,9 +98,18 @@ details summary{cursor:pointer;color:var(--accent)}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="score.js"></script>
 <script>
 const $=s=>document.querySelector(s);
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+let FULL=false, WHO=null;
+async function access(){try{if(!window.supabase) return; const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY); const {data:{session}}=await sbc.auth.getSession(); if(!session) return; WHO=session.user.email;
+  const pr=await sbc.from('bom_profiles').select('role,status').eq('user_id',session.user.id).maybeSingle(); if(pr.data&&pr.data.role==='admin'&&pr.data.status==='active'){FULL=true;return}
+  const s=await sbc.from('sub_subscriptions').select('status').eq('user_id',session.user.id).maybeSingle(); FULL=!!(s.data&&['trial','active','past_due','comp','canceled'].includes(s.data.status));
+}catch(e){console.warn(e)} finally{gateNote()}}
+function gateNote(){const n=$('#gate'); if(!n) return; n.innerHTML=FULL?`已登入會員${WHO?'（'+esc(WHO)+'）':''}，可看完整報告。`:`免費版只顯示總分與重點；<a href="../member/">登入或加入會員</a>看完整報告（人口結構、競品清單、營收推估、租金建議、候選店比較）。`}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nf=n=>n==null?'—':Number(n).toLocaleString('zh-TW');
 const T=0.02, C=0.002, DATA='data/';
@@ -185,6 +195,14 @@ function draw(r,ctx){
   const bars=Object.keys(DIM).map(k=>`<div class="b"><span>${DIM[k]}<span class="note">・${Math.round(r.weights[k]*100)}%</span></span><div class="track"><div class="fill" style="width:${r.dims[k]}%"></div></div><b>${r.dims[k]}</b></div>`).join('');
   const st=n.stations.length?n.stations.map(s=>`${esc(s.name)} ${s.d}m`).join('、'):'500 公尺內無';
   const br=n.bizRoad, bt=n.bizTown;
+  if(!FULL){
+    $('#out').innerHTML=`<div class="card"><h2>${esc(r.place.addr)}</h2><p class="sub">業態：${r.label}｜商圈半徑 ${r.radius} 公尺</p>
+    <div class="top"><div class="ring">${ring}<div class="v"><b>${r.total}</b><span>等級 ${r.grade}</span></div></div><div>
+    ${r.pros[0]?`<p class="good">優勢：${esc(r.pros[0])}</p>`:''}${r.cons[0]?`<p class="bad">風險：${esc(r.cons[0])}</p>`:''}
+    <p>完整報告還有 ${Math.max(0,r.pros.length+r.cons.length-2)} 項優勢與風險、五面向分數、${r.competitors.length} 家同類競品清單、推估月營收與建議租金上限。</p>
+    <div class="row"><a href="../member/"><button class="pri">登入或加入會員看完整報告</button></a></div></div></div>`;
+    return;
+  }
   $('#out').innerHTML=`
   <div class="card"><h2>${esc(r.place.addr)}</h2><p class="sub">業態：${r.label}｜商圈半徑 ${r.radius} 公尺｜${new Date().toLocaleDateString('zh-TW')}</p>
     <div class="top"><div class="ring">${ring}<div class="v"><b>${r.total}</b><span>等級 ${r.grade}</span></div></div><div class="bars">${bars}</div></div></div>
@@ -231,11 +249,11 @@ function drawCmp(){const a=loadCmp(); if(!a.length){$('#cmp').innerHTML='';retur
   $('#cmp').innerHTML=`<div class="card"><h2>候選店面比較</h2><div class="scroll"><table><tr><th></th>${a.map((r,i)=>`<th>${esc(r.place.addr).slice(0,22)}<br><span class="note">${r.label}</span> <button class="noprint" data-del="${i}">移除</button></th>`).join('')}</tr>${rows.map(([l,k])=>`<tr><td>${l}</td>${a.map(r=>`<td>${val(r,k)}</td>`).join('')}</tr>`).join('')}</table></div></div>`;
   $('#cmp').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const x=loadCmp();x.splice(+b.dataset.del,1);saveCmp(x);drawCmp()});
 }
-$('#cmpAdd').onclick=()=>{if(!last) return; const a=loadCmp(); a.push(last.res); saveCmp(a.slice(-3)); drawCmp(); status('已加入比較（最多 3 個）')};
+$('#cmpAdd').onclick=()=>{if(!last) return; if(!FULL){status('候選店比較是會員功能',true);return} const a=loadCmp(); a.push(last.res); saveCmp(a.slice(-3)); drawCmp(); status('已加入比較（最多 3 個）')};
 $('#go').onclick=run; $('#addr').addEventListener('keydown',e=>{if(e.key==='Enter') run()});
 $('#addr').addEventListener('input',()=>{site=null});
 $('#print').onclick=()=>window.print();
-drawCmp(); base();
+drawCmp(); base(); access();
 </script>
 </body>
 </html>

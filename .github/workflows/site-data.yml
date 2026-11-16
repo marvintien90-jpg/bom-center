@@ -29,6 +29,8 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -36,7 +38,10 @@ jobs:
       - name: OSM 店家／站點／道路
         if: ${{ inputs.parts == '' || contains(inputs.parts, 'osm') }}
         run: |
-          curl -sSLf -o /tmp/tw.pbf https://download.geofabrik.de/asia/taiwan-latest.osm.pbf
+          # On a push that did not touch osm.py, keep the existing tiles.
+          if [ "${{ github.event_name }}" = "push" ] && [ -d site/data/tiles ] && ! git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q osm.py; then
+            echo "osm unchanged, keep tiles"; exit 0; fi
+          curl -sSLf --retry 6 --retry-delay 20 --retry-all-errors -o /tmp/tw.pbf https://download.geofabrik.de/asia/taiwan-latest.osm.pbf || { echo "::warning::OSM download failed, keeping old tiles"; exit 0; }
           rm -rf site/data/tiles
           python site/build/osm.py /tmp/tw.pbf site/data/tiles
           du -sh site/data/tiles
