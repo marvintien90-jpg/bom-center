@@ -193,7 +193,7 @@ def villages():
                 continue
             h = rr[hi]
             if L == "A": print("income header", h, rr[hi+1][:6])
-            ti = next(i for i, c in enumerate(h) if "鄉鎮" in c)
+            ti = next((i for i, c in enumerate(h) if "鄉鎮" in c or "縣市" in c), 0)
             vi = next(i for i, c in enumerate(h) if "村里" in c)
             avg_i = next(i for i, c in enumerate(h) if "平均" in c)
             med_i = next(i for i, c in enumerate(h) if "中位" in c)
@@ -201,6 +201,9 @@ def villages():
                 if len(r) <= med_i:
                     continue
                 t = norm(r[ti]); vn = norm(r[vi])
+                mt = re.match(r"^(..[縣市])(.+)$", t)
+                if mt:
+                    t = mt.group(2)
                 cand = [x for x in VT.get((t, vn), []) if x["c"] == CODE2C.get(L.lower())]
                 if cand:
                     pick = cand[0]
