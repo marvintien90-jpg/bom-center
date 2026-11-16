@@ -1,25 +1,25 @@
 // 餐飲立地評估：評分模型（瀏覽器與 node 測試共用）
 (function (root) {
   const FORMATS = {
-    breakfast: { label: '早餐／早午餐', radius: 300, freq: 0.22, ticket: 90,
+    breakfast: { base: 160, label: '早餐／早午餐', radius: 300, freq: 0.22, ticket: 90,
       w: { pop: .30, flow: .30, access: .10, comp: .20, cost: .10 }, ages: [0, 0, 1, .6, .3], kidBonus: true,
       re: /早餐|早午餐|美而美|麥味登|拉亞|弘爺|q ?burger|晨間|蛋餅/i, cuisine: /breakfast|brunch/ },
-    bento: { label: '便當／自助餐', radius: 500, freq: 0.12, ticket: 110,
+    bento: { base: 180, label: '便當／自助餐', radius: 500, freq: 0.12, ticket: 110,
       w: { pop: .25, flow: .30, access: .10, comp: .20, cost: .15 }, ages: [0, .5, 1, .8, .4], office: true,
       re: /便當|自助餐|飯包|池上|悟饕|快餐|排骨飯|雞腿飯/, cuisine: /bento|lunch/ },
-    noodle: { label: '小吃／麵食', radius: 500, freq: 0.12, ticket: 130,
+    noodle: { base: 150, label: '小吃／麵食', radius: 500, freq: 0.12, ticket: 130,
       w: { pop: .25, flow: .25, access: .15, comp: .20, cost: .15 }, ages: [0, .7, 1, .8, .5],
       re: /麵|水餃|餃子|小吃|滷肉飯|魯肉飯|牛肉麵|拉麵|粥|米粉|鍋貼|肉圓/, cuisine: /noodle|ramen|dumpling|taiwanese|soup/ },
-    drink: { label: '手搖飲／飲料', radius: 300, freq: 0.25, ticket: 60,
+    drink: { base: 280, label: '手搖飲／飲料', radius: 300, freq: 0.25, ticket: 60,
       w: { pop: .10, flow: .40, access: .15, comp: .20, cost: .15 }, ages: [.3, 1, .9, .4, .1], school: true,
       re: /茶|飲|50嵐|五十嵐|清心|可不可|coco|迷客夏|萬波|大苑子|五桐號|麻古|得正|鮮茶|珍珠|果汁/i, cuisine: /bubble_tea|tea|juice/ },
-    cafe: { label: '咖啡／輕食', radius: 500, freq: 0.06, ticket: 180,
+    cafe: { base: 110, label: '咖啡／輕食', radius: 500, freq: 0.06, ticket: 180,
       w: { pop: .20, flow: .30, access: .10, comp: .20, cost: .20 }, ages: [0, .7, 1, .6, .2], office: true, income: true,
       re: /咖啡|coffee|caf[eé]|星巴克|starbucks|路易莎|louisa|cama|85度c/i, cuisine: /coffee|cafe/ },
-    dinner: { label: '正餐／火鍋／燒肉', radius: 1000, freq: 0.035, ticket: 450,
+    dinner: { base: 110, label: '正餐／火鍋／燒肉', radius: 1000, freq: 0.035, ticket: 450,
       w: { pop: .25, flow: .15, access: .30, comp: .15, cost: .15 }, ages: [.2, .5, 1, 1, .4], income: true, car: true,
       re: /火鍋|鍋|燒肉|燒烤|牛排|餐廳|石鍋|壽司|料理|食堂|韓式|泰式|義大利|美式/, cuisine: /hot_pot|barbecue|bbq|japanese|korean|steak|thai|italian|sushi|chinese|american|buffet/ },
-    night: { label: '宵夜／居酒屋／熱炒', radius: 500, freq: 0.03, ticket: 400,
+    night: { base: 70, label: '宵夜／居酒屋／熱炒', radius: 500, freq: 0.03, ticket: 400,
       w: { pop: .20, flow: .30, access: .15, comp: .20, cost: .15 }, ages: [0, .8, 1, .7, .1],
       re: /居酒屋|串燒|熱炒|酒|鹹酥雞|宵夜|啤酒|快炒/, cuisine: /izakaya|yakitori/ }
   };
@@ -120,7 +120,7 @@
     let roadCls = 0, roadName = '';
     for (const r of ctx.roads) {
       const d = dist(site, r);
-      if (d <= 80 && r.cls > roadCls) { roadCls = r.cls; roadName = r.name; }
+      if (d <= 130 && r.cls > roadCls) { roadCls = r.cls; roadName = r.name; }
     }
     const parking = cnt(P3, 'parking');
     const roadScore = [35, 35, 55, 75, 90, 70][roadCls]; // 快速道路旁可見但難停
@@ -132,7 +132,7 @@
     const sameR = near(site, ctx.pois.filter(p => isFormat(p, F)), R);
     const same3 = sameR.filter(p => p.d <= 300).length;
     const foodR = (R === 300 ? P3 : R === 500 ? P5 : P10).filter(p => ['food', 'drink', 'bakery', 'bar'].includes(p.cat)).length;
-    const perK = sameR.length / Math.max(popR.pop / 1000, 0.5); // 每千人同業家數
+    const perK = sameR.length / Math.max((popR.pop + flowRaw * 100) / 1000, 0.5); // 每千位（居民＋活動人口）同業家數
     let sComp = scale(perK, [[0, 90], [0.3, 80], [0.7, 65], [1.2, 50], [2, 35], [3.5, 20]]);
     sComp += scale(foodR, [[0, -10], [10, 0], [40, 8], [120, 5]]); // 有聚集效應但過度飽和不加分
     const chains = sameR.filter(p => CHAINS.test(p.name || '') || CHAINS.test(p.brand || '')).length;
@@ -147,19 +147,23 @@
     }
     sComp = clamp(sComp);
 
-    // ---- 營收潛力 (very rough, shown as a range)
+    // ---- 營收潛力：同業標準店來客 × 立地係數（先算分數再回填）
     const ticket = opt.ticket || F.ticket;
-    const capture = 1 / (1 + sameR.length * 0.9);
-    const residentVisits = popR.pop * F.freq * capture;
-    const flowVisits = flowRaw * (F.freq * 30) * capture;
-    const daily = residentVisits + flowVisits;
-    const monthly = daily * 30 * ticket;
-    const rev = { low: Math.round(monthly * 0.6 / 1000) * 1000, mid: Math.round(monthly / 1000) * 1000, high: Math.round(monthly * 1.5 / 1000) * 1000, daily: Math.round(daily) };
+    let rev = null;
+    const revenueFor = score => {
+      const factor = 0.55 + score / 100 * 0.9; // 50 分 ≈ 標準店
+      const daily = F.base * factor;
+      const monthly = daily * 30 * ticket;
+      return { low: Math.round(monthly * 0.75 / 1000) * 1000, mid: Math.round(monthly / 1000) * 1000, high: Math.round(monthly * 1.3 / 1000) * 1000, daily: Math.round(daily), factor: +factor.toFixed(2) };
+    };
 
     // ---- 成本 (rent)
     let market = null;
     if (ctx.rent) market = ctx.rent.road || ctx.rent.town || null; // [median NT$/坪/月, n]
     let sCost = 60, rentRatio = null, rentVsMarket = null;
+    const pre = { pop: sPop, flow: sFlow, access: sAccess, comp: sComp };
+    let preT = 0, preW = 0; for (const k in pre) { preT += F.w[k] * pre[k]; preW += F.w[k]; }
+    rev = revenueFor(preT / preW);
     if (opt.rent && rev.mid) {
       rentRatio = opt.rent / rev.mid;
       sCost = scale(rentRatio, [[0.05, 100], [0.10, 85], [0.15, 65], [0.20, 45], [0.30, 20], [0.45, 5]]);

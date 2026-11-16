@@ -124,54 +124,45 @@ def villages():
                   "lat": round(cy / wsum, 5), "lon": round(cx / wsum, 5), "km2": round(area / 1e6, 4)}
     print("village shapes", len(V))
 
-    # population by single age (latest month)
-    ds = dataset(77132)
-    dist = sorted(ds["distribution"], key=lambda d: d["resourceDescription"][:5])
-    d = dist[-1]
-    META["population"] = d["resourceDescription"][:5]
-    raw = text(get(d["resourceDownloadUrl"]))
-    rows = list(csv.reader(io.StringIO(raw)))
-    hdr = rows[0]
-    print("pop header", hdr[:8], len(hdr), rows[1][:6])
-    if rows[1] and not re.match(r"\d", rows[1][0] or ""):  # second header row (english)
-        rows = rows[1:]
-    H = {h: i for i, h in enumerate(hdr)}
-    def col(name):
-        return H.get(name)
-    age_cols = defaultdict(list)
-    for h, i in H.items():
-        m = re.match(r"people_age_(\d+)(?:up)?_(m|f)", h) or re.match(r"(\d+)歲.*[男女]", h)
-        if m:
-            age_cols[int(m.group(1))].append(i)
-    if not age_cols:  # chinese headers like 0歲-男
-        for h, i in H.items():
-            m = re.search(r"(\d+)", h)
-            if m and ("男" in h or "女" in h):
-                age_cols[int(m.group(1))].append(i)
-    site_i = col("site_id") if col("site_id") is not None else col("區域別")
-    vill_i = col("village") if col("village") is not None else col("村里名稱")
-    hh_i = col("household_no") if col("household_no") is not None else col("戶數")
-    pop_i = col("people_total") if col("people_total") is not None else col("人口數")
+    # population by single age: 戶政司 API ODRP014 (latest available month, paged)
+    today = datetime.date.today()
+    y, m = today.year - 1911, today.month
+    data = None
+    for _ in range(8):
+        m -= 1
+        if m == 0:
+            y -= 1; m = 12
+        ym = f"{y}{m:02d}"
+        try:
+            first = json.loads(get(f"https://www.ris.gov.tw/rs-opendata/api/v1/datastore/ODRP014/{ym}?page=1", timeout=120))
+            if not first.get("responseData"):
+                continue
+            data = list(first["responseData"])
+            for pg in range(2, int(first.get("totalPage", 1)) + 1):
+                data += json.loads(get(f"https://www.ris.gov.tw/rs-opendata/api/v1/datastore/ODRP014/{ym}?page={pg}", timeout=120))["responseData"]
+            META["population"] = ym
+            break
+        except Exception as e:
+            print("population month fail", ym, e)
     bands = [(0, 14), (15, 24), (25, 44), (45, 64), (65, 200)]
     matched = 0
-    for r in rows[1:]:
-        if len(r) < len(hdr) - 2 or not r[pop_i].strip().isdigit():
+    for r in data or []:
+        site = norm(r.get("site_id"))
+        mm = re.match(r"(.+?[縣市])(.+)", site)
+        if not mm:
             continue
-        site = norm(r[site_i])
-        m = re.match(r"(.+?[縣市])(.+)", site)
-        if not m:
-            continue
-        key = (m.group(1), m.group(2), norm(r[vill_i]))
-        v = V.get(key)
+        v = V.get((mm.group(1), mm.group(2), norm(r.get("village"))))
         if not v:
             continue
         b = [0] * 5
-        for age, idxs in age_cols.items():
-            n = sum(int(r[i] or 0) for i in idxs)
-            for j, (lo, hi) in enumerate(bands):
-                if lo <= age <= hi:
-                    b[j] += n
-        v["pop"] = int(r[pop_i]); v["hh"] = int(r[hh_i] or 0); v["age"] = b
+        for k, val in r.items():
+            a = re.match(r"people_age_(\d+)", k)
+            if a:
+                age = int(a.group(1))
+                for j, (lo, hi) in enumerate(bands):
+                    if lo <= age <= hi:
+                        b[j] += int(val or 0)
+        v["pop"] = int(r.get("people_total") or 0); v["hh"] = int(r.get("household_no") or 0); v["age"] = b
         matched += 1
     print("population matched", matched)
     for v in V.values():
