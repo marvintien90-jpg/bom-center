@@ -948,7 +948,7 @@ async function loadAll(){ try{
   catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
 
 function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.classList.toggle('bare',!app); if(!app) sh.classList.remove('open');
-  ub.innerHTML=me&&app?`<span>${esc(me.email)}</span><span class="status">${isAdmin()?'管理員':PLAN_NAME[prof.plan]+' · '+(RO()?'只能看':'可編輯')+(prof.expires_on?' · 到期 '+prof.expires_on:'')}</span><div class="brandbar"><button data-tab="account">我的帳號</button><a href="member/"><button type="button">會員中心／訂閱</button></a><button data-auth="out">登出</button></div>`:'';
+  ub.innerHTML=me&&app?`<span>${esc(me.email)}</span><span class="status">${isAdmin()?'管理員':PLAN_NAME[prof.plan]+' · '+(RO()?'只能看':'可編輯')+(prof.expires_on?' · 到期 '+prof.expires_on:'')}</span><div class="brandbar"><a href="portal/"><button type="button">所有系統</button></a><button data-tab="account">我的帳號</button><a href="member/"><button type="button">會員中心／訂閱</button></a><button data-auth="out">登出</button></div>`:'';
   if(!app){ $('#nav').innerHTML=''; $('#banner').innerHTML=''; $('#main').innerHTML=gate(); return }
   if(!V[tab]) tab='home';
   renderApp();
