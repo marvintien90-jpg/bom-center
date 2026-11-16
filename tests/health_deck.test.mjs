@@ -1,6 +1,6 @@
 // node tests/health_deck.test.mjs [輸出資料夾]：用模擬門市資料產生健檢簡報並檢查指標
 import { createRequire } from 'module'; import fs from 'fs'; import path from 'path';
-import { computeHealth, buildDeck, light } from '../supabase/functions/_shared/health_deck.js';
+import { computeHealth, buildDeck, light, targetMonth, isStale } from '../supabase/functions/_shared/health_deck.js';
 const require = createRequire(import.meta.url); const PptxGen = require('pptxgenjs');
 let fail = 0; const ok = (c, m) => { if (!c) { fail++; console.log('FAIL', m) } else console.log('ok  ', m) };
 // 模擬門市：6 個月，第 6 個月食材成本拉高
@@ -20,6 +20,11 @@ ok(Math.abs(H.cur.r.platform - 0.32) < 1e-9, '平台抽成 = 平台費用 / 外�
 const H1 = computeHealth(rows.filter(r => r.m === '2026-01'));
 ok(H1.prev === null && H1.advice.length >= 1, '只有一個月也能產生');
 ok(computeHealth([]) === null, '沒有資料回傳 null');
+ok(targetMonth(new Date('2026-11-05T01:00:00Z')) === '2026-10', '11/5 排程做 10 月');
+ok(targetMonth(new Date('2026-01-04T20:00:00Z')) === '2025-12', '1 月排程做去年 12 月');
+ok(targetMonth(new Date('2026-01-31T17:00:00Z')) === '2026-01', '台北已是 2/1 就做 1 月');
+ok(isStale(computeHealth(rows, '2026-10'), '2026-10') && computeHealth(rows, '2026-10').month === '2026-06', '只有到 6 月的資料，10 月排程判定為過期');
+ok(!isStale(computeHealth(rows, '2026-05'), '2026-05') && computeHealth(rows, '2026-05').month === '2026-05', '指定有資料的月份就用那個月');
 const p = buildDeck(PptxGen, H, { brand: '模擬門市' });
 const out = process.argv[2] || '/tmp'; const f = path.join(out, '健檢簡報_模擬門市_2026-06.pptx');
 await p.writeFile({ fileName: f }); ok(fs.statSync(f).size > 20000, '簡報檔產生 ' + f);
