@@ -64,7 +64,7 @@ const SUB={trial:['試用中','good'],active:['訂閱中','good'],past_due:['扣
 const PLAN={basic:'基本版',pro:'進階版',member:'顧問會員'};
 /* 其他系統卡片：加一筆就會出現在入口。rule：'any' = BOM 或損益中心任一個可使用（含管理員）就能進入。
    例：{ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢與案例引導。',url:BOM+'hr/',rule:'any'} */
-const EXTRA=[];
+const EXTRA=[{ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢與案例引導。',url:BOM+'hr/',rule:'any'}];
 
 let me=null, bom=null, pl=null, sub=null, isAdmin=false, all=null, mode='login', msg='', bad=false;
 
