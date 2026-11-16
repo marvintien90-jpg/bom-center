@@ -28,8 +28,22 @@ def dataset(i):
     return json.loads(get(f"https://data.gov.tw/api/v2/rest/dataset/{i}"))["result"]
 
 
+CN = "零一二三四五六七八九"
+
+
+def cnum(n):
+    n = int(n)
+    if n <= 10:
+        return "十" if n == 10 else CN[n]
+    if n < 20:
+        return "十" + CN[n - 10]
+    return CN[n // 10] + "十" + (CN[n % 10] if n % 10 else "")
+
+
 def norm(s):
-    return (s or "").strip().replace("台", "臺").replace("　", "")
+    s = (s or "").strip().replace("台", "臺").replace("　", "").replace(" ", "")
+    s = s.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
+    return re.sub(r"(\d+)段", lambda m: cnum(m.group(1)) + "段", s)
 
 
 def text(b):
