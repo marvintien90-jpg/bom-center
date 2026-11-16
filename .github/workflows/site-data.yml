@@ -61,3 +61,14 @@ jobs:
           git diff --cached --quiet && echo "no change" && exit 0
           git commit -m "立地評估資料更新 $(date +%F)"
           git push
+      - name: Publish data to the live site (main only)
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          git fetch --depth=1 origin gh-pages
+          git checkout -B gh-pages origin/gh-pages
+          rm -rf site/data
+          git checkout main -- site/data
+          git add -A site/data
+          git diff --cached --quiet && echo "no change" && exit 0
+          git commit -m "立地評估資料更新上線 $(date +%F)"
+          git push origin gh-pages
