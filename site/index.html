@@ -83,7 +83,7 @@ input[type=search]{max-width:240px}
 <body>
 <div class="wrap">
   <h1>餐飲立地評估</h1>
-  <p class="sub">輸入店面地址，3 分鐘看懂商圈人口、人流、交通、競爭、租金負擔與損益｜品牌加辣餐飲顧問</p>
+  <p class="sub">顧問專用：輸入店面地址，看懂商圈客群、人流、交通、競爭、租金負擔與損益｜品牌加辣餐飲顧問</p>
 
   <div class="card noprint">
     <div class="form">
@@ -120,7 +120,7 @@ input[type=search]{max-width:240px}
       </div>
       <div class="row"><button id="tReset">恢復業態預設</button><span class="note">調整只影響這次的分析，不會改到業態預設。</span></div>
     </div>
-    <p class="note" id="tuneLock" hidden>條件調整是會員功能。<a href="../portal/">登入會員</a>後可以改商圈半徑、競品關鍵字與評分權重。</p>
+    <p class="note" id="tuneLock" hidden>請用顧問帳號<a href="../portal/">登入</a>後使用。</p>
   </div>
 
   <div id="out"></div>
@@ -128,7 +128,7 @@ input[type=search]{max-width:240px}
   <div class="card noprint" id="hist" hidden></div>
 
   <div class="card"><details><summary>評分方法與資料來源</summary>
-    <p class="note">總分由五個面向加權而成，權重依業態不同（例如手搖飲看重人流、正餐看重交通與停車），會員可自行調整。80 分以上為 A、65–79 為 B、50–64 為 C、未滿 50 為 D。</p>
+    <p class="note">總分由五個面向加權而成，權重依業態不同（例如手搖飲看重人流、正餐看重交通與停車），可自行調整。80 分以上為 A、65–79 為 B、50–64 為 C、未滿 50 為 D。</p>
     <ul class="note">
       <li>客群：內政部村里人口與年齡（依商圈範圍面積比例估算）、財政部村里綜合所得中位數。</li>
       <li>人流：OpenStreetMap 的便利商店、公車站、學校、辦公點、醫院、商場與車站分佈（人流的間接指標）。</li>
@@ -153,15 +153,8 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 let FULL=false, WHO=null;
 async function access(){try{if(!window.supabase) return; const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY); const {data:{session}}=await sbc.auth.getSession(); if(!session) return; WHO=session.user.email;
   const pr=await sbc.from('bom_profiles').select('role,status').eq('user_id',session.user.id).maybeSingle(); if(pr.data&&pr.data.role==='admin'&&pr.data.status==='active'){FULL=true;return}
-  // 與 sub_private.access_until 相同規則：comp 永久；trial 到試用結束；canceled 到期末；其餘期末＋寬限天數
-  const [s,g]=await Promise.all([sbc.from('sub_subscriptions').select('status,period_end,trial_ends_on').eq('user_id',session.user.id).maybeSingle(),sbc.from('sub_settings').select('grace_days').eq('id',1).maybeSingle()]);
-  const d=s.data; if(!d) return; if(d.status==='comp'){FULL=true;return} if(d.status==='expired') return;
-  const today=new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
-  let until=d.status==='trial'?d.trial_ends_on:(d.period_end||d.trial_ends_on);
-  if(until&&!['trial','canceled'].includes(d.status)){const t=new Date(until+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+((g.data&&g.data.grace_days)||0));until=t.toISOString().slice(0,10)}
-  FULL=!!until&&until>=today;
 }catch(e){console.warn(e)} finally{gateNote(); if(last) render()}}
-function gateNote(){const n=$('#gate'); if(!n) return; n.innerHTML=FULL?`已登入會員${WHO?'（'+esc(WHO)+'）':''}，可看完整報告與所有工具。`:`免費版只顯示總分與重點；<a href="../portal/">登入會員入口</a>看完整報告（業態推薦、時段潛力、競品清單、營收與損益試算、附近熱區、候選店比較）。`;
+function gateNote(){const n=$('#gate'); if(!n) return; n.innerHTML=FULL?`顧問帳號${WHO?'（'+esc(WHO)+'）':''}已登入。`:`這是品牌加辣顧問專用工具，請用顧問帳號在<a href="../portal/">入口</a>登入後使用。`;
   $('#tuneBody').classList.toggle('lock',!FULL); $('#tuneLock').hidden=FULL}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nf=n=>n==null||isNaN(n)?'—':Math.round(Number(n)).toLocaleString('zh-TW');
@@ -345,14 +338,7 @@ function drawReport(){
   const bars=Object.keys(DIM).map(k=>bar(DIM[k],r.dims[k],Math.round(r.weights[k]*100)+'%')).join('');
   const st=n.stations.length?n.stations.map(s=>`${esc(s.name)} ${s.d}m`).join('、'):'500 公尺內無';
   const br=n.bizRoad, bt=n.bizTown, bn=n.bizNear, pf=r.profile;
-  if(!FULL){
-    $('#out').innerHTML=`<div class="card"><h2>${esc(r.place.addr)}</h2><p class="sub">業態：${r.label}｜商圈半徑 ${r.radius} 公尺</p>
-    <div class="top"><div class="ring">${ring}<div class="v"><b>${r.total}</b><span>等級 ${r.grade}</span></div></div><div>
-    ${r.pros[0]?`<p class="good">優勢：${esc(r.pros[0])}</p>`:''}${r.cons[0]?`<p class="bad">風險：${esc(r.cons[0])}</p>`:''}
-    <p>會員完整報告還有：</p><ul class="pc"><li>${Math.max(0,r.pros.length+r.cons.length-2)} 項優勢與風險、五面向分數</li><li>7 種業態適配排行：這個點最適合開什麼</li><li>早餐／午餐／下午茶／晚餐／宵夜時段潛力</li><li>${r.competitors.length} 家同類競品清單（可匯出）</li><li>推估月營收、損益兩平來客數、回本月數試算</li><li>附近 600 公尺熱區掃描：找出更好的位置</li><li>條件拉桿：自訂商圈半徑、競品關鍵字與評分權重</li></ul>
-    <div class="row"><a href="../portal/"><button class="pri">登入或加入會員看完整報告</button></a></div></div></div>`;
-    return;
-  }
+  if(!FULL){ $('#out').innerHTML=`<div class="card"><h2>顧問專用</h2><p>這是品牌加辣顧問專用的立地評估工具，請用顧問帳號登入後使用。</p><div class="row"><a href="../portal/"><button class="pri">前往登入</button></a></div></div>`; return; }
   // 業態排行
   const rank=Object.keys(SiteScore.FORMATS).map(k=>{const x=SiteScore.evaluate(site,last.ctx,{format:k,rent:+$('#rent').value||0,ping:+$('#ping').value||0});return {k,label:x.label,total:x.total,grade:x.grade,rev:x.revenue}}).sort((a,b)=>b.total-a.total);
   const dp=r.daypart, DPN={breakfast:'早餐 6–10 點',lunch:'午餐 11–14 點',afternoon:'下午茶 14–17 點',dinner:'晚餐 17–21 點',late:'宵夜 21 點後'};
@@ -475,7 +461,7 @@ function drawCmp(){const a=loadCmp(); if(!a.length){$('#cmp').innerHTML='';retur
   $('#cmp').innerHTML=`<div class="card"><h2>候選店面比較</h2><div class="scroll"><table><tr><th></th>${a.map((r,i)=>`<th>${esc(r.place.addr).slice(0,22)}<br><span class="note">${r.label}</span> <button class="noprint" data-del="${i}">移除</button></th>`).join('')}</tr>${rows.map(([l,k])=>`<tr><td>${l}</td>${a.map(r=>`<td>${val(r,k)}</td>`).join('')}</tr>`).join('')}</table></div></div>`;
   $('#cmp').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const x=loadCmp();x.splice(+b.dataset.del,1);saveCmp(x);drawCmp()});
 }
-$('#cmpAdd').onclick=()=>{if(!last) return; if(!FULL){status('候選店比較是會員功能',true);return} const a=loadCmp(); a.push(last.res); saveCmp(a.slice(-3)); drawCmp(); status('已加入比較（最多 3 個）')};
+$('#cmpAdd').onclick=()=>{if(!last) return; if(!FULL){status('請先用顧問帳號登入',true);return} const a=loadCmp(); a.push(last.res); saveCmp(a.slice(-3)); drawCmp(); status('已加入比較（最多 3 個）')};
 $('#share').onclick=async()=>{ if(!last) return; const p=new URLSearchParams({lat:site.lat.toFixed(6),lon:site.lon.toFixed(6),f:$('#fmt').value,a:last.res.place.addr}); for(const k of ['ticket','rent','ping']) if($('#'+k).value) p.set(k,$('#'+k).value);
   const u=location.origin+location.pathname+'?'+p; try{await navigator.clipboard.writeText(u); status('分享連結已複製，對方打開就會看到同一個位置的評估')}catch(e){prompt('複製這個連結',u)}};
 const HK='site-eval-history';
