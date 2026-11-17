@@ -103,6 +103,10 @@ def village_shapes():
     print("atlas props sample", out[0][0] if out else None)
     return out
 
+# 0-6 學齡前, 7-12 國小, 13-18 中學, 19-24 大專／初入職, 25-34, 35-44, 45-54, 55-64, 65-74, 75+
+BANDS10 = [(0, 6), (7, 12), (13, 18), (19, 24), (25, 34), (35, 44), (45, 54), (55, 64), (65, 74), (75, 200)]
+
+
 def villages():
     from pyproj import Geod
     geod = Geod(ellps="GRS80")
@@ -154,15 +158,19 @@ def villages():
         v = V.get((mm.group(1), mm.group(2), norm(r.get("village"))))
         if not v:
             continue
-        b = [0] * 5
+        b = [0] * 5; b10 = [0] * len(BANDS10)
         for k, val in r.items():
             a = re.match(r"people_age_(\d+)", k)
             if a:
-                age = int(a.group(1))
+                age = int(a.group(1)); n = int(val or 0)
                 for j, (lo, hi) in enumerate(bands):
                     if lo <= age <= hi:
-                        b[j] += int(val or 0)
-        v["pop"] = int(r.get("people_total") or 0); v["hh"] = int(r.get("household_no") or 0); v["age"] = b
+                        b[j] += n
+                for j, (lo, hi) in enumerate(BANDS10):
+                    if lo <= age <= hi:
+                        b10[j] += n
+        v["pop"] = int(r.get("people_total") or 0); v["hh"] = int(r.get("household_no") or 0); v["age"] = b; v["a10"] = b10
+        v["mf"] = [int(r.get("people_total_m") or 0), int(r.get("people_total_f") or 0)]
         matched += 1
     print("population matched", matched)
     for v in V.values():
@@ -197,6 +205,8 @@ def villages():
             vi = next(i for i, c in enumerate(h) if "村里" in c)
             avg_i = next(i for i, c in enumerate(h) if "平均" in c)
             med_i = next(i for i, c in enumerate(h) if "中位" in c)
+            q1_i = next((i for i, c in enumerate(h) if "第一分位" in c), None)
+            q3_i = next((i for i, c in enumerate(h) if "第三分位" in c), None)
             for r in rr[hi + 1:]:
                 if len(r) <= med_i:
                     continue
@@ -211,6 +221,8 @@ def villages():
                         try:
                             pick["inc_med"] = round(float(r[med_i]))
                             pick["inc_avg"] = round(float(r[avg_i]))
+                            if q1_i is not None and q3_i is not None:
+                                pick["inc_q"] = [round(float(r[q1_i])), round(float(r[q3_i]))]
                             inc += 1
                         except ValueError:
                             pass
@@ -223,7 +235,8 @@ def villages():
 VT = defaultdict(list)
 
 # ---------------------------------------------------------------- business registry
-ADDR = re.compile(r"^(?P<c>..[縣市])(?P<t>.{1,4}?[鄉鎮市區])(?:.{1,4}?[村里])?(?:\d+鄰)?(?P<r>[^\d段巷弄號]{1,10}?(?:路|街|大道))(?P<s>[一二三四五六七八九十\d]+段)?")
+ADDR = re.compile(r"^(?P<c>..[縣市])(?P<t>.{1,4}?[鄉鎮市區])(?:.{1,4}?[村里])?(?:\d+鄰)?(?P<r>[^\d段巷弄號]{1,10}?(?:路|街|大道))(?P<s>[一二三四五六七八九十\d]+段)?(?:(?P<x>\d+)巷)?(?:\d+弄)?(?:(?P<no>\d+)(?:之\d+)?號)?")
+NO_BUCKET = 20  # 門牌每 20 號一格；頁面取前後各 2 格 ≈ 前後 50 號
 SUB = {"5611": "餐館", "5612": "小吃", "5613": "外帶外送", "5619": "其他餐食", "5620": "外燴團膳",
        "5621": "外燴團膳", "5631": "飲料店", "5632": "酒吧", "5630": "飲料店"}
 
@@ -261,7 +274,12 @@ def biz():
             except Exception:
                 pass
             sub = SUB.get(code[:4], "其他餐飲")
-            for k in (t + "|", t + "|" + road, t + "|" + m.group("r")):
+            keys = [t + "|", t + "|" + road, t + "|" + m.group("r")]
+            if m.group("x"):
+                keys.append(f"{t}|{road}|{int(m.group('x'))}巷")
+            elif m.group("no"):
+                keys.append(f"{t}|{road}|#{int(m.group('no')) // NO_BUCKET}")
+            for k in keys:
                 a = agg[c][k]
                 a["n"] += 1; a["sub"][sub] += 1
                 if age is not None and age <= 12: a["y1"] += 1

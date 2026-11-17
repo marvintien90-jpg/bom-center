@@ -24,6 +24,18 @@
       re: /居酒屋|串燒|熱炒|酒|鹹酥雞|宵夜|啤酒|快炒/, cuisine: /izakaya|yakitori/ }
   };
 
+  // 替代競爭：滿足同一餐期／同一需求、但不是同一種店（權重 0.3 計入競爭）
+  const SUBST = {
+    breakfast: { fmts: ['cafe'], cats: ['bakery', 'conv'], subs: /fast_food|burger|sandwich|bakery/ },
+    bento: { fmts: ['noodle'], cats: ['conv'], subs: /fast_food|burger|chicken|food_court/ },
+    noodle: { fmts: ['bento'], cats: [], subs: /fast_food|burger|chicken|food_court|chinese|taiwanese/ },
+    drink: { fmts: ['cafe'], cats: [], subs: /ice_cream|dessert|juice/ },
+    cafe: { fmts: ['drink'], cats: ['bakery'], subs: /dessert|ice_cream|cake/ },
+    dinner: { fmts: ['night'], cats: [], subs: /restaurant|chinese|japanese|korean|thai|italian|american|seafood|buffet/ },
+    night: { fmts: ['dinner'], cats: ['bar'], subs: /chicken|barbecue|bbq/ }
+  };
+  const SUB_W = 0.3;
+
   const CHAINS = /7-?eleven|統一超商|全家|萊爾富|ok ?mart|麥當勞|mcdonald|肯德基|kfc|摩斯|mos|漢堡王|星巴克|starbucks|路易莎|85度c|50嵐|清心|可不可|迷客夏|八方雲集|四海遊龍|鬍鬚張|爭鮮|瓦城|王品|陶板屋|西堤|石二鍋|海底撈|麥味登|拉亞|弘爺|q ?burger|全聯|家樂福|subway|必勝客|達美樂|頂呱呱|丹丹|吉野家|sukiya|すき家|コメダ|cama/i;
 
   const R_EARTH = 6371000;
@@ -54,8 +66,20 @@
   }
   const clamp = v => Math.max(0, Math.min(100, Math.round(v)));
 
+  // 全台村里加總（客群指數的分母），算一次就快取
+  let NAT = null;
+  function national(villages) {
+    if (NAT && NAT.n === villages.length) return NAT;
+    const a10 = new Array(10).fill(0), age = [0, 0, 0, 0, 0]; let pop = 0, hh = 0, m = 0, f = 0; const incs = [];
+    for (const v of villages) { if (!v.pop) continue; pop += v.pop; hh += v.hh || 0; if (v.a10) v.a10.forEach((n, i) => a10[i] += n); if (v.age) v.age.forEach((n, i) => age[i] += n); if (v.mf) { m += v.mf[0]; f += v.mf[1]; } if (v.inc_med) incs.push(v.inc_med); }
+    incs.sort((a, b) => a - b);
+    NAT = { n: villages.length, pop, hh, a10, age, m, f, incs };
+    return NAT;
+  }
+  function incPct(nat, x) { if (!x || !nat.incs.length) return null; let lo = 0, hi = nat.incs.length; while (lo < hi) { const md = (lo + hi) >> 1; if (nat.incs[md] < x) lo = md + 1; else hi = md; } return Math.round(lo / nat.incs.length * 100); }
+
   function population(site, villages, R) {
-    let pop = 0, hh = 0, age = [0, 0, 0, 0, 0], incW = 0, incSum = 0, home = null, best = 1e9;
+    let pop = 0, hh = 0, age = [0, 0, 0, 0, 0], a10 = new Array(10).fill(0), mf = [0, 0], incW = 0, incSum = 0, home = null, best = 1e9, has10 = false;
     for (const v of villages) {
       if (!v.pop) continue;
       const d = dist(site, v);
@@ -66,9 +90,11 @@
       if (f <= 0) continue;
       pop += v.pop * f; hh += (v.hh || 0) * f;
       if (v.age) v.age.forEach((n, i) => age[i] += n * f);
+      if (v.a10) { has10 = true; v.a10.forEach((n, i) => a10[i] += n * f); }
+      if (v.mf) { mf[0] += v.mf[0] * f; mf[1] += v.mf[1] * f; }
       if (v.inc_med) { incW += v.pop * f; incSum += v.inc_med * v.pop * f; }
     }
-    return { pop: Math.round(pop), hh: Math.round(hh), age: age.map(Math.round), inc: incW ? Math.round(incSum / incW) : null, home };
+    return { pop: Math.round(pop), hh: Math.round(hh), age: age.map(Math.round), a10: has10 ? a10.map(Math.round) : null, mf: mf.map(Math.round), inc: incW ? Math.round(incSum / incW) : null, home };
   }
 
   function near(site, pois, R) {
@@ -90,6 +116,52 @@
    * site: {lat, lon}; ctx: {pois, roads:[{lat,lon,cls,name}], villages, biz, rent, inc}
    * opt: {format, ticket, rent (monthly NT$), ping}
    */
+  const RENT_GOOD = 0.05, RENT_RED = 0.08; // 租金占營收：3–5% 優良，8–10% 紅燈
+  const pct1 = x => (Math.round(x * 1000) / 10).toString();
+
+  // 客群輪廓：區隔占比 ÷ 全台占比 ×100 = 指數（>120 明顯偏多、<80 偏少）
+  const SEGS = [
+    { k: 'kid', label: '學齡兒童家庭', note: '0–12 歲', idx: [0, 1] },
+    { k: 'teen', label: '中學生', note: '13–18 歲', idx: [2] },
+    { k: 'young', label: '大學生／社會新鮮人', note: '19–24 歲', idx: [3] },
+    { k: 'work', label: '年輕上班族', note: '25–34 歲', idx: [4] },
+    { k: 'family', label: '成家主力', note: '35–44 歲', idx: [5] },
+    { k: 'mid', label: '中壯年', note: '45–54 歲', idx: [6] },
+    { k: 'mature', label: '熟齡', note: '55–64 歲', idx: [7] },
+    { k: 'senior', label: '銀髮', note: '65 歲以上', idx: [8, 9] }
+  ];
+  // 各業態偏好的客群（權重）；office/income/single 為補充訊號
+  const FIT = {
+    breakfast: { kid: 1, teen: 1, young: .5, work: .6, family: .8, senior: .5, office: .5 },
+    bento: { work: 1, young: .7, mid: .6, office: 1, single: .7 },
+    noodle: { young: .6, work: .7, family: .5, mid: .6, mature: .6, senior: .6, single: .6 },
+    drink: { teen: 1, young: 1, work: .8, kid: .3 },
+    cafe: { young: .6, work: 1, family: .5, office: .8, income: 1 },
+    dinner: { family: 1, mid: .9, mature: .7, senior: .3, kid: .5, income: 1 },
+    night: { young: 1, work: 1, single: .8, senior: -.5 }
+  };
+  function profile(pp, nat, ctxSig) {
+    const segs = [];
+    const has10 = !!pp.a10, src = has10 ? pp.a10 : null, nsrc = nat.a10;
+    const tot = src ? src.reduce((a, b) => a + b, 0) : 0, ntot = nsrc.reduce((a, b) => a + b, 0);
+    if (has10 && tot && ntot) for (const sg of SEGS) {
+      const n = sg.idx.reduce((a, i) => a + src[i], 0), nn = sg.idx.reduce((a, i) => a + nsrc[i], 0);
+      segs.push({ ...sg, n, share: n / tot, index: Math.round((n / tot) / (nn / ntot) * 100) });
+    }
+    const hhSize = pp.hh ? pp.pop / pp.hh : null, nhh = nat.hh ? nat.pop / nat.hh : 2.6;
+    const male = pp.mf && (pp.mf[0] + pp.mf[1]) ? pp.mf[0] / (pp.mf[0] + pp.mf[1]) : null;
+    const incP = incPct(nat, pp.inc);
+    const sig = { office: Math.min(150, 60 + (ctxSig.office || 0) * 3), income: incP == null ? 100 : 50 + incP, single: hhSize ? Math.round(nhh / hhSize * 100) : 100 };
+    const idx = {}; segs.forEach(s => idx[s.k] = s.index); Object.assign(idx, sig);
+    const fits = Object.entries(FIT).map(([f, w]) => {
+      let num = 0, den = 0; const why = [];
+      for (const [k, wt] of Object.entries(w)) { if (idx[k] == null) continue; num += wt * (idx[k] - 100); den += Math.abs(wt); if (wt > 0 && idx[k] >= 115) why.push(k); }
+      return { f, label: FORMATS[f].label, score: Math.max(0, Math.min(100, Math.round(50 + (den ? num / den : 0) * 1.2))), why };
+    }).sort((a, b) => b.score - a.score);
+    const top = segs.slice().sort((a, b) => b.index - a.index);
+    return { segs, top: top.slice(0, 3), low: top.slice(-2), hhSize: hhSize && +hhSize.toFixed(2), nhh: +nhh.toFixed(2), male, inc: pp.inc, incP, sig, fits };
+  }
+
   function evaluate(site, ctx, opt) {
     const F0 = FORMATS[opt.format] || FORMATS.noodle;
     let W = F0.w;
@@ -141,8 +213,13 @@
     // ---- 競爭 (same-format saturation vs clustering benefit)
     const sameR = near(site, ctx.pois.filter(p => isFormat(p, F, KW)), R);
     const same3 = sameR.filter(p => p.d <= 300).length;
+    const SB = SUBST[opt.format] || SUBST.noodle;
+    const directSet = new Set(sameR);
+    const subR = near(site, ctx.pois.filter(p => !isFormat(p, F, KW) && (SB.cats.includes(p.cat) ||
+      (['food', 'drink', 'bakery', 'bar'].includes(p.cat) && (SB.fmts.some(k => isFormat(p, FORMATS[k])) || SB.subs.test(p.sub || ''))))), R);
     const foodR = near(site, ctx.pois, R).filter(p => ['food', 'drink', 'bakery', 'bar'].includes(p.cat)).length;
-    const perK = sameR.length / Math.max((popR.pop + flowRaw * 100) / 1000, 0.5); // 每千位（居民＋活動人口）同業家數
+    const effComp = sameR.length + subR.length * SUB_W;
+    const perK = effComp / Math.max((popR.pop + flowRaw * 100) / 1000, 0.5); // 每千位（居民＋活動人口）有效競爭家數（直接 1、替代 0.3）
     let sComp = scale(perK, [[0, 90], [0.3, 80], [0.7, 65], [1.2, 50], [2, 35], [3.5, 20]]);
     sComp += scale(foodR, [[0, -10], [10, 0], [40, 8], [120, 5]]); // 有聚集效應但過度飽和不加分
     const chains = sameR.filter(isChain).length;
@@ -150,8 +227,9 @@
     let bizRoad = null, bizTown = null;
     if (ctx.biz) {
       bizRoad = ctx.biz.road || null; bizTown = ctx.biz.town || null;
-      if (bizRoad && bizRoad[0] >= 5) {
-        const newRate = bizRoad[1] / bizRoad[0];
+      const loc = ctx.biz.near || null;
+      if (loc && loc[0] >= 5) {
+        const newRate = loc[1] / loc[0];
         if (newRate > .25) sComp -= 6; // 新開店比例高：換手頻繁或過熱
       }
     }
@@ -176,7 +254,7 @@
     rev = revenueFor(preT / preW);
     if (opt.rent && rev.mid) {
       rentRatio = opt.rent / rev.mid;
-      sCost = scale(rentRatio, [[0.05, 100], [0.10, 85], [0.15, 65], [0.20, 45], [0.30, 20], [0.45, 5]]);
+      sCost = scale(rentRatio, [[0.03, 100], [0.05, 90], [0.065, 65], [0.08, 40], [0.10, 15], [0.15, 0]]);
     }
     if (opt.rent && opt.ping && market) {
       rentVsMarket = (opt.rent / opt.ping) / market[0];
@@ -201,12 +279,15 @@
     if (roadCls >= 4) pros.push(`位於${roadName || '主要道路'}旁，車行可見度高`);
     if (roadCls <= 1 && F.car) cons.push('門前不是主要道路，開車客較難注意到');
     if (F.car && parking <= 1) cons.push('300 公尺內停車場少，開車來客會流失');
-    if (perK >= 1.2) cons.push(`同業密度高：${R} 公尺內 ${sameR.length} 家同類店（每千人 ${perK.toFixed(1)} 家）`);
-    else if (sameR.length <= 2) pros.push(`${R} 公尺內同類店只有 ${sameR.length} 家，競爭少`);
+    if (perK >= 1.2) cons.push(`競爭密度高：${R} 公尺內直接競爭 ${sameR.length} 家、替代競爭 ${subR.length} 家（每千人 ${perK.toFixed(1)} 家有效競爭）`);
+    else if (sameR.length <= 2) pros.push(`${R} 公尺內直接競爭只有 ${sameR.length} 家${subR.length ? `（替代競爭 ${subR.length} 家）` : ''}，競爭少`);
+    if (sameR.length <= 2 && subR.length >= 15) cons.push(`直接同業少，但有 ${subR.length} 家替代型店家在搶同一餐期的客人`);
     if (chains >= 2) cons.push(`附近已有 ${chains} 家連鎖同業，價格與品牌壓力大`);
-    if (bizRoad && bizRoad[0] >= 5 && bizRoad[1] / bizRoad[0] > .25) cons.push(`這條路近一年新登記餐飲 ${bizRoad[1]} 家（占 ${Math.round(bizRoad[1] / bizRoad[0] * 100)}%），換手快，需確認原店退場原因`);
-    if (rentRatio != null && rentRatio > .18) cons.push(`租金約占推估營收 ${Math.round(rentRatio * 100)}%，超過餐飲常見安全線 15%`);
-    if (rentRatio != null && rentRatio <= .10) pros.push(`租金約占推估營收 ${Math.round(rentRatio * 100)}%，成本壓力低`);
+    const loc = ctx.biz && ctx.biz.near;
+    if (loc && loc[0] >= 5 && loc[1] / loc[0] > .25) cons.push(`門前這一段近一年新登記餐飲 ${loc[1]} 家（占 ${Math.round(loc[1] / loc[0] * 100)}%），換手快，需確認原店退場原因`);
+    if (rentRatio != null && rentRatio > RENT_RED) cons.push(`租金約占推估營收 ${pct1(rentRatio)}%，已達紅燈（8% 以上）`);
+    else if (rentRatio != null && rentRatio > RENT_GOOD) cons.push(`租金約占推估營收 ${pct1(rentRatio)}%，高於優良標準 5%，需要議價或拉高營收`);
+    if (rentRatio != null && rentRatio <= RENT_GOOD) pros.push(`租金約占推估營收 ${pct1(rentRatio)}%，在 3–5% 優良範圍內`);
     if (rentVsMarket != null && rentVsMarket > 1.2) cons.push(`開價比附近店面行情高約 ${Math.round((rentVsMarket - 1) * 100)}%，可議價`);
     if (popR.inc && F.income && popR.inc >= 900) pros.push(`周邊家戶所得中位數約 ${popR.inc} 千元，消費力佳`);
 
@@ -226,10 +307,12 @@
 
     return {
       format: opt.format, keyword: opt.keyword || '', custom: !!(opt.weights || opt.radius || opt.keyword), daypart, label: F.label, radius: R, total, grade, dims, weights: F.w,
-      numbers: { pop5: pop5.pop, pop10: pop10.pop, hh5: pop5.hh, age5: pop5.age, inc: popR.inc, home: pop5.home,
+      profile: profile(pop5, national(ctx.villages), { office: g.office }),
+      numbers: { a10: pop5.a10, sub: subR.length, bizNear: ctx.biz ? ctx.biz.near || null : null, bizLane: ctx.biz ? ctx.biz.lane || null : null, bizNearLabel: ctx.biz ? ctx.biz.nearLabel || '' : '', pop5: pop5.pop, pop10: pop10.pop, hh5: pop5.hh, age5: pop5.age, inc: popR.inc, home: pop5.home,
         stations: stations5.slice(0, 3).map(p => ({ name: p.name, sub: p.sub, d: Math.round(p.d) })), ...g, parking,
         roadCls, roadName, flowRaw: Math.round(flowRaw), same: sameR.length, same3, perK: +perK.toFixed(2), foodR, chains, bizRoad, bizTown, market },
       competitors: sameR.slice(0, 60).map(p => ({ name: p.name || '(未命名)', d: Math.round(p.d), lat: p.lat, lon: p.lon, sub: p.sub || '', brand: p.brand || '', chain: isChain(p) })),
+      substitutes: subR.slice(0, 60).map(p => ({ name: p.name || '(未命名)', d: Math.round(p.d), lat: p.lat, lon: p.lon, cat: p.cat, sub: p.sub || '', brand: p.brand || '', chain: isChain(p) })),
       revenue: rev, ticket, rentRatio, rentVsMarket, pros, cons
     };
   }
@@ -248,6 +331,6 @@
       beRev: beRev && Math.round(beRev), beDaily, payback: invest && mid > 0 ? +(invest / mid).toFixed(1) : null, defaults: d };
   }
 
-  const api = { FORMATS, evaluate, dist, overlapFrac, population, scale, pnl, isChain };
+  const api = { RENT_GOOD, RENT_RED, SEGS, FORMATS, evaluate, dist, overlapFrac, population, scale, pnl, isChain };
   if (typeof module !== 'undefined') module.exports = api; else root.SiteScore = api;
 })(this);
