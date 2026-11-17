@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>餐飲立地評估｜品牌加辣餐飲顧問</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8; --comp:#c2410c; --gen:#2563eb; --station:#7c3aed;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; --comp:#fb923c; --gen:#60a5fa; --station:#a78bfa; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:24px;margin:0 0 2px}h2{font-size:18px;margin:0 0 8px}h3{font-size:15px;margin:12px 0 6px}
+.sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 3px}
+input,select{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;color:inherit}
+button{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:8px 14px;cursor:pointer}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button:disabled{opacity:.6;cursor:wait}
+.form{display:grid;grid-template-columns:2.2fr 1.2fr 1fr 1fr 1fr;gap:0 10px;align-items:end}
+@media (max-width:820px){.form{grid-template-columns:1fr 1fr}.form .addr{grid-column:1/-1}}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+#map{height:420px;border-radius:10px;border:1px solid var(--line)}
+.msg{padding:9px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}
+.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.top{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:center}
+@media (max-width:620px){.top{grid-template-columns:1fr}}
+.ring{width:170px;height:170px;margin:auto;position:relative}
+.ring .v{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .v b{font-size:44px;line-height:1}.ring .v span{color:var(--mute);font-size:13px}
+.bars .b{display:grid;grid-template-columns:96px 1fr 40px;gap:8px;align-items:center;margin:6px 0;font-size:14px}
+.track{height:10px;border-radius:5px;background:var(--field);border:1px solid var(--line);overflow:hidden}
+.fill{height:100%;background:var(--accent)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.kv div{background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.kv b{display:block;font-size:18px}.kv span{color:var(--mute);font-size:12px}
+ul.pc{margin:4px 0;padding-left:20px}ul.pc li{margin:3px 0}
+.good{color:var(--good)}.bad{color:var(--bad)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+@media (max-width:700px){.grid2{grid-template-columns:1fr}}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:0 8px;font-size:12px;background:var(--warn-bg);color:var(--warn)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-top:6px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+details summary{cursor:pointer;color:var(--accent)}
+@media print{.noprint{display:none!important}body{background:#fff}.card{break-inside:avoid;border-color:#ccc}#map{height:320px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>餐飲立地評估</h1>
+  <p class="sub">輸入店面地址，3 分鐘看懂商圈人口、人流、交通、競爭與租金負擔｜品牌加辣餐飲顧問</p>
+
+  <div class="card noprint">
+    <div class="form">
+      <div class="addr"><label>店面地址（或直接在地圖上點選位置）</label><input id="addr" placeholder="例：臺北市大安區忠孝東路四段 100 號"></div>
+      <div><label>業態</label><select id="fmt"></select></div>
+      <div><label>客單價（元）</label><input id="ticket" type="number" min="20" placeholder="依業態預設"></div>
+      <div><label>開價月租（元）</label><input id="rent" type="number" min="0" placeholder="選填"></div>
+      <div><label>店面坪數</label><input id="ping" type="number" min="0" placeholder="選填"></div>
+    </div>
+    <div class="row"><button class="pri" id="go">開始評估</button><button id="cmpAdd" disabled>加入比較</button><button id="print" disabled>列印／存 PDF</button><span class="note" id="status"></span></div>
+    <p class="note" id="gate"></p>
+  </div>
+
+  <div class="card"><div id="map"></div>
+    <div class="legend"><span><i class="dot" style="background:var(--accent)"></i>評估點與商圈範圍</span><span><i class="dot" style="background:var(--comp)"></i>同業競品</span><span><i class="dot" style="background:var(--gen)"></i>人流磁鐵（超商、學校、辦公、商場）</span><span><i class="dot" style="background:var(--station)"></i>捷運／車站</span></div>
+  </div>
+
+  <div id="out"></div>
+  <div id="cmp"></div>
+
+  <div class="card"><details><summary>評分方法與資料來源</summary>
+    <p class="note">總分由五個面向加權而成，權重依業態不同（例如手搖飲看重人流、正餐看重交通與停車）。80 分以上為 A、65–79 為 B、50–64 為 C、未滿 50 為 D。</p>
+    <ul class="note">
+      <li>客群：內政部村里人口與年齡（依商圈範圍面積比例估算）、財政部村里綜合所得中位數。</li>
+      <li>人流：OpenStreetMap 的便利商店、公車站、學校、辦公點、醫院、商場與車站分佈（人流的間接指標）。</li>
+      <li>交通與車流：門前道路等級、捷運／車站距離、停車場數量。</li>
+      <li>競爭：同類型店家密度（每千位居民家數）、連鎖品牌、財政部稅籍登記的同路段餐飲家數與近一年新開家數。</li>
+      <li>成本：內政部實價登錄店面租金行情；租金占推估營收比例。</li>
+      <li>營收推估只是依人口、人流與競爭換算的區間，實際營收受品牌、產品與經營影響很大，請與顧問實地評估一起使用。</li>
+    </ul>
+    <p class="note" id="vint"></p>
+  </details></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="score.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+let FULL=false, WHO=null;
+async function access(){try{if(!window.supabase) return; const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY); const {data:{session}}=await sbc.auth.getSession(); if(!session) return; WHO=session.user.email;
+  const pr=await sbc.from('bom_profiles').select('role,status').eq('user_id',session.user.id).maybeSingle(); if(pr.data&&pr.data.role==='admin'&&pr.data.status==='active'){FULL=true;return}
+  // 與 sub_private.access_until 相同規則：comp 永久；trial 到試用結束；canceled 到期末；其餘期末＋寬限天數
+  const [s,g]=await Promise.all([sbc.from('sub_subscriptions').select('status,period_end,trial_ends_on').eq('user_id',session.user.id).maybeSingle(),sbc.from('sub_settings').select('grace_days').eq('id',1).maybeSingle()]);
+  const d=s.data; if(!d) return; if(d.status==='comp'){FULL=true;return} if(d.status==='expired') return;
+  const today=new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+  let until=d.status==='trial'?d.trial_ends_on:(d.period_end||d.trial_ends_on);
+  if(until&&!['trial','canceled'].includes(d.status)){const t=new Date(until+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+((g.data&&g.data.grace_days)||0));until=t.toISOString().slice(0,10)}
+  FULL=!!until&&until>=today;
+}catch(e){console.warn(e)} finally{gateNote()}}
+function gateNote(){const n=$('#gate'); if(!n) return; n.innerHTML=FULL?`已登入會員${WHO?'（'+esc(WHO)+'）':''}，可看完整報告。`:`免費版只顯示總分與重點；<a href="../portal/">登入會員入口</a>看完整報告（人口結構、競品清單、營收推估、租金建議、候選店比較）。`}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf=n=>n==null?'—':Number(n).toLocaleString('zh-TW');
+const T=0.02, C=0.002, DATA='data/';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const DIM={pop:'客群',flow:'人流',access:'交通與車流',comp:'競爭',cost:'租金成本'};
+const ROADN=['巷弄','巷弄','一般道路','次要幹道','主要幹道','快速道路／省道'];
+
+for(const [k,f] of Object.entries(SiteScore.FORMATS)) $('#fmt').insertAdjacentHTML('beforeend',`<option value="${k}">${f.label}</option>`);
+$('#fmt').value='noodle';
+
+const map=L.map('map',{scrollWheelZoom:false}).setView([25.0418,121.5440],15);
+L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}',{maxZoom:19,attribution:'底圖 © 內政部國土測繪中心｜資料 © OpenStreetMap 貢獻者、內政部、財政部'}).addTo(map);
+let layer=L.layerGroup().addTo(map), site=null, last=null;
+map.on('click',e=>{site={lat:e.latlng.lat,lon:e.latlng.lng,label:''};marker();status('已選定地圖位置，按「開始評估」');});
+function marker(){layer.clearLayers();if(site) L.circleMarker([site.lat,site.lon],{radius:9,color:css('--accent'),weight:3,fillOpacity:.9}).addTo(layer)}
+function status(t,bad){$('#status').textContent=t;$('#status').className='note'+(bad?' bad':'')}
+
+const cache={};
+async function j(url){if(url in cache) return cache[url]; try{const r=await fetch(url);cache[url]=r.ok?await r.json():null}catch(e){cache[url]=null} return cache[url]}
+let VILL=null, RENT=null, META=null;
+async function base(){if(!VILL){[VILL,RENT,META]=await Promise.all([j(DATA+'villages.json'),j(DATA+'rent.json'),j(DATA+'meta.json')]); VILL=VILL||[]; RENT=RENT||{}; if(META) $('#vint').textContent=`資料版本：人口 ${META.population||'—'}、所得 ${META.income||'—'}、實價登錄 ${META.rent||'—'}、稅籍與地圖資料更新於 ${META.built||'—'}`}}
+
+async function ctxFor(s){
+  await base();
+  const ti=Math.floor(s.lat/T), tj=Math.floor(s.lon/T), pois=[], roads=[];
+  const tiles=[]; for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++) tiles.push(j(`${DATA}tiles/${ti+a}_${tj+b}.json`));
+  for(const t of await Promise.all(tiles)){ if(!t) continue;
+    for(const p of t.p) pois.push({cat:p[0],lat:p[1]/1e5,lon:p[2]/1e5,name:p[3],sub:p[4],brand:p[5]||''});
+    for(const [k,v] of Object.entries(t.r)){const [a,b]=k.split('_').map(Number); roads.push({lat:(a+.5)*C,lon:(b+.5)*C,cls:v[0],name:v[1]})}
+  }
+  return {pois,roads,villages:VILL};
+}
+
+async function geocode(q){
+  const u='https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=tw&accept-language=zh-TW&limit=1&q='+encodeURIComponent(q);
+  const r=await fetch(u); const a=await r.json(); if(a&&a[0]) return {lat:+a[0].lat,lon:+a[0].lon,label:a[0].display_name};
+  const q2=q.replace(/\d+號.*$/,'').replace(/\d+[巷弄].*$/,''); if(q2!==q){const r2=await fetch(u.replace(encodeURIComponent(q),encodeURIComponent(q2)));const b=await r2.json(); if(b&&b[0]) return {lat:+b[0].lat,lon:+b[0].lon,label:b[0].display_name,approx:true}}
+  return null;
+}
+async function reverse(s){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=zh-TW&zoom=17&lat=${s.lat}&lon=${s.lon}`);const a=await r.json();return a.address||{}}catch(e){return {}}}
+const norm=s=>(s||'').replace(/台/g,'臺').trim();
+
+async function run(){
+  $('#go').disabled=true;
+  try{
+    const q=$('#addr').value.trim();
+    if(q && (!site || site.label!==q)){status('查詢地址位置…'); const g=await geocode(q); if(!g){status('找不到這個地址，請改在地圖上點選店面位置',true);return} site={...g,label:q}; if(g.approx) status('門牌找不到，先用路段位置，可在地圖上點選更精確的位置')}
+    if(!site){status('請輸入地址或在地圖上點選位置',true);return}
+    marker(); map.setView([site.lat,site.lon],16);
+    status('讀取商圈資料…');
+    const [ctx,addr]=await Promise.all([ctxFor(site),reverse(site)]);
+    const opt={format:$('#fmt').value,ticket:+$('#ticket').value||0,rent:+$('#rent').value||0,ping:+$('#ping').value||0};
+    // county / town / road keys for registry and rent lookups
+    const home=SiteScore.population(site,ctx.villages,300).home;
+    const c=home?home.c:norm(addr.city||addr.county), t=home?home.t:norm(addr.suburb||addr.town||addr.city_district);
+    let road=norm(addr.road||'');
+    if(!road){let best=1e9; for(const r of ctx.roads){ if(!r.name) continue; const d=SiteScore.dist(site,r); if(d<best&&d<150){best=d;road=norm(r.name)} }}
+    const rb=road.replace(/(.+?(路|街|大道))([一二三四五六七八九十]+段)?.*/,'$1$3'), rbase=road.replace(/(.+?(路|街|大道)).*/,'$1');
+    const biz=await j(`${DATA}biz/${c}.json`);
+    ctx.biz=biz?{road:road?(biz[`${t}|${rb}`]||biz[`${t}|${rbase}`]||null):null,town:biz[`${t}|`]||null,roadName:rb}:null;
+    ctx.rent={road:road?(RENT[`${c}|${t}|${rb}`]||RENT[`${c}|${t}|${rbase}`]||null):null,town:RENT[`${c}|${t}`]||null};
+    const res=SiteScore.evaluate(site,ctx,opt);
+    res.place={addr:site.label||[c,t,road].join(''),c,t,road:rb,lat:site.lat,lon:site.lon}; res.opt=opt;
+    last={res,ctx}; draw(res,ctx); status(ctx.pois.length?'':'這個位置還沒有店家資料（資料可能尚在更新）',!ctx.pois.length);
+    $('#cmpAdd').disabled=false; $('#print').disabled=false;
+  }catch(e){console.error(e);status('評估失敗：'+e.message,true)}
+  finally{$('#go').disabled=false}
+}
+
+function draw(r,ctx){
+  marker();
+  L.circle([site.lat,site.lon],{radius:r.radius,color:css('--accent'),weight:2,fill:true,fillOpacity:.06}).addTo(layer);
+  if(r.radius!==500) L.circle([site.lat,site.lon],{radius:500,color:css('--accent'),weight:1,dashArray:'4 6',fill:false}).addTo(layer);
+  const gen=new Set(['conv','school','office','mall','market','hospital']);
+  for(const p of ctx.pois){const d=SiteScore.dist(site,p); if(d>Math.max(r.radius,500)) continue;
+    if(p.cat==='station') L.circleMarker([p.lat,p.lon],{radius:7,color:css('--station'),fillOpacity:.9}).bindTooltip(esc(p.name)).addTo(layer);
+    else if(gen.has(p.cat)) L.circleMarker([p.lat,p.lon],{radius:3,color:css('--gen'),weight:1,fillOpacity:.6}).bindTooltip(esc(p.name||p.cat)).addTo(layer)}
+  for(const p of r.competitors) L.circleMarker([p.lat,p.lon],{radius:5,color:css('--comp'),fillOpacity:.9}).bindTooltip(esc(p.name)+'｜'+p.d+'m').addTo(layer);
+  map.fitBounds(L.latLng(site.lat,site.lon).toBounds(Math.max(r.radius,500)*2.3));
+
+  const n=r.numbers, col=r.total>=80?css('--good'):r.total>=65?css('--accent'):r.total>=50?css('--warn'):css('--bad');
+  const ang=r.total*3.6, ageT=n.age5.reduce((a,b)=>a+b,0)||1, pct=i=>Math.round(n.age5[i]/ageT*100);
+  const ring=`<svg viewBox="0 0 170 170" width="170" height="170"><circle cx="85" cy="85" r="72" fill="none" stroke="${css('--line')}" stroke-width="14"/><circle cx="85" cy="85" r="72" fill="none" stroke="${col}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${(r.total/100*452).toFixed(1)} 452" transform="rotate(-90 85 85)"/></svg>`;
+  const bars=Object.keys(DIM).map(k=>`<div class="b"><span>${DIM[k]}<span class="note">・${Math.round(r.weights[k]*100)}%</span></span><div class="track"><div class="fill" style="width:${r.dims[k]}%"></div></div><b>${r.dims[k]}</b></div>`).join('');
+  const st=n.stations.length?n.stations.map(s=>`${esc(s.name)} ${s.d}m`).join('、'):'500 公尺內無';
+  const br=n.bizRoad, bt=n.bizTown;
+  if(!FULL){
+    $('#out').innerHTML=`<div class="card"><h2>${esc(r.place.addr)}</h2><p class="sub">業態：${r.label}｜商圈半徑 ${r.radius} 公尺</p>
+    <div class="top"><div class="ring">${ring}<div class="v"><b>${r.total}</b><span>等級 ${r.grade}</span></div></div><div>
+    ${r.pros[0]?`<p class="good">優勢：${esc(r.pros[0])}</p>`:''}${r.cons[0]?`<p class="bad">風險：${esc(r.cons[0])}</p>`:''}
+    <p>完整報告還有 ${Math.max(0,r.pros.length+r.cons.length-2)} 項優勢與風險、五面向分數、${r.competitors.length} 家同類競品清單、推估月營收與建議租金上限。</p>
+    <div class="row"><a href="../portal/"><button class="pri">登入或加入會員看完整報告</button></a></div></div></div>`;
+    return;
+  }
+  $('#out').innerHTML=`
+  <div class="card"><h2>${esc(r.place.addr)}</h2><p class="sub">業態：${r.label}｜商圈半徑 ${r.radius} 公尺｜${new Date().toLocaleDateString('zh-TW')}</p>
+    <div class="top"><div class="ring">${ring}<div class="v"><b>${r.total}</b><span>等級 ${r.grade}</span></div></div><div class="bars">${bars}</div></div></div>
+  <div class="grid2">
+   <div class="card"><h2 class="good">優勢</h2><ul class="pc">${r.pros.map(x=>`<li>${esc(x)}</li>`).join('')||'<li class="note">沒有特別突出的優勢</li>'}</ul></div>
+   <div class="card"><h2 class="bad">風險</h2><ul class="pc">${r.cons.map(x=>`<li>${esc(x)}</li>`).join('')||'<li class="note">沒有明顯風險</li>'}</ul></div>
+  </div>
+  <div class="card"><h2>客群</h2><div class="kv">
+    <div><b>${nf(n.pop5)}</b><span>500m 內居民（估）</span></div><div><b>${nf(n.pop10)}</b><span>1km 內居民（估）</span></div>
+    <div><b>${nf(n.hh5)}</b><span>500m 內戶數（估）</span></div><div><b>${n.inc?nf(n.inc)+' 千':'—'}</b><span>家戶所得中位數</span></div>
+    <div><b>${pct(2)}%</b><span>25–44 歲占比</span></div><div><b>${pct(4)}%</b><span>65 歲以上占比</span></div><div><b>${pct(0)}%</b><span>14 歲以下占比</span></div><div><b>${pct(1)}%</b><span>15–24 歲占比</span></div>
+  </div><p class="note">所在里：${n.home?esc(n.home.c+n.home.t+n.home.v):'—'}</p></div>
+  <div class="card"><h2>人流與交通</h2><div class="kv">
+    <div><b>${n.conv}</b><span>300m 內便利商店</span></div><div><b>${n.bus}</b><span>300m 內公車站牌</span></div>
+    <div><b>${n.school}</b><span>500m 內學校</span></div><div><b>${n.office}</b><span>500m 內辦公點</span></div>
+    <div><b>${n.mall}</b><span>500m 內商場／市場／超市</span></div><div><b>${n.hospital}</b><span>500m 內醫院診所</span></div>
+    <div><b>${ROADN[n.roadCls]}</b><span>門前道路${n.roadName?'（'+esc(n.roadName)+'）':''}</span></div><div><b>${n.parking}</b><span>300m 內停車場</span></div>
+  </div><p class="note">捷運／車站：${st}</p></div>
+  <div class="card"><h2>競爭</h2><div class="kv">
+    <div><b>${n.same}</b><span>${r.radius}m 內同類店</span></div><div><b>${n.same3}</b><span>300m 內同類店</span></div>
+    <div><b>${n.perK}</b><span>每千位居民同類店</span></div><div><b>${n.foodR}</b><span>${r.radius}m 內所有餐飲</span></div>
+    <div><b>${n.chains}</b><span>連鎖同業</span></div>
+    <div><b>${br?nf(br[0]):'—'}</b><span>${esc(r.place.road||'同路段')} 稅籍餐飲家數</span></div>
+    <div><b>${br?nf(br[1]):'—'}</b><span>同路段近一年新登記</span></div>
+    <div><b>${bt?nf(bt[0]):'—'}</b><span>${esc(r.place.t)} 稅籍餐飲家數</span></div>
+  </div>
+  ${r.competitors.length?`<h3>最近的同類店</h3><div class="scroll"><table><tr><th>店名</th><th>距離</th><th></th></tr>${r.competitors.slice(0,12).map(p=>`<tr><td>${esc(p.name)}</td><td>${p.d} m</td><td>${p.chain?'<span class="pill">連鎖</span>':''}</td></tr>`).join('')}</table></div>`:''}</div>
+  <div class="card"><h2>營收潛力與租金負擔</h2><div class="kv">
+    <div><b>${nf(r.revenue.low)}–${nf(r.revenue.high)}</b><span>推估月營收區間（元）</span></div><div><b>${nf(r.revenue.daily)}</b><span>推估每日來客</span></div>
+    <div><b>${nf(r.ticket)}</b><span>客單價（元）</span></div>
+    <div><b>${r.rentRatio!=null?Math.round(r.rentRatio*100)+'%':'—'}</b><span>租金占推估營收</span></div>
+    <div><b>${n.market?nf(n.market[0]):'—'}</b><span>附近店面行情（元／坪／月，${n.market?n.market[1]+' 筆':'無資料'}）</span></div>
+    <div><b>${r.rentVsMarket!=null?Math.round(r.rentVsMarket*100)+'%':'—'}</b><span>開價 ÷ 行情</span></div>
+    <div><b>${nf(Math.round(r.revenue.mid*.15/1000)*1000)}</b><span>建議租金上限（推估營收 15%）</span></div>
+  </div><p class="note">營收推估以人口、人流與同業分食換算，僅供初步比較；正式決策請搭配實地人流計數與顧問評估。</p></div>`;
+}
+
+const CK='site-eval-compare';
+function loadCmp(){try{return JSON.parse(localStorage.getItem(CK))||[]}catch(e){return []}}
+function saveCmp(a){try{localStorage.setItem(CK,JSON.stringify(a))}catch(e){}}
+function drawCmp(){const a=loadCmp(); if(!a.length){$('#cmp').innerHTML='';return}
+  const rows=[['總分','total'],['等級','grade'],...Object.entries(DIM).map(([k,v])=>[v,'d.'+k]),['500m 居民','n.pop5'],['同類店','n.same'],['推估月營收','rev']];
+  const val=(r,k)=>k==='rev'?nf(r.revenue.low)+'–'+nf(r.revenue.high):k.startsWith('d.')?r.dims[k.slice(2)]:k.startsWith('n.')?nf(r.numbers[k.slice(2)]):r[k];
+  $('#cmp').innerHTML=`<div class="card"><h2>候選店面比較</h2><div class="scroll"><table><tr><th></th>${a.map((r,i)=>`<th>${esc(r.place.addr).slice(0,22)}<br><span class="note">${r.label}</span> <button class="noprint" data-del="${i}">移除</button></th>`).join('')}</tr>${rows.map(([l,k])=>`<tr><td>${l}</td>${a.map(r=>`<td>${val(r,k)}</td>`).join('')}</tr>`).join('')}</table></div></div>`;
+  $('#cmp').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const x=loadCmp();x.splice(+b.dataset.del,1);saveCmp(x);drawCmp()});
+}
+$('#cmpAdd').onclick=()=>{if(!last) return; if(!FULL){status('候選店比較是會員功能',true);return} const a=loadCmp(); a.push(last.res); saveCmp(a.slice(-3)); drawCmp(); status('已加入比較（最多 3 個）')};
+$('#go').onclick=run; $('#addr').addEventListener('keydown',e=>{if(e.key==='Enter') run()});
+$('#addr').addEventListener('input',()=>{site=null});
+$('#print').onclick=()=>window.print();
+drawCmp(); base(); access();
+</script>
+</body>
+</html>

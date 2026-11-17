@@ -64,7 +64,7 @@ const SUB={trial:['試用中','good'],active:['訂閱中','good'],past_due:['扣
 const PLAN={basic:'基本版',pro:'進階版',member:'顧問會員'};
 /* 其他系統卡片：加一筆就會出現在入口。rule：'any' = BOM 或損益中心任一個可使用（含管理員）就能進入。
    例：{ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢與案例引導。',url:BOM+'hr/',rule:'any'} */
-const EXTRA=[{ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢與案例引導。',url:BOM+'hr/',rule:'any'}];
+const EXTRA=[{ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢與案例引導。',url:BOM+'hr/',rule:'any'},{ic:'址',name:'餐飲立地評估',desc:'輸入店面地址，看商圈人口、人流、競爭與租金負擔。',url:BOM+'site/',rule:'login'}];
 
 let me=null, bom=null, pl=null, sub=null, isAdmin=false, all=null, mode='login', msg='', bad=false;
 
@@ -126,7 +126,7 @@ function viewHome(){
   return `${flash()}<div class="apps">
 ${appCard('B','BOM 運算中心','食材成本、配方 BOM、叫貨與庫存。',ab,btn(ab,BOM,'進入 BOM 運算中心',renew))}
 ${appCard('損','損益分析中心','每月損益、成本結構與門市比較。',ap,btn(ap,PL,'進入損益分析中心',renew))}
-${EXTRA.map(x=>{const a=(x.rule==='any'&&(ab.k==='ok'||ap.k==='ok'))?{k:'ok',admin:isAdmin}:{k:'none'}; return appCard(esc(x.ic),esc(x.name),esc(x.desc),a,a.k==='ok'?`<a class="btn pri" href="${esc(x.url)}">進入${esc(x.name)}</a>`:renew)}).join('')}
+${EXTRA.map(x=>{const a=(x.rule==='login'||(x.rule==='any'&&(ab.k==='ok'||ap.k==='ok')))?{k:'ok',admin:isAdmin}:{k:'none'}; return appCard(esc(x.ic),esc(x.name),esc(x.desc),a,a.k==='ok'?`<a class="btn pri" href="${esc(x.url)}">進入${esc(x.name)}</a>`:renew)}).join('')}
 <div class="app ${sub&&['trial','active','comp','past_due'].includes(sub.status)?'on':''}"><div class="row" style="margin:0;justify-content:space-between"><div class="ic" aria-hidden="true">訂</div>${isAdmin?'<span class="pill good">管理員</span>':subPill}</div><h3>BOM＋損益 訂閱版</h3><p>${isAdmin?'訂閱、試點名單、發票、設定。':subDesc}</p><div class="go"><a class="btn pri" href="${MEMBER}">${isAdmin?'進入訂閱管理':sub?'進入會員中心':'看方案、免費試用'}</a></div></div>
 </div>
 ${ab.k!=='ok'&&ap.k!=='ok'&&!sub&&!isAdmin?`<div class="card"><h2>這個帳號還沒開通任何系統</h2><p class="sub">如果你已經跟顧問簽約，請等開通通知信；也可以先到會員中心開始 14 天免費試用。</p></div>`:''}
