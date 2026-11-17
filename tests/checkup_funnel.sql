@@ -4,6 +4,8 @@ alter table public.checkup_leads add column if not exists pref text, add column 
 create table if not exists checkup_private.cfg (k text primary key, v text);
 alter table checkup_private.cfg enable row level security;
 insert into checkup_private.cfg (k, v) values ('line_url', ''), ('line_id', '') on conflict (k) do nothing;
+-- Marvin 的 LINE 官方帳號加好友連結
+update checkup_private.cfg set v = 'https://lin.ee/qKdrAkh' where k = 'line_url';
 
 create or replace function public.checkup_cfg()
 returns jsonb language sql stable security definer set search_path to '' as $$

@@ -64,7 +64,7 @@ Migration：`supabase/migrations/20261104_checkup_brief.sql`（取代尚未套�
 - **預約表單**：多了「方便聯絡的時段」「最想先解決」。送出後換成「接下來會這樣進行」三步驟。
 - **業主結果信**：有設定 LINE 時多一顆 LINE 按鈕。
 - **顧問通知信**：多一行來源／方便時段／想先解決。名單頁多了「來源成效」表（各平台名單、聯絡、預約、成交、成交率）。
-- **設定 LINE**：`update checkup_private.cfg set v='@你的ID' where k='line_id';`（官方帳號 ID，可帶預設訊息）或 `k='line_url'` 填 lin.ee 連結。
+- **設定 LINE**（已設為 https://lin.ee/qKdrAkh）：`update checkup_private.cfg set v='@你的ID' where k='line_id';`（官方帳號 ID，可帶預設訊息）或 `k='line_url'` 填 lin.ee 連結。
 - **LINE 即時通知**：送出時會呼叫 `notify.line_push`；這個專案的 vault 還沒有 line_channel_token／line_user_id，所以目前只寄 Email，不會出錯。
 - 資料庫變更在 `tests/checkup_funnel.sql`。
 
