@@ -74,6 +74,22 @@ button.pri,.btn.pri{background:var(--accent);border-color:var(--accent);color:va
 .scroll{overflow-x:auto}table.t{border-collapse:collapse;width:100%;font-size:14px}table.t th,table.t td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
 .hit{padding:8px 0;border-bottom:1px solid var(--line)}.hit small{color:var(--mute)}
 mark{background:var(--warn-bg);color:inherit}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);padding:0;max-width:560px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog .dh{padding:14px 18px;background:var(--bad-bg);color:var(--bad);font-weight:700;font-size:17px}
+dialog .db{padding:12px 18px;max-height:60vh;overflow:auto}
+dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.wl{margin:0;padding:0;list-style:none}.wl li{border-left:4px solid var(--warn);background:var(--warn-bg);padding:8px 10px;border-radius:6px;margin:8px 0}
+.wl li.bad{border-color:var(--bad);background:var(--bad-bg)}.wl b{display:block}
+.banner{border-radius:8px;padding:8px 12px;margin:10px 0;font-size:14px;background:var(--warn-bg);border-left:4px solid var(--warn)}
+.banner.bad{background:var(--bad-bg);border-color:var(--bad)}.banner.ok{background:var(--good-bg);border-color:var(--good)}
+details.qa{border-top:1px solid var(--line);padding:10px 0}details.qa summary{cursor:pointer;font-weight:600;list-style-position:outside}
+details.qa .w{background:var(--bad-bg);border-radius:6px;padding:6px 10px;margin:8px 0 6px}details.qa .r{background:var(--good-bg);border-radius:6px;padding:6px 10px;margin:6px 0}
+.guide ol{margin:4px 0 8px;padding-left:22px}.guide ul{margin:4px 0;padding-left:20px}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:0 8px;margin-left:6px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+.tag.pt{background:var(--warn-bg);color:var(--warn)}
+.empl{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.empl .m{color:var(--mute);font-size:13px}.empl .act{grid-row:span 2;align-self:center;display:flex;gap:6px}
 @media print{
   body{background:#fff}
   .noprint,header,nav,.card:not(.printme){display:none!important}
@@ -105,7 +121,7 @@ const ss={get(k){try{const v=sessionStorage.getItem(k);return v?JSON.parse(v):nu
 let me=null, C=null, err='', mode='login', flash='';
 const CO_FIELDS=[['co','公司名稱','好吃餐飲有限公司'],['brand','品牌名稱','好吃小火鍋'],['boss','負責人',''],['taxid','統一編號',''],['addr','地址',''],['tel','聯絡電話',''],['payday','每月發薪日','5'],['hr','人事聯絡人','']];
 const coKey=()=>'hr_co_'+(me?me.id:'x');
-const co=()=>store.get(coKey(),{});
+const co=()=>SET||{};
 
 // ── 資料讀取 ──
 async function boot(){
@@ -121,10 +137,27 @@ async function fetchContent(){
   try{
     const [b,p]=await Promise.all([sbc.from('bom_profiles').select('role,status,expires_on').eq('user_id',me.id).maybeSingle(),sbc.from('pl_profiles').select('role,status,expires_on').eq('user_id',me.id).maybeSingle()]);
     if(!valid(b.data)&&!valid(p.data)){err='NO_ACCESS';return}
-    const v='?v=20261116';
-    const [L,T,K]=await Promise.all([import('./content/laws.js'+v),import('./content/templates.js'+v),import('./content/cases.js'+v)]);
-    C={checked:L.LAWS_CHECKED,laws:L.LAWS,notes:L.NOTES,cats:T.TEMPLATE_CATS,templates:T.TEMPLATES,cases:K.CASES};
+    const v='?v=20261117';
+    const [L,T,K,Q,B,I]=await Promise.all(['laws','templates','cases','qa','biz','insurance'].map(f=>import('./content/'+f+'.js'+v)));
+    C={checked:L.LAWS_CHECKED,laws:L.LAWS,notes:L.NOTES,cats:T.TEMPLATE_CATS,templates:T.TEMPLATES,cases:K.CASES,qa:Q.QA,qaCats:Q.QA_CATS,biz:B.BIZ,guides:B.GUIDES,topics:B.TOPICS,ins:I};
+    await loadOwnerData();
   }catch(e){err='讀取失敗，請重新整理再試一次。'}
+}
+// 公司設定與員工名單存在雲端（hr_settings、hr_employees，RLS 只看得到自己的）
+let SET={}, EMPS=[], cloudOk=true;
+async function loadOwnerData(){
+  const [s,e]=await Promise.all([sbc.from('hr_settings').select('data').eq('user_id',me.id).maybeSingle(),sbc.from('hr_employees').select('id,name,kind,data,active,created_at').eq('user_id',me.id).order('created_at')]);
+  cloudOk=!s.error&&!e.error;
+  SET=(s.data&&s.data.data)||{};
+  const old=store.get(coKey(),null);
+  if(cloudOk&&!s.data&&old&&old.co){SET=old;await saveSet(old)}
+  if(!cloudOk) SET=old||{};
+  EMPS=(e.data||[]).filter(x=>x.active!==false);
+}
+async function saveSet(v){
+  SET=v; store.set(coKey(),v);
+  const {error}=await sbc.from('hr_settings').upsert({user_id:me.id,data:v,updated_at:new Date().toISOString()});
+  return !error;
 }
 sbc.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){me=null;C=null;route()} });
 
@@ -149,8 +182,9 @@ function bindChips(root){
 }
 
 // ── 畫面 ──
-const TABS=[['home','首頁'],['case','案例引導'],['tpl','範本'],['law','法規查詢'],['calc','計算工具'],['set','公司設定']];
+const TABS=[['home','首頁'],['qa','常見錯誤'],['case','案例引導'],['tpl','範本'],['emp','員工名單'],['calc','計算工具'],['law','法規查詢'],['set','公司設定']];
 function shell(tab,body){
+  const dl=document.getElementById('dlg'); if(dl){try{dl.close()}catch(e){} dl.remove()}
   $('#top').innerHTML=me?`<a class="btn" href="${BASE}portal/">回入口</a><button id="out">登出</button>`:'';
   if(me) $('#out').onclick=async()=>{await sbc.auth.signOut();try{sessionStorage.clear()}catch(e){};me=null;C=null;location.hash='';route()};
   $('#app').innerHTML=`<nav class="tabs noprint" aria-label="功能">${TABS.map(([k,n])=>`<a href="#${k}" class="${tab===k?'on':''}">${n}</a>`).join('')}</nav>${body}`;
@@ -164,8 +198,10 @@ function route(){
   if(tab==='case') return a?viewCase(a,b):viewCases();
   if(tab==='tpl') return a?viewTpl(a):viewTpls();
   if(tab==='law') return viewLaw(a);
-  if(tab==='calc') return viewCalc(a||'ot');
+  if(tab==='calc') return viewCalc(a||'ins',b||'');
   if(tab==='set') return viewSet();
+  if(tab==='qa') return viewQA(a||'',b||'');
+  if(tab==='emp') return viewEmp(a||'');
   if(tab==='q') return viewSearch(a||'');
   viewHome();
 }
@@ -197,19 +233,26 @@ function viewHome(){
   const quick=['ot','fire','leave','deduct','sched','pt'].map(id=>C.cases.find(x=>x.id===id)).filter(Boolean);
   shell('home',`
 <div class="card"><form id="qf" role="search"><label for="q">遇到什麼問題？直接打關鍵字</label><div style="display:flex;gap:8px"><input id="q" placeholder="例如：加班費、特休、曠工、資遣、扣薪、懷孕" autocomplete="off"><button class="pri" type="submit">搜尋</button></div></form></div>
-${c.co?'':`<div class="msg">第一次使用：先到 <a href="#set">公司設定</a> 填公司名稱、負責人，範本會自動帶入。</div>`}
+${c.co&&c.biz?'':`<div class="msg">第一次使用：先到 <a href="#set">公司設定</a> 填公司名稱、負責人並選你的業態，範本與操作說明會依業態調整。</div>`}
+${cloudOk?'':'<div class="msg bad">雲端資料暫時讀不到，員工名單先無法使用；公司設定暫存在這台裝置。</div>'}
+<div class="grid" style="margin-bottom:12px">
+<a class="tile" href="#qa"><div class="h"><span class="ic">錯</span><b>餐飲業常犯錯 ${C.qa.length} 題</b></div><span>扣薪、加班費、特休、試用期、兼職勞健保…每題附條文</span></a>
+<a class="tile" href="#emp"><div class="h"><span class="ic">員</span><b>員工名單 ${EMPS.length} 人</b></div><span>新增正職、兼職，自動算勞健保、勞退與每月人事成本</span></a>
+<a class="tile" href="#calc/ins"><div class="h"><span class="ic">保</span><b>勞健保與勞退計算</b></div><span>2026 年級距表，雇主與員工各付多少</span></a></div>
 <h2>常見情境</h2><div class="grid">${quick.map(x=>`<a class="tile" href="#case/${x.id}"><div class="h"><span class="ic">${esc(x.icon)}</span><b>${esc(x.title)}</b></div></a>`).join('')}</div>
 <h2 style="margin-top:18px">今年要知道的數字</h2>
 <div class="card"><div class="res">
 <div>每月最低工資（2026）</div><div>29,500 元</div><div>每小時最低工資（2026）</div><div>196 元</div>
 <div>2027-01-01 起</div><div>30,900 元／205 元</div>
 <div>勞退雇主提繳</div><div>≥ 6%</div><div>每月加班上限</div><div>46 小時（勞資會議同意 54）</div>
-<div>病假（未住院）</div><div>1 年 30 日、半薪</div></div>
+<div>病假（未住院）</div><div>1 年 30 日、半薪</div>
+<div>勞保＋就保費率</div><div>12.5%（員工 20%、雇主 70%）</div><div>健保費率</div><div>5.17%（員工 30%、雇主 60%）</div>
+<div>職災保險（餐飲業）</div><div>0.19%，雇主全額</div></div>
 <p class="note">勞工請假規則 2026 年修正兩次（1 月 1 日、10 月 1 日施行）：一年 10 日內的病假不得給不利處分；病假扣全勤只能按比例；照顧家人可按小時請事假。</p></div>
 <div class="grid">
 <a class="tile" href="#tpl"><div class="h"><span class="ic">範</span><b>人資範本 ${C.templates.length} 份</b></div><span>契約、加班、請假、考核、懲處、資遣、離職證明</span></a>
 <a class="tile" href="#law"><div class="h"><span class="ic">法</span><b>法規查詢</b></div><span>${C.laws.map(l=>l.name).join('、')}</span></a>
-<a class="tile" href="#calc"><div class="h"><span class="ic">算</span><b>計算工具</b></div><span>加班費、資遣費、特休、預告期、最低工資檢查</span></a></div>
+<a class="tile" href="#calc"><div class="h"><span class="ic">算</span><b>計算工具</b></div><span>勞健保勞退、加班費、資遣費、特休、預告期、最低工資檢查</span></a></div>
 <p class="note" style="margin-top:16px">條文取自全國法規資料庫，最後核對 ${esc(C.checked)}。本系統提供一般性說明，個案有爭議請洽當地勞工局或律師。</p>`);
   $('#qf').onsubmit=e=>{e.preventDefault();location.hash='q/'+encodeURIComponent($('#q').value.trim())};
 }
@@ -220,8 +263,10 @@ function viewSearch(q){
   const cs=C.cases.filter(c=>m(c.title)||m(c.tag)), ts=C.templates.filter(t=>m(t.name)||m(t.desc));
   const as=[]; C.laws.forEach(L=>L.articles.forEach(a=>{if(m(a[1])||m(a[2])) as.push([L,a])}));
   const ns=(C.notes||[]).filter(n=>m(n.t)||m(n.d));
+  const qs=C.qa.filter(x=>m(x.q)||m(x.a)||m(x.wrong));
   shell('home',`<div class="card"><form id="qf" role="search"><div style="display:flex;gap:8px"><input id="q" value="${esc(k)}" aria-label="關鍵字"><button class="pri" type="submit">搜尋</button></div></form></div>
-${!cs.length&&!ts.length&&!as.length&&!ns.length?`<p>找不到「${esc(k)}」。試試：加班、特休、病假、資遣、曠工、扣薪、懷孕、工讀。</p>`:''}
+${!cs.length&&!ts.length&&!as.length&&!ns.length&&!qs.length?`<p>找不到「${esc(k)}」。試試：加班、特休、病假、資遣、曠工、扣薪、懷孕、工讀。</p>`:''}
+${qs.length?`<div class="card"><h2>常見錯誤 Q&A（${qs.length}）</h2>${qs.map(x=>`<div class="hit"><a href="#qa/all/${x.id}">${hl(x.q)}</a><br><small>${hl(x.a.slice(0,80))}…</small></div>`).join('')}</div>`:''}
 ${cs.length?`<div class="card"><h2>案例引導</h2>${cs.map(c=>`<div class="hit"><a href="#case/${c.id}">${hl(c.title)}</a></div>`).join('')}</div>`:''}
 ${ts.length?`<div class="card"><h2>範本</h2>${ts.map(t=>`<div class="hit"><a href="#tpl/${t.id}">${hl(t.name)}</a><br><small>${hl(t.desc)}</small></div>`).join('')}</div>`:''}
 ${ns.length?`<div class="card"><h2>重點說明</h2>${ns.map(n=>`<div class="hit"><b>${hl(n.t)}</b><br><small>${hl(n.d)}</small></div>`).join('')}</div>`:''}
@@ -242,7 +287,7 @@ function viewCase(id,path){
     body=`<div class="card"><h2>${esc(n.q)}</h2>${n.opts.map(o=>`<a class="btn opt" href="#case/${id}/${steps.concat(o[1]).join('.')}">${esc(o[0])}</a>`).join('')}</div>`;
   }else{
     const ts=(n.tpl||[]).map(t=>C.templates.find(x=>x.id===t)).filter(Boolean);
-    const calcName={ot:'加班費計算',sev:'資遣費計算',min:'最低工資檢查',al:'特休天數'}[n.calc];
+    const calcName={ot:'加班費計算',sev:'資遣費計算',min:'最低工資檢查',al:'特休天數',ins:'勞健保與勞退',unused:'未休特休工資'}[n.calc];
     body=`<div class="verdict ${n.v}"><h2>${esc(n.t)}</h2>${n.s&&n.s.length?`<ol>${n.s.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>`:''}</div>
 ${n.next?`<div class="row"><a class="btn pri" href="#case/${n.next}">前往：${esc((C.cases.find(x=>x.id===n.next)||{}).title||'')}</a></div>`:''}
 ${n.law&&n.law.length?`<div class="card"><h3>相關條文（點開看原文）</h3>${chips(n.law)}</div>`:''}
@@ -262,20 +307,178 @@ function fill(t,vals){
 }
 function viewTpl(id){
   const t=C.templates.find(x=>x.id===id); if(!t) return viewTpls();
-  const saved=tplVals(id); const vals={}; t.fields.forEach(([k,,d])=>vals[k]=saved[k]??d);
+  const B=bizOf(), G=C.guides[id]||{steps:[],topics:[]};
+  const saved=tplVals(id); const vals={}; t.fields.forEach(([k,,d])=>{const bd=B&&B.defaults[k]!==undefined&&!(id==='contract-pt'&&k==='hours')?B.defaults[k]:undefined; vals[k]=saved[k]??bd??d});
+  const notes=B?G.topics.flatMap(tp=>(B.notes[tp]||[]).map(n=>[C.topics[tp],n])):[];
+  const empOpts=EMPS.length&&t.fields.some(f=>f[0]==='emp')?`<label for="tEmp">從員工名單帶入</label><select id="tEmp"><option value="">— 選員工 —</option>${EMPS.map(e=>`<option value="${e.id}">${esc(e.name)}（${e.kind==='pt'?'兼職':'正職'}）</option>`).join('')}</select>`:'';
   shell('tpl',`<p class="crumb noprint"><a href="#tpl">範本</a> ／ ${esc(t.name)}</p>
+<details class="card guide noprint" open><summary><b>怎麼用這份範本</b>${B?`<span class="tag">${esc(B.name)}</span>`:''}</summary>
+${G.steps.length?`<ol>${G.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:''}
+${B?(notes.length?`<h3>${esc(B.name)}要特別注意</h3><ul>${notes.map(([tp,n])=>`<li><b>${esc(tp)}｜</b>${esc(n)}</li>`).join('')}</ul>`:''):`<p class="note">到 <a href="#set">公司設定</a> 選你的業態（小吃、早午餐、手搖飲、火鍋燒肉、正餐宴席、烘焙、連鎖），這裡會顯示你的業態要注意的事，班別等欄位也會依業態預先帶入。</p>`}
+</details>
 <div class="split"><div class="card noprint"><h2>${esc(t.name)}</h2><p class="sub">${esc(t.desc)}</p>
+${empOpts}
 <form id="tf">${t.fields.map(([k,l])=>`<label for="f_${k}">${esc(l)}</label><input id="f_${k}" data-k="${k}" value="${esc(vals[k])}">`).join('')}</form>
 ${co().co?'':'<p class="note">公司名稱、負責人等會從 <a href="#set">公司設定</a> 帶入，目前還沒填。</p>'}
+<div id="wn" role="status"></div>
 <div class="row"><button class="pri" id="pr">列印／存 PDF</button><button id="wd">下載 Word</button><button id="cp">複製文字</button></div><p class="note" id="st" role="status"></p>
 ${t.law&&t.law.length?`<h3>相關條文</h3>${chips(t.law)}`:''}</div>
 <div class="card printme"><div class="doc" id="doc">${fill(t,vals)}</div></div></div>`);
-  const upd=()=>{const v={};document.querySelectorAll('#tf input').forEach(i=>v[i.dataset.k]=i.value);store.set('hr_t_'+id+'_'+me.id,v);$('#doc').innerHTML=fill(t,v)};
+  let emp=null;
+  const cur=()=>{const v={};document.querySelectorAll('#tf input').forEach(i=>v[i.dataset.k]=i.value);return v};
+  const banner=()=>{const w=checkTpl(t,cur(),emp);const nb=w.filter(x=>x.lv==='bad').length;
+    $('#wn').innerHTML=w.length?`<div class="banner ${nb?'bad':''}">${nb?`有 ${nb} 項可能違法`:''}${nb&&w.length>nb?'、':''}${w.length>nb?`${w.length-nb} 項要注意`:''}，產出前會跳出說明。</div>`:'<div class="banner ok">目前填的內容沒有發現違法疑慮。</div>'};
+  const upd=()=>{const v=cur();store.set('hr_t_'+id+'_'+me.id,v);$('#doc').innerHTML=fill(t,v);banner()};
   document.querySelectorAll('#tf input').forEach(i=>i.oninput=upd);
-  $('#pr').onclick=()=>window.print();
-  $('#wd').onclick=()=>{const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>body{font-family:"Microsoft JhengHei","PMingLiU";font-size:12pt}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:4px 6px;vertical-align:top}th{background:#eee}h1{text-align:center;font-size:18pt}.tip{border:1px dashed #c9a227;padding:6px}</style></head><body>${$('#doc').innerHTML}</body></html>`;
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿',html],{type:'application/msword'}));a.download=t.name.replace(/[\\/:*?"<>|（）()]/g,'')+'.doc';document.body.appendChild(a);a.click();a.remove();$('#st').textContent='已下載 Word 檔。'};
-  $('#cp').onclick=async()=>{try{await navigator.clipboard.writeText($('#doc').innerText);$('#st').textContent='已複製，可以貼到 LINE 或 Word。'}catch(e){$('#st').textContent='這個瀏覽器不能自動複製，請改用下載 Word。'}};
+  if($('#tEmp')) $('#tEmp').onchange=e=>{emp=EMPS.find(x=>x.id===e.target.value)||null; if(!emp) return banner();
+    const d=emp.data||{}, w=empWage(emp), m={emp:emp.name,cand:emp.name,idno:d.idno,pos:d.pos,start:d.start,place:d.store,store:d.store,rate:emp.kind==='pt'?d.rate:'',pay:emp.kind==='pt'?'':String(d.wage||''),base:d.base||'',wage:w?String(Math.round(w/30)):''};
+    Object.entries(m).forEach(([k,v])=>{const i=document.getElementById('f_'+k);if(i&&v)i.value=v}); upd()};
+  banner();
+  const go=fn=>()=>{const w=checkTpl(t,cur(),emp); if(!w.length) return fn(); warnDialog(w,fn)};
+  $('#pr').onclick=go(()=>window.print());
+  $('#wd').onclick=go(()=>{const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>body{font-family:"Microsoft JhengHei","PMingLiU";font-size:12pt}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:4px 6px;vertical-align:top}th{background:#eee}h1{text-align:center;font-size:18pt}.tip{border:1px dashed #c9a227;padding:6px}</style></head><body>${$('#doc').innerHTML}</body></html>`;
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿',html],{type:'application/msword'}));a.download=t.name.replace(/[\\/:*?"<>|（）()]/g,'')+'.doc';document.body.appendChild(a);a.click();a.remove();$('#st').textContent='已下載 Word 檔。'});
+  $('#cp').onclick=go(async()=>{try{await navigator.clipboard.writeText($('#doc').innerText);$('#st').textContent='已複製，可以貼到 LINE 或 Word。'}catch(e){$('#st').textContent='這個瀏覽器不能自動複製，請改用下載 Word。'}});
+}
+
+// ── 產出前檢查：違法疑慮跳出警告 ──
+const bizOf=()=>C.biz.find(b=>b.id===co().biz)||null;
+const nums=s=>(String(s||'').match(/\d[\d,]*(\.\d+)?/g)||[]).map(x=>parseFloat(x.replace(/,/g,'')));
+const minFor=v=>{const y=parseInt(String(v.start||v.date||v.month||'').slice(0,4))||+todayTW().slice(0,4);return MIN[y>=2027?2027:2026].concat(y>=2027?2027:2026)};
+function ageOn(birth,on){const b=dd(birth),d=dd(on||todayTW());if(!b||!d)return null;return tenure(b,d).y}
+function timeRanges(s){const out=[];String(s||'').replace(/(\d{1,2})[:：](\d{2})\s*[–\-~～至到]\s*(凌晨\s*)?(\d{1,2})[:：](\d{2})/g,(m,h1,m1,lt,h2,m2)=>{let a=+h1+m1/60,b=+h2+m2/60;if(b<=a)b+=24;out.push([a,b]);return m});return out}
+function checkTpl(t,v,emp){
+  const W=[]; const add=(lv,b,d,law)=>W.push({lv,b,d,law:law||[]});
+  const all=Object.values(v).join('｜'); const [MM,MH,Y]=minFor(v);
+  const isPT=t.id==='contract-pt'||(emp&&emp.kind==='pt');
+  // 工資低於最低工資
+  const wageKeys={'contract-ft':'pay','offer':'pay'};
+  if(wageKeys[t.id]){const n=nums(v[wageKeys[t.id]]).filter(x=>x>=1000);if(n.length&&n[0]<MM)add('bad',`月薪 ${money(n[0])} 元低於 ${Y} 年最低工資 ${money(MM)} 元`,'全時員工月薪（含伙食、全勤等經常性給與）不得低於最低工資；試用期也一樣。',['NOTE:最低工資'])}
+  if(t.id==='contract-pt'){const n=nums(v.rate)[0];if(n&&n<MH)add('bad',`時薪 ${n} 元低於 ${Y} 年最低時薪 ${MH} 元`,'兼職、工讀、試做期間都不得低於最低時薪。',['NOTE:最低工資'])}
+  String(all).replace(/時薪[^\d｜]{0,6}(\d{2,4})/g,(m,x)=>{if(t.id!=='contract-pt'&&+x<MH)add('bad',`時薪 ${x} 元低於 ${Y} 年最低時薪 ${MH} 元`,'時薪不得低於最低工資。',['NOTE:最低工資']);return m});
+  String(all).replace(/月薪[^\d｜]{0,6}(\d{2},?\d{3})/g,(m,x)=>{x=+x.replace(',','');if(!wageKeys[t.id]&&x<MM)add('bad',`月薪 ${money(x)} 元低於 ${Y} 年最低工資 ${money(MM)} 元`,'全時月薪不得低於最低工資。',['NOTE:最低工資']);return m});
+  // 工時
+  const hrsTxt=[v.hours,v.shift,v.time].filter(Boolean).join('｜');
+  const daily=(hrsTxt.match(/每日[^\d｜]{0,8}(\d+(\.\d+)?)\s*小時/)||[])[1]; if(daily&&+daily>8) add('bad',`每日正常工時 ${daily} 小時超過 8 小時`,'正常工時每日不得超過 8 小時、每週不得超過 40 小時；超過的部分是加班，要另給加班費。',['LSA:30','LSA:24']);
+  const weekly=(hrsTxt.match(/每週[^\d｜]{0,8}(\d+(\.\d+)?)\s*小時/)||[])[1]; if(weekly&&+weekly>40) add('bad',`每週工時 ${weekly} 小時超過 40 小時`,'每週正常工時不得超過 40 小時。',['LSA:30']);
+  const rs=timeRanges(hrsTxt);
+  if(rs.some(([a,b])=>b>22||a<6)){
+    add('warn','班表含晚上 10 點到早上 6 點的時段','女性員工在這段時間工作，要先經勞資會議（或工會）同意，並提供安全衛生設施，沒有大眾運輸時要提供交通或宿舍；妊娠、哺乳期間不得排這段時間。',['LSA:49']);
+  }
+  if(rs.some(([a,b])=>b-a>12)) add('bad','有一段班超過 12 小時','一天連同加班最多 12 小時。',['LSA:32']);
+  if(rs.some(([a,b])=>b-a>4.5)&&!/休息|用餐|空班/.test(hrsTxt)) add('warn','連續工作超過 4 小時沒有寫休息時間','連續工作 4 小時至少要有 30 分鐘休息，建議在班別旁寫明休息時間。',['LSA:35']);
+  if(t.id==='job-post'){const off=nums(v.off)[0];if(off!==undefined&&off<8)add('warn',`月休 ${off} 天可能不夠`,'每 7 天要有 1 天例假、1 天休息日，一個月大約 8–10 天。',['LSA:36'])}
+  // 未成年
+  if(emp&&emp.data&&emp.data.birth){const a=ageOn(emp.data.birth,v.start);
+    if(a!==null&&a<16){add('bad',`${emp.name} 未滿 16 歲（童工）`,'童工每日不得超過 8 小時、例假日不得工作、晚上 8 點到早上 6 點不得工作，並要有法定代理人同意書與年齡證明。',['LSA:47','LSA:48','LSA:46']);if(rs.some(([x,y])=>y>20||x<6))add('bad','童工不得排晚上 8 點以後的班','請把班表改到 20:00 前結束。',['LSA:48'])}
+    else if(a!==null&&a<18) add('warn',`${emp.name} 未滿 18 歲`,'要有法定代理人同意書與年齡證明，不得從事危險性或有害性工作（大型油炸、高溫高壓設備）。',['LSA:44','LSA:46'])}
+  // 文字用語
+  const T=(re,lv,b,d,law)=>{if(re.test(all))add(lv,b,d,law)};
+  T(/限\s*(女|男)|女性為佳|男性為佳|\d+\s*歲以(下|內)|年齡\s*\d+|未婚|已婚|顏值|外貌|身高|五官端正/,'bad','文案或條件有性別、年齡、婚姻或外貌限制','就業服務法禁止就業歧視，罰鍰 30 萬元起。請改寫成工作條件，例如「需能久站、可上晚班」。',['NOTE:就業歧視']);
+  T(/罰\s*(款|金|錢)|扣\s*\d+\s*元|扣.{0,4}(薪|工資).{0,4}(賠|罰)|賠償.{0,6}(扣|從薪)|打破.{0,8}扣|短少.{0,8}(扣|賠|分攤)|遲到.{0,8}扣\s*\d/,'bad','有罰款或從薪水扣賠償的寫法','工資要全額直接給付，不能預扣工資作為違約金或賠償。沒上班的時間可以按比例不給，但不能罰錢。',['LSA:22','LSA:26']);
+  T(/押金|保證金|扣.{0,3}(身分證|證件)|留置.{0,4}證/,'bad','有收押金、保證金或扣留證件','雇主不得收取保證金、扣留員工財物或證件。',['NOTE:扣留證件與收保證金']);
+  T(/(試用|試用期).{0,12}(隨時|無條件|不需|不用|免).{0,6}(解僱|終止|離職|資遣|預告)|試用.{0,12}不(發|給|付).{0,4}資遣/,'bad','試用期可以隨時解僱、不給資遣費的寫法','勞基法沒有試用期可以隨時解僱的規定；終止契約仍要符合第 11、12 條，並依法給資遣費與預告。',['LSA:11','LSA:16','LPA:12']);
+  T(/責任制|不另(計|給|支).{0,4}加班|加班.{0,4}不另/,'bad','有「責任制」或「不另給加班費」','責任制只適用勞動部核定並報備的工作者，餐廳店長、主廚一般不適用；加班要依法給加班費或補休。',['LSA:84-1','LSA:24']);
+  T(/含加班費|加班費.{0,3}已含|包含加班/,'warn','月薪「含加班費」要寫清楚金額','可以約定固定加班費，但要在契約與薪資單分開列出金額，且不得少於實際加班依法應給的金額。',['LSA:24','LSA:23']);
+  T(/視同放棄|(特休|休假).{0,6}(作廢|歸零|不補|不折算|不發)/,'bad','特休沒休完視同放棄或作廢','年度終結或離職時未休完的特休要折算工資發給。',['LSA:38','LSAER:24-1']);
+  T(/(不得|不准|禁止).{0,3}請.{0,2}病假|病假.{0,8}(全勤|獎金).{0,4}(全扣|不發|取消|歸零)/,'bad','限制請病假或病假扣光全勤','一年 10 日內的病假不得給不利處分，全勤只能按比例扣。',['LEAVE:9-1','LEAVE:4']);
+  T(/違約金|最低服務|綁約|做滿.{0,4}(年|個月).{0,8}(賠|罰|扣)/,'warn','有最低服務年限或違約金','只有雇主出錢讓員工受專業訓練，或給了合理補償，才能約定最低服務年限，違約金要合理。一般新人訓練通常不算。',['LSA:15-1','LSA:26']);
+  T(/競業/,'warn','有離職後競業禁止','要有值得保護的營業秘密、期間地區合理（最長 2 年），並給不低於月平均工資 50% 的補償；一般門市員工通常不符合，建議改用保密條款。',['LSA:9-1']);
+  T(/無薪假|減班/,'warn','有無薪假（減班休息）','要員工個別書面同意並通報勞工局，按月計酬的全時員工減班期間工資仍不得低於最低工資。',['LSA:21']);
+  T(/不(保|加保)勞保|免\s*(勞|健)保|自願.{0,4}不.{0,2}保|(勞|健)保.{0,4}(員工|自行)全額|現金.{0,4}不報/,'bad','有不加保或保費全由員工負擔','勞保、就保、職保要在到職當天加保；保費雇主負擔部分不能轉給員工。',['NOTE:勞保、就保、職保要在到職當天加保','NOTE:健保加保與二代健保補充保費']);
+  T(/勞退.{0,6}(含|內含|從薪|由員工|自付)|含.{0,3}勞退/,'bad','勞退 6% 從薪水扣或包含在薪水裡','雇主提繳的 6% 是雇主負擔，不能從工資扣，也不能內含在薪水裡。',['LPA:6','LPA:14']);
+  T(/(不准|不得|禁止).{0,3}(離職|辭職)|離職.{0,8}(扣|不發).{0,4}(薪|工資)/,'bad','限制離職或離職扣薪','員工依法預告就可以離職，最後一期工資要在發薪日照發。',['LSA:15','LSA:22']);
+  // 個別範本
+  if(t.id==='layoff'){
+    if(!/第\s*[1-5一二三四五]\s*款/.test(v.reason||'')) add('warn','資遣事由沒有寫勞基法第 11 條第幾款','資遣一定要符合第 11 條各款之一，並在資遣通知寫明。',['LSA:11']);
+    const a=dd(v.start),b=dd(v.last); if(a&&b&&b>a){const tn=tenure(a,b),days=(b-a)/864e5,need=days<91?0:tn.years<1?10:tn.years<3?20:30;const nd=nums(v.notice)[0];
+      if(nd!==undefined&&nd<need) add('bad',`預告 ${nd} 日少於法定 ${need} 日`,'年資 3 個月以上未滿 1 年預告 10 日、1 年以上未滿 3 年 20 日、3 年以上 30 日；不預告要給預告期間工資。',['LSA:16']);
+      const avg=nums(v.avg)[0],sev=nums(v.sev)[0]; if(avg&&sev!==undefined){const should=Math.min(6,tn.years*0.5)*avg; if(sev+1<should) add('bad',`資遣費 ${money(sev)} 元少於法定約 ${money(should)} 元`,'新制每滿 1 年 0.5 個月平均工資，最高 6 個月。',['LPA:12'])}}
+    add('warn','記得在員工離職 10 日前做資遣通報','未通報會被罰鍰。',['NOTE:資遣通報']);
+  }
+  if(t.id==='annual-leave'){const a=dd(v.start);const days=nums(v.days)[0];if(a&&days!==undefined){const should=alDays(tenure(a,new Date(todayTW()+'T00:00:00')).years);if(days<should)add('bad',`特休 ${days} 日少於依年資應有的 ${should} 日`,'依到職日週年制計算，可用「計算工具 → 特休天數」核對。',['LSA:38'])}}
+  if(t.id==='ot-form'){const r=timeRanges(v.time);const h=r.reduce((s,[a,b])=>s+b-a,0);if(h>4)add('bad',`單日加班 ${h} 小時超過 4 小時`,'一天正常工時加加班最多 12 小時。',['LSA:32'])}
+  if(t.id==='labor-meeting'&&!String(v.labor||'').trim()) add('warn','勞方代表還沒填','勞方代表要由全體員工選出，不能由老闆指定。',['LSA:83']);
+  if(t.id==='warning'&&/扣|罰/.test(String(v.level||''))) add('bad','懲處等級含扣薪或罰款','懲處可以是警告、記過，但不能搭配扣薪罰款。',['LSA:22','LSA:26']);
+  // 去除重複
+  const seen=new Set(); return W.filter(w=>!seen.has(w.b)&&seen.add(w.b)).sort((a,b)=>(a.lv==='bad'?0:1)-(b.lv==='bad'?0:1));
+}
+function warnDialog(W,proceed){
+  let d=document.getElementById('dlg'); if(d) d.remove();
+  d=document.createElement('dialog'); d.id='dlg'; d.setAttribute('aria-labelledby','dlgh');
+  const nb=W.filter(w=>w.lv==='bad').length;
+  d.innerHTML=`<div class="dh" id="dlgh">產出前提醒：${nb?`有 ${nb} 項可能違法`:'有幾項要注意'}</div><div class="db"><ul class="wl">${W.map(w=>`<li class="${w.lv}"><b>${w.lv==='bad'?'可能違法：':'注意：'}${esc(w.b)}</b>${esc(w.d)}${chips(w.law)}</li>`).join('')}</ul><p class="note">建議回去修改。仍要產出時，請自行確認內容並保留紀錄。</p></div><div class="df"><button id="dlgGo">我了解，仍要產出</button><button class="pri" id="dlgBack">回去修改</button></div>`;
+  document.body.appendChild(d); bindChips(d);
+  d.querySelector('#dlgBack').onclick=()=>d.close();
+  d.querySelector('#dlgGo').onclick=()=>{d.close();proceed()};
+  d.addEventListener('close',()=>d.remove());
+  d.showModal(); d.querySelector('#dlgBack').focus();
+}
+
+// ── 常見錯誤 Q&A ──
+function viewQA(cat,open){
+  const cs=C.qaCats; const cur=cs.find(c=>c[0]===cat)?cat:'all';
+  shell('qa',`<p class="sub">餐飲業最常踩的 ${C.qa.length} 個勞動法地雷：左邊是常見錯誤做法，下面是正確做法、依據條文和可用的範本與計算工具。</p>
+<div class="card noprint"><label for="qq">搜尋問題</label><input id="qq" placeholder="例如：扣薪、試用期、兼職、特休、加班費" autocomplete="off">
+<div class="chips" style="margin-top:8px"><a class="chip" href="#qa" style="${cur==='all'?'border-color:var(--accent);font-weight:700':''}">全部 ${C.qa.length}</a>${cs.map(([k,n])=>`<a class="chip" href="#qa/${k}" style="${cur===k?'border-color:var(--accent);font-weight:700':''}">${esc(n)} ${C.qa.filter(x=>x.c===k).length}</a>`).join('')}</div></div>
+<div class="card" id="qal"></div>`);
+  const calcN=Object.fromEntries(CALCS);
+  const draw=()=>{const k=$('#qq').value.trim();
+    const xs=C.qa.filter(x=>(cur==='all'||x.c===cur)&&(!k||x.q.includes(k)||x.a.includes(k)||x.wrong.includes(k)));
+    $('#qal').innerHTML=xs.length?xs.map((x,i)=>`<details class="qa" id="${x.id}" ${x.id===open?'open':''}><summary>${esc(x.q)}</summary>
+<div class="w"><b>常見錯誤：</b>${esc(x.wrong)}</div><div class="r"><b>正確做法：</b>${esc(x.a)}</div>
+${chips(x.law)}<div class="chips">${(x.tpl||[]).map(id=>{const t=C.templates.find(z=>z.id===id);return t?`<a class="btn" href="#tpl/${id}">範本：${esc(t.name)}</a>`:''}).join('')}${x.calc?`<a class="btn" href="#calc/${x.calc}">${esc(calcN[x.calc]||'計算工具')}</a>`:''}</div></details>`).join(''):'<p>找不到符合的問題。</p>';
+    bindChips($('#qal'));};
+  $('#qq').oninput=draw; draw();
+  if(open){const el=document.getElementById(open);if(el)el.scrollIntoView()}
+}
+
+// ── 員工名單 ──
+const empWage=e=>{const d=e.data||{};return e.kind==='pt'?(+d.rate||0)*(+d.mh||0):(+d.wage||0)};
+const empPrem=e=>{const d=e.data||{};return C.ins.premiums(empWage(e),{pt:e.kind==='pt',dep:+d.dep||0,self:+d.self||0,senior:!!d.senior,nhiHere:d.nhiHere!==false,oi:co().oi?+co().oi/100:undefined})};
+const EMP_F=[['name','姓名','','text'],['pos','職務','','text'],['store','門市','','text'],['start','到職日','','date'],['birth','出生日期（檢查未成年、65 歲）','','date'],['idno','身分證字號（只用在範本）','','text']];
+function viewEmp(sel){
+  if(!cloudOk) return shell('emp','<div class="msg bad">雲端資料暫時讀不到，請重新整理再試一次。</div>');
+  const e=sel==='new'?{id:'',name:'',kind:'ft',data:{nhiHere:true}}:EMPS.find(x=>x.id===sel);
+  const tot=EMPS.reduce((a,x)=>{const p=empPrem(x);a.w+=empWage(x);a.er+=p.erTotal;a.emp+=p.empTotal;return a},{w:0,er:0,emp:0});
+  const [MM,MH]=MIN[+todayTW().slice(0,4)>=2027?2027:2026];
+  const list=EMPS.map(x=>{const p=empPrem(x),d=x.data||{},w=empWage(x);const low=x.kind==='pt'?(+d.rate&&+d.rate<MH):(w&&w<MM);
+    return `<div class="empl"><div><b>${esc(x.name)}</b><span class="tag ${x.kind}">${x.kind==='pt'?'兼職':'正職'}</span>${low?'<span class="tag pt">低於最低工資</span>':''}</div>
+<div class="act"><a class="btn" href="#emp/${x.id}">編輯</a><a class="btn" href="#calc/ins/${x.id}">保費</a></div>
+<div class="m">${esc([d.pos,d.store].filter(Boolean).join('・'))} ${x.kind==='pt'?`時薪 ${money(d.rate)}×${money(d.mh)} 小時`:`月薪 ${money(w)}`}｜雇主每月保險與勞退 ${money(p.erTotal)} 元｜員工自付 ${money(p.empTotal)} 元</div></div>`}).join('');
+  const form=e?`<div class="card" id="ef"><h2>${e.id?'編輯員工':'新增員工'}</h2>
+<div class="grid2"><div><label for="e_kind">僱用型態</label><select id="e_kind"><option value="ft" ${e.kind==='ft'?'selected':''}>正職（月薪）</option><option value="pt" ${e.kind==='pt'?'selected':''}>兼職／工讀（時薪）</option></select></div>
+${EMP_F.map(([k,l,,ty])=>`<div><label for="e_${k}">${l}</label><input id="e_${k}" type="${ty}" value="${esc(k==='name'?e.name:(e.data[k]||''))}"></div>`).join('')}
+<div class="ftf"><label for="e_wage">月薪總額（含伙食、全勤等每月固定津貼）</label><input id="e_wage" type="number" inputmode="numeric" value="${esc(e.data.wage||'')}"></div>
+<div class="ptf"><label for="e_rate">時薪</label><input id="e_rate" type="number" inputmode="numeric" value="${esc(e.data.rate||'')}"></div>
+<div class="ptf"><label for="e_mh">每月約工作幾小時</label><input id="e_mh" type="number" inputmode="numeric" value="${esc(e.data.mh||'')}"></div>
+<div><label for="e_dep">健保眷屬人數（0–3）</label><input id="e_dep" type="number" min="0" max="3" value="${esc(e.data.dep||0)}"></div>
+<div><label for="e_self">員工自提勞退 %（0–6）</label><input id="e_self" type="number" min="0" max="6" value="${esc(e.data.self||0)}"></div></div>
+<label style="display:flex;gap:8px;align-items:center"><input id="e_nhi" type="checkbox" style="width:auto" ${e.data.nhiHere!==false?'checked':''}>健保在本公司加保（兼職已在別處加保時取消勾選）</label>
+<label style="display:flex;gap:8px;align-items:center"><input id="e_sen" type="checkbox" style="width:auto" ${e.data.senior?'checked':''}>年滿 65 歲或已領勞保老年給付（只保職保，不保勞保、就保）</label>
+<div id="epv"></div>
+<div class="row"><button class="pri" id="esave">儲存</button><a class="btn" href="#emp">取消</a>${e.id?'<button id="edel">刪除</button>':''}<span class="note" id="est" role="status"></span></div></div>`:'';
+  shell('emp',`<p class="sub">員工資料存在雲端，用同一個帳號在手機、電腦都看得到。保費依 2026 年級距表自動計算，範本與計算工具可以直接帶入。</p>
+${form}
+<div class="card"><div class="row" style="margin-top:0;justify-content:space-between"><h2 style="margin:0">員工名單（${EMPS.length} 人）</h2>${sel==='new'?'':'<a class="btn pri" href="#emp/new">＋ 新增員工</a>'}</div>
+${EMPS.length?`${list}<div class="res"><div>每月薪資總額</div><div>${money(tot.w)} 元</div><div>雇主每月勞健保、職保、勞退合計</div><div>${money(tot.er)} 元</div><div>員工自付勞健保合計</div><div>${money(tot.emp)} 元</div><div>人事成本（薪資＋雇主負擔）</div><div>${money(tot.w+tot.er)} 元</div></div><p class="note">不含加班費、年終與二代健保雇主補充保費。</p>`:'<p>還沒有員工。按「新增員工」把正職、兼職加進來。</p>'}</div>`);
+  if(!e) return;
+  const kindSync=()=>{const pt=$('#e_kind').value==='pt';document.querySelectorAll('.ftf').forEach(x=>x.style.display=pt?'none':'');document.querySelectorAll('.ptf').forEach(x=>x.style.display=pt?'':'none');prev()};
+  const read=()=>{const d={...e.data};EMP_F.forEach(([k])=>{if(k!=='name')d[k]=$('#e_'+k).value.trim()});['wage','rate','mh','dep','self'].forEach(k=>d[k]=$('#e_'+k).value);d.nhiHere=$('#e_nhi').checked;d.senior=$('#e_sen').checked;return {name:$('#e_name').value.trim(),kind:$('#e_kind').value,data:d}};
+  const prev=()=>{const r=read(),w=empWage(r),p=empPrem(r),[mm,mh]=MIN[+todayTW().slice(0,4)>=2027?2027:2026];const a=ageOn(r.data.birth);
+    const msgs=[];if(r.kind==='pt'&&+r.data.rate&&+r.data.rate<mh)msgs.push(`時薪低於最低時薪 ${mh} 元`);if(r.kind==='ft'&&w&&w<mm)msgs.push(`月薪低於最低工資 ${money(mm)} 元`);if(a!==null&&a<18)msgs.push(`未滿 18 歲：要有法定代理人同意書${a<16?'；童工晚上 8 點後不能排班':''}`);if(a!==null&&a>=65&&!r.data.senior)msgs.push('已滿 65 歲：請勾選「只保職保」');
+    $('#epv').innerHTML=`${msgs.map(m=>`<div class="banner bad">${esc(m)}</div>`).join('')}${w?`<div class="banner ok">月薪資 ${money(w)} 元 → 勞保 ${money(p.grades.li)}／健保 ${money(p.grades.nhi)}／勞退 ${money(p.grades.lp)}；雇主每月負擔 ${money(p.erTotal)} 元，員工自付 ${money(p.empTotal)} 元。</div>`:''}`};
+  $('#ef').querySelectorAll('input,select').forEach(x=>x.oninput=x.onchange=x.id==='e_kind'?kindSync:prev); kindSync();
+  $('#esave').onclick=async()=>{const r=read(); if(!r.name){$('#est').textContent='請填姓名。';return}
+    $('#esave').disabled=true; $('#est').textContent='儲存中…';
+    const q=e.id?sbc.from('hr_employees').update({...r,updated_at:new Date().toISOString()}).eq('id',e.id).select().single():sbc.from('hr_employees').insert(r).select().single();
+    const {data,error}=await q; $('#esave').disabled=false;
+    if(error){$('#est').textContent='儲存失敗，請再試一次。';return}
+    if(e.id) EMPS=EMPS.map(x=>x.id===e.id?data:x); else EMPS.push(data);
+    location.hash='emp'};
+  if($('#edel')){let armed=false;$('#edel').onclick=async()=>{if(!armed){armed=true;$('#edel').textContent='再按一次確認刪除';return}
+    const {error}=await sbc.from('hr_employees').delete().eq('id',e.id); if(error){$('#est').textContent='刪除失敗，請再試一次。';return}
+    EMPS=EMPS.filter(x=>x.id!==e.id); location.hash='emp'}}
 }
 
 function viewLaw(sel){
@@ -294,7 +497,7 @@ function viewLaw(sel){
 }
 
 // ── 計算工具 ──
-const CALCS=[['ot','加班費'],['sev','資遣費與預告期'],['al','特休天數'],['min','最低工資檢查'],['unused','未休特休工資']];
+const CALCS=[['ins','勞健保與勞退'],['ot','加班費'],['sev','資遣費與預告期'],['al','特休天數'],['min','最低工資檢查'],['unused','未休特休工資']];
 const MIN={2026:[29500,196],2027:[30900,205]};
 function dd(s){const d=new Date(s+'T00:00:00');return isNaN(d)?null:d}
 function tenure(a,b){ // 回傳 {y,m,d,years}
@@ -303,7 +506,7 @@ function tenure(a,b){ // 回傳 {y,m,d,years}
   return {y,m,d,years:y+m/12+d/365};
 }
 const alDays=yrs=>yrs<0.5?0:yrs<1?3:yrs<2?7:yrs<3?10:yrs<5?14:yrs<10?15:Math.min(30,15+Math.floor(yrs)-9);
-function viewCalc(k){
+function viewCalc(k,eid){
   const f={
 ot:`<div class="grid2"><div><label for="pt">薪資型態</label><select id="pt"><option value="m">月薪</option><option value="h">時薪</option></select></div><div><label for="w">月薪或時薪（正常工時工資，不含加班費）</label><input id="w" type="number" inputmode="numeric" value="31000"></div>
 <div><label for="h1">平日超過 8 小時的時數</label><input id="h1" type="number" step="0.5" value="2"></div><div><label for="h2">休息日出勤時數</label><input id="h2" type="number" step="0.5" value="0"></div>
@@ -313,9 +516,15 @@ sev:`<div class="grid2"><div><label for="s1">到職日（或適用勞退新制�
 al:`<div class="grid2"><div><label for="a1">到職日</label><input id="a1" type="date" value="2024-06-15"></div><div><label for="a2">計算到哪一天</label><input id="a2" type="date"></div></div>`,
 min:`<div class="grid2"><div><label for="m0">年度</label><select id="m0"><option>2026</option><option>2027</option></select></div><div><label for="m1">薪資型態</label><select id="m1"><option value="m">月薪（全時）</option><option value="h">時薪</option></select></div>
 <div><label for="m2">正常工時的工資（不含加班費、年終、三節獎金等非經常性給與）</label><input id="m2" type="number" inputmode="numeric" value="29000"></div></div>`,
+ins:`<div class="grid2"><div><label for="i0">僱用型態</label><select id="i0"><option value="ft">正職（月薪）</option><option value="pt">兼職／工讀</option></select></div>
+<div><label for="i1">每月薪資總額（本薪＋伙食、全勤等固定津貼；兼職填時薪 × 當月時數）</label><input id="i1" type="number" inputmode="numeric" value="31000"></div>
+<div><label for="i2">健保眷屬人數（0–3）</label><input id="i2" type="number" min="0" max="3" value="0"></div><div><label for="i3">員工自提勞退 %（0–6）</label><input id="i3" type="number" min="0" max="6" value="0"></div>
+<div><label for="i4">職災保險費率 %</label><input id="i4" type="number" step="0.01" value="${esc(co().oi||'0.19')}"></div></div>
+<label style="display:flex;gap:8px;align-items:center"><input id="i5" type="checkbox" style="width:auto" checked>健保在本公司加保</label>
+<label style="display:flex;gap:8px;align-items:center"><input id="i6" type="checkbox" style="width:auto">年滿 65 歲或已領勞保老年給付（只保職保）</label>`,
 unused:`<div class="grid2"><div><label for="u1">月薪（年度終結或離職前最近一個月正常工時工資）</label><input id="u1" type="number" inputmode="numeric" value="33000"></div><div><label for="u2">未休特休天數</label><input id="u2" type="number" step="0.5" value="5"></div></div>`};
   shell('calc',`<div class="chips noprint">${CALCS.map(([x,n])=>`<a class="chip" href="#calc/${x}" style="${x===k?'border-color:var(--accent);font-weight:700':''}">${n}</a>`).join('')}</div>
-<div class="card"><h2>${(CALCS.find(x=>x[0]===k)||CALCS[0])[1]}</h2>${f[k]||f.ot}<div id="cout" role="status" aria-live="polite"></div></div>`);
+<div class="card"><h2>${(CALCS.find(x=>x[0]===k)||CALCS[0])[1]}</h2>${EMPS.length?`<label for="ce">從員工名單帶入</label><select id="ce"><option value="">— 手動輸入 —</option>${EMPS.map(e=>`<option value="${e.id}" ${e.id===eid?'selected':''}>${esc(e.name)}（${e.kind==='pt'?'兼職':'正職'}）</option>`).join('')}</select>`:''}${f[k]||f.ins}<div id="cout" role="status" aria-live="polite"></div></div>`);
   const today=new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
   ['s2','a2'].forEach(i=>{const e=document.getElementById(i);if(e&&!e.value)e.value=today});
   const v=id=>parseFloat((document.getElementById(id)||{}).value)||0;
@@ -337,17 +546,40 @@ unused:`<div class="grid2"><div><label for="u1">月薪（年度終結或離職�
       out.innerHTML=`<p class="big">目前年資 ${t.y} 年 ${t.m} 個月：本年度特休 ${now} 日</p><p class="note">以「週年制」計算：每到下表日期取得新一年度的特休。雇主應在員工符合條件 30 日內告知排休。</p><div class="scroll"><table class="t"><tr><th>年資</th><th>取得日</th><th>該年度天數</th></tr>${rows}</table></div>${chips(['LSA:38','LSAER:24'])}`},
     min(){const [M,H]=MIN[$('#m0').value]; const isM=$('#m1').value==='m'; const w=v('m2'); const lim=isM?M:H; const ok=w>=lim;
       out.innerHTML=`<div class="verdict ${ok?'ok':'bad'}"><h2>${ok?'符合':'低於'} ${$('#m0').value} 年最低${isM?'月薪':'時薪'} ${money(lim)} 元</h2>${ok?'':`<p>每${isM?'月':'小時'}至少要補到 ${money(lim)} 元（差 ${money(lim-w)} 元）。</p>`}</div><p class="note">比較的是正常工時內的工資：伙食津貼、全勤獎金等經常性給與要算進去；加班費、年終、三節獎金不算。部分工時月薪可按工時比例計算（施行細則第 13 條）。</p>${chips(['NOTE:最低工資','LSAER:11','LSAER:10'])}`},
+    ins(){const pt=$('#i0').value==='pt',w=v('i1');const I=C.ins;const p=I.premiums(w,{pt,dep:v('i2'),self:v('i3'),oi:v('i4')/100,nhiHere:$('#i5').checked,senior:$('#i6').checked});
+      const [MM]=MIN[+todayTW().slice(0,4)>=2027?2027:2026];
+      out.innerHTML=`${!pt&&w&&w<MM?`<div class="verdict bad"><h2>月薪低於最低工資 ${money(MM)} 元</h2><p>全時員工請先調到最低工資以上；兼職請把型態改成「兼職」。</p></div>`:''}
+<div class="scroll"><table class="t"><tr><th>項目</th><th>投保級距</th><th>員工自付</th><th>雇主負擔</th></tr>
+<tr><td>勞保＋就保（12.5%）</td><td>${p.grades.li?money(p.grades.li):'不加保'}</td><td>${money(p.emp.li)}</td><td>${money(p.er.li)}</td></tr>
+<tr><td>職災保險（${v('i4')}%）</td><td>${money(p.grades.oi)}</td><td>0</td><td>${money(p.er.oi)}</td></tr>
+<tr><td>工資墊償基金（0.025%）</td><td>—</td><td>0</td><td>${money(p.er.wage)}</td></tr>
+<tr><td>健保（5.17%${v('i2')?`，含眷屬 ${Math.min(3,v('i2'))} 人`:''}）</td><td>${p.grades.nhi?money(p.grades.nhi):'不在本公司加保'}</td><td>${money(p.emp.nhi)}</td><td>${money(p.er.nhi)}</td></tr>
+<tr><td>勞退提繳（雇主 6%）</td><td>${money(p.grades.lp)}</td><td>${p.emp.lpSelf?`自提 ${money(p.emp.lpSelf)}`:'0'}</td><td>${money(p.er.lp)}</td></tr>
+<tr><th>合計</th><th></th><th>${money(p.empTotal+p.emp.lpSelf)}</th><th>${money(p.erTotal)}</th></tr></table></div>
+<p class="big">雇主每月負擔 ${money(p.erTotal)} 元；員工薪水扣 ${money(p.empTotal+p.emp.lpSelf)} 元</p>
+<p class="note">依 2026 年（115 年 1 月 1 日起）級距表與費率計算，四捨五入到元，實際以勞保局、健保署繳款單為準。${pt&&w<29500?'兼職薪資未達最低工資：勞保、職保可用 11,100、12,540 等較低級距；健保最低仍為 29,500。':''}${!$('#i5').checked?'不在本公司加保健保的兼職，單次薪資達最低工資以上要扣 2.11% 補充保費。':''}<br>來源：${I.INS_SOURCES.map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join('、')}（核對 ${I.INS_CHECKED}）</p>
+${chips(['NOTE:投保薪資不得以多報少（高薪低報）','NOTE:健保加保與二代健保補充保費','LPA:14','LPA:6'])}`},
     unused(){const day=v('u1')/30; out.innerHTML=`<div class="res"><div>一日工資（月薪 ÷ 30）</div><div>${money(day)} 元</div></div><p class="big">應發 ${money(day*v('u2'))} 元</p><p class="note">年度終結：於約定發薪日或年度終結後 30 日內發給；離職：即結清。雙方可協商遞延一年。</p>${chips(['LSA:38','LSAER:24-1'])}`},
   };
-  const run=()=>{(calc[k]||calc.ot)();bindChips(out)};
-  $('#app').querySelectorAll('input,select').forEach(e=>e.oninput=run); run();
+  const run=()=>{(calc[k]||calc.ins)();bindChips(out)};
+  const setV=(id,val)=>{const e=document.getElementById(id);if(e&&val!==undefined&&val!==null&&val!=='')e.value=val};
+  const fillEmp=id=>{const e=EMPS.find(x=>x.id===id);if(!e)return;const d=e.data||{},w=empWage(e),pt=e.kind==='pt';
+    setV('i0',e.kind);setV('i1',Math.round(w));setV('i2',d.dep||0);setV('i3',d.self||0);if($('#i5'))$('#i5').checked=d.nhiHere!==false;if($('#i6'))$('#i6').checked=!!d.senior;
+    setV('pt',pt?'h':'m');setV('w',pt?d.rate:d.wage);setV('s1',d.start);setV('s3',Math.round(w));setV('a1',d.start);setV('m1',pt?'h':'m');setV('m2',pt?d.rate:d.wage);setV('u1',Math.round(w))};
+  if($('#ce')) $('#ce').onchange=e=>{fillEmp(e.target.value);run()};
+  if(eid) fillEmp(eid);
+  $('#app').querySelectorAll('input,select').forEach(e=>{if(e.id!=='ce')e.oninput=e.onchange=run}); run();
 }
 
 function viewSet(){
   const c=co();
-  shell('set',`<div class="card"><h2>公司設定</h2><p class="sub">填一次，所有範本會自動帶入。資料只存在這台裝置的瀏覽器裡。</p><form id="sf"><div class="grid2">${CO_FIELDS.map(([k,l,ph])=>`<div><label for="c_${k}">${esc(l)}</label><input id="c_${k}" data-k="${k}" value="${esc(c[k]||'')}" placeholder="${esc(ph)}"></div>`).join('')}</div>
+  shell('set',`<div class="card"><h2>公司設定</h2><p class="sub">填一次，所有範本會自動帶入。資料存在雲端，用同一個帳號在任何裝置都看得到。</p><form id="sf">
+<label for="c_biz">業態（範本操作說明、班別預設會依業態調整）</label><select id="c_biz"><option value="">— 請選擇 —</option>${C.biz.map(b=>`<option value="${b.id}" ${c.biz===b.id?'selected':''}>${esc(b.name)}｜${esc(b.desc)}</option>`).join('')}</select>
+<div class="grid2">${CO_FIELDS.map(([k,l,ph])=>`<div><label for="c_${k}">${esc(l)}</label><input id="c_${k}" data-k="${k}" value="${esc(c[k]||'')}" placeholder="${esc(ph)}"></div>`).join('')}
+<div><label for="c_oi">職災保險費率 %（餐飲業 0.19，以勞保局核定通知為準）</label><input id="c_oi" data-k="oi" type="number" step="0.01" value="${esc(c.oi||'0.19')}"></div></div>
 <div class="row"><button class="pri" type="submit">儲存</button><span class="note" id="st" role="status"></span></div></form></div>`);
-  $('#sf').onsubmit=e=>{e.preventDefault();const v={};document.querySelectorAll('#sf input').forEach(i=>v[i.dataset.k]=i.value.trim());store.set(coKey(),v);$('#st').textContent='已儲存。'};
+  $('#sf').onsubmit=async e=>{e.preventDefault();const v={...co()};document.querySelectorAll('#sf input').forEach(i=>v[i.dataset.k]=i.value.trim());v.biz=$('#c_biz').value;
+    $('#st').textContent='儲存中…'; const ok=await saveSet(v); $('#st').textContent=ok?'已儲存。':'已存在這台裝置，雲端暫時存不進去，稍後再按一次儲存。'};
 }
 
 boot();
