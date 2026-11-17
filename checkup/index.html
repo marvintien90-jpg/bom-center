@@ -66,8 +66,17 @@ ol.gaps{margin:6px 0 0;padding-left:20px}
 .hidden{display:none}
 .dimtbl td,.dimtbl th{white-space:nowrap}
 @media (max-width:560px){.dimtbl td:nth-child(3),.dimtbl th:nth-child(3){display:none}}
+.cta{border:2px solid var(--accent);background:var(--accent-soft)}
+.cta h2{margin-bottom:4px}.cta .row{margin-top:10px}
+.btn-line{background:#06c755;border-color:#06c755;color:#fff;text-decoration:none;display:inline-block;border-radius:6px;padding:9px 16px;font-weight:600}
+a.btnlink{text-decoration:none;display:inline-block}
+.stick{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);padding:10px 16px;display:none;gap:8px;justify-content:center;box-shadow:0 -2px 10px rgba(0,0,0,.08)}
+.stick button,.stick a{flex:1;max-width:320px;text-align:center}
+@media (max-width:640px){body.on4 .stick.ready{display:flex}body.on4 .wrap{padding-bottom:90px}}
+.done ol{margin:6px 0 0;padding-left:20px}
 .brand{font-size:13px;color:var(--mute);letter-spacing:.04em}
 @media print{
+  .stick{display:none!important}
   body{background:#fff;color:#000;font-size:12px}
   .wrap{max-width:none;padding:0}
   .noprint{display:none!important}
@@ -117,18 +126,22 @@ ol.gaps{margin:6px 0 0;padding-left:20px}
   <div id="result" class="step hidden" data-step="4"></div>
 
   <form id="lead" class="card hidden noprint">
-    <h2>預約免費 30 分鐘結果解讀</h2>
-    <p class="sub">留下聯絡方式，顧問會依你的健檢結果，說明最該先做的三件事。資料只用於這次聯繫，不會轉給第三方。</p>
+    <h2>預約 Marvin 免費 30 分鐘，一起看結果</h2>
+    <p class="sub">品牌加辣顧問 Marvin 本人會用電話或 LINE 跟你聯絡，依這份健檢說明最該先做的三件事。不推銷、不綁約；資料只用於這次聯繫，不會轉給第三方。</p>
     <div class="grid2">
       <div><label for="cname">稱呼</label><input id="cname" maxlength="40" autocomplete="name"></div>
       <div><label for="phone">手機</label><input id="phone" maxlength="20" inputmode="tel" autocomplete="tel"></div>
       <div><label for="line">LINE ID</label><input id="line" maxlength="40"></div>
-      <div><label for="email">Email</label><input id="email" type="email" maxlength="120" autocomplete="email"></div>
+      <div><label for="email">Email（收結果摘要）</label><input id="email" type="email" maxlength="120" autocomplete="email"></div>
+      <div><label for="pref">方便聯絡的時段</label><select id="pref"><option>都可以</option><option>平日白天</option><option>平日晚上</option><option>週末</option></select></div>
+      <div><label for="topic">最想先解決</label><select id="topic"></select></div>
     </div>
     <label><input type="checkbox" id="consent">我同意品牌加辣餐飲顧問以上述方式與我聯絡，並保存這份健檢結果。</label>
     <div id="lmsg"></div>
-    <div class="row"><button type="submit" class="pri" id="lsend">送出預約</button></div>
+    <div class="row"><button type="submit" class="pri" id="lsend">送出預約</button><span id="lline"></span></div>
   </form>
+  <div id="done" class="card cta done hidden noprint"></div>
+  <div class="stick noprint" id="stick"></div>
   <p class="note">財務參考值為餐飲業常見範圍，屬顧問經驗值，實際標準依業態不同。健檢結果僅供參考。</p>
 </div>
 <script src="score.js"></script>
@@ -140,6 +153,18 @@ const C=window.Checkup, $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n).toLocaleString('zh-TW');
 const KEY='checkup-draft-v1';
+// 來源追蹤：?src= 優先，其次 utm，再來看從哪個網站點進來；記住第一次的來源
+const SRC=(()=>{const q=new URLSearchParams(location.search);let v=q.get('src')||(q.get('utm_source')?(q.get('utm_source')+(q.get('utm_campaign')?'_'+q.get('utm_campaign'):'')):'');
+  if(!v){const r=(document.referrer||'').toLowerCase();if(r&&!r.includes(location.hostname)){v=/threads\./.test(r)?'ref_threads':/instagram\./.test(r)?'ref_ig':/facebook\.|fb\.com|fb\.me/.test(r)?'ref_fb':/line\.me|line\.naver/.test(r)?'ref_line':/google\./.test(r)?'ref_google':/wix|spicesup/.test(r)?'ref_web':'ref_other'}}
+  v=String(v).replace(/[^\w.-]/g,'').slice(0,40);
+  try{if(v)localStorage.setItem('ck_src',v);else v=localStorage.getItem('ck_src')||''}catch(e){}return v})();
+// Marvin 的 LINE（從資料庫設定讀，沒設定就只顯示預約表單）
+let CFG={line_url:'',line_id:''};
+function lineHref(text){if(CFG.line_id){const id=CFG.line_id.startsWith('@')?CFG.line_id:'@'+CFG.line_id;return 'https://line.me/R/oaMessage/'+encodeURIComponent(id)+'/?'+encodeURIComponent(text)}return CFG.line_url||''}
+function lineText(){const r=last;const w=r&&r.recs&&r.recs[0];return 'Marvin 你好，我剛做完餐飲經營健檢'+(state.info.brand?'（'+state.info.brand+'）':'')+'，總分 '+(r?r.total:'-')+' 分'+(w?'，最弱的是「'+w.full+'」':'')+'，想約 30 分鐘聊聊。'}
+function lineBtn(label){const h=lineHref(lineText());return h?'<a class="btn-line" target="_blank" rel="noopener" href="'+esc(h)+'" data-lineclick="1">'+label+'</a>':''}
+async function loadCfg(){try{if(!window.supabase)return;const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);const {data,error}=await sbc.rpc('checkup_cfg');
+  if(!error&&data){CFG={line_url:/^https:\/\/(lin\.ee|line\.me)\//.test(data.line_url||'')?data.line_url:'',line_id:/^@?[\w.-]{2,30}$/.test(data.line_id||'')?data.line_id:''};if(state.step===4&&last)ctaRefresh()}}catch(e){}}
 let state={step:1,info:{},answers:{},fin:{}}, last=null;
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.answers)state={...state,...s,step:s.step||1}}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
@@ -163,7 +188,9 @@ function go(s){
   state.step=s; save();
   document.querySelectorAll('.step').forEach(el=>el.classList.toggle('hidden',Number(el.dataset.step)!==s));
   document.querySelectorAll('#steps span').forEach(el=>el.classList.toggle('on',Number(el.dataset.s)===s));
-  $('#lead').classList.toggle('hidden',s!==4);
+  $('#lead').classList.toggle('hidden',s!==4||state.sent);
+  $('#done').classList.toggle('hidden',s!==4||!state.sent);
+  document.body.classList.toggle('on4',s===4);
   window.scrollTo(0,0);
 }
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(Number(b.dataset.go))));
@@ -201,6 +228,7 @@ function show(){
   let h=`<div class="card"><div class="result-top"><div><h2>${nm}健檢結果</h2><p class="sub">${new Date().toLocaleDateString('zh-TW')}${state.info.biz?'｜'+esc(state.info.biz):''}${state.info.stores?'｜'+esc(state.info.stores)+' 家門市':''}</p>
     <div class="big">${r.total}<small style="font-size:16px;font-weight:400"> ／100</small></div><p>${pill(r.level)}　六構面平均。75 分以上良好，50–74 需加強，50 以下優先改善。</p></div>${radar(r.dims)}</div>
     <div class="scroll"><table class="dimtbl"><thead><tr><th>構面</th><th>分數</th><th></th><th>狀態</th></tr></thead><tbody>${r.dims.map(d=>`<tr><td>${d.name}｜${d.full}</td><td class="num">${d.score}</td><td style="width:40%"><div class="bar"><i style="width:${d.score}%"></i></div></td><td>${pill(d.level)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  h+='<div class="card cta noprint" id="cta"></div>';
   if(r.recs.length) h+=`<div class="card"><h2>最該先改善的${r.recs.length===1?'一':r.recs.length===2?'兩':'三'}個面向</h2>${r.recs.map((x,i)=>`<div class="rec"><h3>${i+1}. ${x.name}｜${x.full}（${x.score} 分）</h3><p style="margin:0 0 4px">${esc(x.tip)}</p><div class="tool">對應工具：${esc(x.tool)}</div></div>`).join('')}</div>`;
   else h+=`<div class="card"><h2>六個面向都在良好範圍</h2><p>下一步適合做的是展店前的財務試算與標準化複製。</p></div>`;
   if(r.gaps.length) h+=`<div class="card"><h2>最先處理的 ${r.gaps.length} 件事</h2><p class="sub">你回答「沒有」或「偶爾」的項目，依嚴重程度排列。</p><ol class="gaps">${r.gaps.map(g=>`<li>【${g.dim}】${esc(g.text)}<span class="note">（${C.SCALE[g.value]}）</span></li>`).join('')}</ol></div>`;
@@ -212,13 +240,25 @@ function show(){
   h+=`<div class="row noprint"><button type="button" class="pri" id="print">下載報告（PDF）</button><button type="button" data-go2="2">修改答案</button><button type="button" id="restart">重新健檢</button></div>`;
   $('#result').innerHTML=h;
   $('#print').onclick=()=>window.print();
-  $('#restart').onclick=()=>{if(confirm('清除所有答案，重新開始？')){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}};
+  $('#restart').onclick=()=>{if(confirm('清除所有答案，重新開始？')){try{localStorage.removeItem(KEY)}catch(e){}location.href=location.pathname+(SRC?'?src='+encodeURIComponent(SRC):'')}};
   document.querySelectorAll('[data-go2]').forEach(b=>b.onclick=()=>go(Number(b.dataset.go2)));
+  $('#topic').innerHTML=(r.recs.length?r.recs.map(x=>'<option>'+esc(x.full)+'</option>'):C.DIMS.map(d=>'<option>'+esc(d.full)+'</option>')).join('')+'<option>展店／加盟規劃</option><option>其他</option>';
+  ctaRefresh();
 }
+function ctaRefresh(){const r=last;if(!r)return;const w=r.recs[0];
+  const el=$('#cta');if(el){el.innerHTML='<h2>'+(w?'「'+esc(w.full)+'」只有 '+w.score+' 分，要從哪裡下手？':'分數不錯，下一步是展店和複製')+'</h2><p style="margin:0">這份結果可以跟品牌加辣顧問 Marvin 本人約 <b>免費 30 分鐘</b>，他會依你的答案，直接告訴你最該先做的 2 到 3 件事、每件大概能省多少或多賺多少。</p>'
+    +(state.sent?'<p class="msg" style="margin-top:10px">你已經預約了，Marvin 會在 1 到 2 個工作天內聯絡你。</p>':'<div class="row">'+lineBtn('加 LINE 直接問 Marvin')+'<button type="button" class="pri" data-book="1">留資料，預約 30 分鐘</button></div>')}
+  const st=$('#stick');st.innerHTML=state.sent?'':(lineBtn('LINE 問 Marvin')+'<button type="button" class="pri" data-book="1">免費預約 30 分鐘</button>');st.classList.toggle('ready',!state.sent);
+  $('#lline').innerHTML=lineBtn('或直接加 LINE');
+  if(state.sent)doneRender()}
+function doneRender(){const d=$('#done');d.innerHTML='<h2>預約成功，接下來會這樣進行</h2><ol><li>Marvin 會在 1 到 2 個工作天內'+(state.sentPref&&state.sentPref!=='都可以'?'（'+esc(state.sentPref)+'）':'')+'用你留的方式聯絡你，約一個 30 分鐘的時間。</li><li>聊之前可以先準備：近 3 個月營業額與主要成本、目前菜單與售價。</li><li>聊完你會拿到 2 到 3 個馬上能做的改善建議，要不要進一步合作由你決定。</li></ol>'
+  +(lineHref('x')?'<p style="margin:12px 0 0">等不及的話，現在就可以傳 LINE 給 Marvin：</p><div class="row">'+lineBtn('加 LINE 傳訊息給 Marvin')+'</div>':'')+'<div class="row"><button type="button" id="print2">下載這份報告（PDF）</button></div>';
+  $('#print2').onclick=()=>window.print()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-book]');if(!b)return;const f=$('#lead');f.classList.remove('hidden');f.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('#cname').focus({preventScroll:true}),400)});
 
 // 預約
 $('#lead').addEventListener('submit',async e=>{e.preventDefault();
-  const v={name:$('#cname').value.trim(),phone:$('#phone').value.trim(),line:$('#line').value.trim(),email:$('#email').value.trim()};
+  const v={name:$('#cname').value.trim(),phone:$('#phone').value.trim(),line:$('#line').value.trim(),email:$('#email').value.trim(),pref:$('#pref').value,topic:$('#topic').value};
   const m=$('#lmsg');
   if(!v.name){m.innerHTML='<div class="msg bad">請填稱呼。</div>';return}
   if(!v.phone&&!v.line&&!v.email){m.innerHTML='<div class="msg bad">手機、LINE ID、Email 至少填一個。</div>';return}
@@ -230,15 +270,17 @@ $('#lead').addEventListener('submit',async e=>{e.preventDefault();
     const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
     const r=last||C.score(state.answers,state.fin);
     const {data,error}=await sbc.rpc('checkup_submit',{p:{contact:v,consent:true,info:state.info,answers:state.answers,fin:state.fin,
-      scores:Object.fromEntries(r.dims.map(d=>[d.key,d.score])),total:r.total,source:new URLSearchParams(location.search).get('src')||''}});
+      scores:Object.fromEntries(r.dims.map(d=>[d.key,d.score])),total:r.total,source:SRC}});
     if(error)throw error;
-    m.innerHTML='<div class="msg">已收到，顧問會在 2 個工作天內與你聯絡。'+(v.email?'結果摘要也寄到你的 Email 了。':'')+'</div>';$('#lead').querySelectorAll('input,button').forEach(x=>x.disabled=true);
+    m.innerHTML='<div class="msg">已收到，Marvin 會在 1 到 2 個工作天內與你聯絡。'+(v.email?'結果摘要也寄到你的 Email 了。':'')+'</div>';
+    state.sent=true;state.sentPref=v.pref;save();ctaRefresh();go(4);$('#done').scrollIntoView({block:'start'});
   }catch(err){
     const t=String(err&&err.message||'');
     m.innerHTML=`<div class="msg bad">${/limit|上限/.test(t)?'今天的預約已滿，請明天再試。':'送出失敗，請稍後再試，或直接下載報告後聯絡我們。'}</div>`;btn.disabled=false;
   }
 });
 
+loadCfg();
 fill(); if(state.step===4&&Object.keys(state.answers).length===C.QUESTION_COUNT){show();go(4)} else if(state.step>1&&state.step<4) go(state.step); else go(1);
 </script>
 </body>

@@ -18,7 +18,7 @@ t('奇怪的答案當 0', () => { const r = C.score({ p1: 9, p2: 'x', p3: -1 });
   const { chromium } = require('playwright');
   const dir = path.join(__dirname, '../checkup');
   const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8'), js = fs.readFileSync(path.join(dir, 'score.js'), 'utf8');
-  const fake = (mode) => `window.supabase={createClient(){return {rpc:async(n,a)=>{window.__rpc=[n,a];return ${mode === 'err' ? "{data:null,error:{message:'daily limit'}}" : "{data:{id:7},error:null}"}}}}}`;
+  const fake = (mode) => `window.supabase={createClient(){return {rpc:async(n,a)=>{if(n==='checkup_cfg')return ${mode === 'err' ? "{data:null,error:{message:'no fn'}}" : "{data:{line_id:'@spiceup'},error:null}"};window.__rpc=[n,a];return ${mode === 'err' ? "{data:null,error:{message:'daily limit'}}" : "{data:{id:7},error:null}"}}}}}`;
   const br = await chromium.launch();
   for (const vw of [{ width: 1200, height: 900 }, { width: 375, height: 800 }]) {
     for (const mode of ['ok', 'err']) {
@@ -43,13 +43,20 @@ t('奇怪的答案當 0', () => { const r = C.score({ p1: 9, p2: 'x', p3: -1 });
         const txt = await pg.innerText('#result');
         for (const w of ['好吃鍋', '健檢結果', '最該先改善', '對應工具', '兩平營業額', '食材成本率']) assert.ok(txt.includes(w), 'result missing ' + w);
         assert.ok(await pg.isVisible('#lead'), 'lead visible');
+        const cta = await pg.innerText('#cta'); assert.ok(cta.includes('30 分鐘') && cta.includes('Marvin'), 'cta');
+        const lh = await pg.evaluate(() => (document.querySelector('#cta a.btn-line') || {}).href || '');
+        if (mode === 'ok') assert.ok(lh.startsWith('https://line.me/R/oaMessage/%40spiceup/?') && decodeURIComponent(lh).includes('好吃鍋'), 'line ' + lh); else assert.strictEqual(lh, '', 'no line w/o cfg');
+        if (vw.width === 375) assert.ok(await pg.isVisible('#stick'), 'sticky bar'); else assert.ok(!(await pg.isVisible('#stick')), 'no sticky desktop');
+        assert.ok((await pg.$$eval('#topic option', o => o.length)) >= 3, 'topic options');
         const sw = await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1); assert.ok(!sw, 'horizontal scroll');
         await pg.click('#lsend'); assert.ok((await pg.innerText('#lmsg')).includes('稱呼'));
-        await pg.fill('#cname', '王老闆'); await pg.fill('#line', 'wang'); await pg.click('#lsend'); assert.ok((await pg.innerText('#lmsg')).includes('同意'));
+        await pg.fill('#cname', '王老闆'); await pg.fill('#line', 'wang'); await pg.selectOption('#pref', '平日晚上'); await pg.click('#lsend'); assert.ok((await pg.innerText('#lmsg')).includes('同意'));
         await pg.check('#consent'); await pg.click('#lsend'); await pg.waitForTimeout(150);
         const lm = await pg.innerText('#lmsg');
         if (mode === 'ok') { assert.ok(lm.includes('已收到'), lm); const rpc = await pg.evaluate(() => window.__rpc);
-          assert.strictEqual(rpc[0], 'checkup_submit'); assert.strictEqual(rpc[1].p.source, 'ig'); assert.strictEqual(Object.keys(rpc[1].p.answers).length, 30); assert.ok(rpc[1].p.scores.fin >= 0); }
+          assert.strictEqual(rpc[0], 'checkup_submit'); assert.strictEqual(rpc[1].p.source, 'ig'); assert.strictEqual(rpc[1].p.contact.pref, '平日晚上'); assert.ok(rpc[1].p.contact.topic, 'topic');
+          assert.ok(await pg.isVisible('#done') && !(await pg.isVisible('#lead')), 'done panel'); assert.ok((await pg.innerText('#done')).includes('平日晚上'));
+          assert.ok(!(await pg.isVisible('#stick')), 'sticky hidden after sent'); assert.strictEqual(Object.keys(rpc[1].p.answers).length, 30); assert.ok(rpc[1].p.scores.fin >= 0); }
         else assert.ok(lm.includes('預約已滿'), lm);
         // 重新整理後答案還在
         await pg.reload(); assert.ok((await pg.innerText('#result')).includes('健檢結果') || (await pg.isVisible('#f3')), 'restore');

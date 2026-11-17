@@ -57,6 +57,17 @@ Migration：`supabase/migrations/20261104_checkup_brief.sql`（取代尚未套�
 - 名單頁同樣標出「N 天沒聯絡」「N 天沒進展，該追蹤」。
 - Migration：`supabase/migrations/20261104_checkup_owner_followup.sql`。
 
+## S01 導流與成交（2026-11-17）
+
+- **追蹤連結**：`checkup/?src=s01_fb`、`s01_ig`、`s01_threads`、`s01_web`（貼文、個人檔案、官網按鈕各用自己的）。沒帶 src 時會看 utm 或從哪個網站點進來（ref_fb、ref_ig、ref_threads…），並記在瀏覽器，換頁回來也算同一個來源。
+- **結果頁**：分數下面馬上有「跟 Marvin 約免費 30 分鐘」卡片，用最弱的面向當標題；手機版底部固定兩顆按鈕。設定了 LINE 才會出現綠色「加 LINE 直接問 Marvin」，點了會帶好預設訊息（品牌、分數、最弱面向）。
+- **預約表單**：多了「方便聯絡的時段」「最想先解決」。送出後換成「接下來會這樣進行」三步驟。
+- **業主結果信**：有設定 LINE 時多一顆 LINE 按鈕。
+- **顧問通知信**：多一行來源／方便時段／想先解決。名單頁多了「來源成效」表（各平台名單、聯絡、預約、成交、成交率）。
+- **設定 LINE**：`update checkup_private.cfg set v='@你的ID' where k='line_id';`（官方帳號 ID，可帶預設訊息）或 `k='line_url'` 填 lin.ee 連結。
+- **LINE 即時通知**：送出時會呼叫 `notify.line_push`；這個專案的 vault 還沒有 line_channel_token／line_user_id，所以目前只寄 Email，不會出錯。
+- 資料庫變更在 `tests/checkup_funnel.sql`。
+
 ## ② 菜單工程（2026-11-04，BOM 運算中心進階版）
 
 - 「產品四象限」加上「銷量來源」：可選任一次 POS 銷量匯入，用實際份數換算 30 天來分類（不會改到品項配方的月銷量）。
