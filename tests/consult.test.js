@@ -14,7 +14,7 @@ const cases = [
   ['業主', { user: U, tables: { bom_profiles: [{ user_id: 'u1', role: 'client', status: 'active' }], checkup_leads: leads } }, ['只開放顧問使用', '回業主入口'], ['立地評估', '名單管理']],
   ['停用的管理員', { user: A, tables: { bom_profiles: [{ user_id: 'a1', role: 'admin', status: 'disabled' }] } }, ['只開放顧問使用'], ['立地評估']],
   ['顧問', { user: A, tables: { bom_profiles: [{ user_id: 'a1', role: 'admin', status: 'active' }], checkup_leads: leads } },
-    ['經營健檢', '名單管理＋顧問作業包', '餐飲立地評估', 'BOM 運算中心（顧問工具）', '菜單四象限', '損益分析中心', '品牌案件工作台', '文件與簡報管理', '招募考核範本包', '業主入口（總覽）', '訂閱與會員管理', '人資與勞基法中心', '2 筆新名單', '新名單待聯絡', '該追蹤（逾期）', '累計成交'], ['undefined', 'NaN']],
+    ['經營健檢', '名單管理＋顧問作業包', '餐飲立地評估', 'BOM 運算中心（顧問工具）', '菜單四象限', '損益分析中心', '營運輔導', '品牌案件工作台', '文件與簡報管理', '招募考核範本包', '業主入口（總覽）', '訂閱與會員管理', '人資與勞基法中心', '2 筆新名單', '新名單待聯絡', '該追蹤（逾期）', '累計成交'], ['undefined', 'NaN']],
 ];
 (async () => {
   const br = await chromium.launch(); let fail = 0;
