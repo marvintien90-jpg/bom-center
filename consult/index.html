@@ -87,7 +87,9 @@ const GROUPS=[
    go:[['進入 BOM 中心',BOM]],chips:[['菜單四象限','matrix'],['新品試算','newp'],['門市稽核','qsc'],['排班人力','shift'],['現金流','cash'],['顧客成長','grow'],['每月月報','mrep'],['授權管理','admin']]},
   {ic:'損',name:'損益分析中心',desc:'客戶每月損益、成本結構、門市比較與紅燈。',where:'網頁（業主也用，你有管理員權限）',
    go:[['進入損益中心',PL]]}]},
- {t:'③ 提案與交付',items:[
+ {t:'③ 提案、輔導與交付',items:[
+  {ic:'導',name:'營運輔導',desc:'成交後的輔導客戶：訪視紀錄、改善待辦追蹤、每月 KPI 對目標，一鍵產出給業主的進度報告。',where:'網頁（顧問專用）',
+   go:[['進入營運輔導',BOM+'consult/coach/'],['全部待辦',BOM+'consult/coach/#todo']]},
   {ic:'案',name:'品牌案件工作台',desc:'開案 → 問題樹 → 證據 → 策略 → 提案；一鍵出簡報與服務建議書。',where:'Claude 網頁（需登入 claude.ai）',
    go:[['打開案件工作台','https://claude.ai/artifact/DEjP3mWn57z1SkgkkVhQMe']]},
   {ic:'文',name:'文件與簡報管理',desc:'公告、SOP、提案簡報依範本產出與歸檔；在 Claude 專案「D_文件與簡報管理中心」裡下指令。',where:'Claude 專案＋技能（marvin-doc-manager、deck）',
