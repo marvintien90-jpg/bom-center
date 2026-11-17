@@ -134,7 +134,8 @@ ${isAdmin?viewAdmin():''}`;
 }
 function viewAdmin(){
   const rows=(all||[]).slice().sort((a,b)=>(mail(a)).localeCompare(mail(b)));
-  return `<div class="card"><h2>業主總覽</h2><p class="sub">每位業主可以進哪些系統。要開通、延長或停用，請到各系統的管理頁。</p>
+  return `<div class="card" style="border-color:var(--accent)"><div class="row" style="margin:0;justify-content:space-between"><div><h2>顧問工作台</h2><p class="sub" style="margin:0">健檢名單、立地評估、案件提案等顧問專用系統，一頁切換。業主看不到。</p></div><a class="btn pri" href="${BOM}consult/">進入顧問工作台</a></div></div>
+<div class="card"><h2>業主總覽</h2><p class="sub">每位業主可以進哪些系統。要開通、延長或停用，請到各系統的管理頁。</p>
 <div class="scroll"><table><thead><tr><th>業主</th><th>BOM 運算中心</th><th>損益分析中心</th><th>訂閱版</th></tr></thead><tbody>
 ${rows.map(r=>{const s=r.sub, sa=s?SUB[s.status]||[s.status,'mute']:null; return `<tr><td>${esc(s&&s.company||'')}${s&&s.company?'<br>':''}<span class="note">${esc(mail(r))}</span></td><td>${pillOf(access(r.bom,false))}</td><td>${pillOf(access(r.pl,false))}</td><td>${sa?`<span class="pill ${sa[1]}">${sa[0]}</span> ${esc(PLAN[s.plan]||s.plan)}`:'<span class="pill mute">沒有</span>'}</td></tr>`}).join('')||'<tr><td colspan="4">還沒有業主。</td></tr>'}
 </tbody></table></div>
