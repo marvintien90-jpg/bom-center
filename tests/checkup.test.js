@@ -61,7 +61,10 @@ t('奇怪的答案當 0', () => { const r = C.score({ p1: 9, p2: 'x', p3: -1 });
         // 重新整理後答案還在
         await pg.reload(); assert.ok((await pg.innerText('#result')).includes('健檢結果') || (await pg.isVisible('#f3')), 'restore');
         if (vw.width === 375 && mode === 'ok') await pg.screenshot({ path: path.join(process.env.SHOT_DIR || __dirname, 'checkup-mobile.png'), fullPage: true });
-        if (vw.width === 1200 && mode === 'ok') { await pg.goto('https://ck.test/checkup/'); await pg.screenshot({ path: path.join(process.env.SHOT_DIR || __dirname, 'checkup-desktop.png'), fullPage: true }); }
+        if (vw.width === 1200 && mode === 'ok') {
+          for (const [u, want] of [['https://ck.test/checkup/#src=s01_threads', 's01_threads'], ['https://ck.test/checkup/?0[0]=src&0[1]=s01_fb', 's01_fb']]) {
+            await pg.evaluate(() => localStorage.clear()); await pg.goto(u); assert.strictEqual(await pg.evaluate(() => SRC), want, 'src ' + u); }
+          await pg.goto('https://ck.test/checkup/'); await pg.screenshot({ path: path.join(process.env.SHOT_DIR || __dirname, 'checkup-desktop.png'), fullPage: true }); }
         assert.deepStrictEqual(errs, []);
         console.log('PASS', name);
       } catch (e) { fail++; console.log('FAIL', name, e.message, errs); }

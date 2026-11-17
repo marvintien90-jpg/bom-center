@@ -59,7 +59,7 @@ Migration：`supabase/migrations/20261104_checkup_brief.sql`（取代尚未套�
 
 ## S01 導流與成交（2026-11-17）
 
-- **追蹤連結**：`checkup/?src=s01_fb`、`s01_ig`、`s01_threads`、`s01_web`（貼文、個人檔案、官網按鈕各用自己的）。沒帶 src 時會看 utm 或從哪個網站點進來（ref_fb、ref_ig、ref_threads…），並記在瀏覽器，換頁回來也算同一個來源。
+- **追蹤連結**：`checkup/?src=s01_fb`、`s01_ig`、`s01_threads`、`s01_web`（貼文、個人檔案、官網按鈕各用自己的）。脆個人檔案會把 `?src=` 改壞，所以 Threads 用 `checkup/#src=s01_threads`；頁面 `?src=`、`#src=` 和被改壞的 `?0[0]=src&0[1]=…` 都認得。沒帶 src 時會看 utm 或從哪個網站點進來（ref_fb、ref_ig、ref_threads…），並記在瀏覽器，換頁回來也算同一個來源。
 - **結果頁**：分數下面馬上有「跟 Marvin 約免費 30 分鐘」卡片，用最弱的面向當標題；手機版底部固定兩顆按鈕。設定了 LINE 才會出現綠色「加 LINE 直接問 Marvin」，點了會帶好預設訊息（品牌、分數、最弱面向）。
 - **預約表單**：多了「方便聯絡的時段」「最想先解決」。送出後換成「接下來會這樣進行」三步驟。
 - **業主結果信**：有設定 LINE 時多一顆 LINE 按鈕。

@@ -35,7 +35,7 @@ const cases = [
         assert.ok(!txt.includes('舊客'), 'closed lead hidden in 待處理');
         await pg.click('[data-tab=all]'); assert.ok((await pg.innerText('body')).includes('舊客'));
         await pg.click('[data-copy=s01_threads]'); const clip = await pg.evaluate(() => navigator.clipboard.readText());
-        assert.strictEqual(clip, 'https://ck.test/bom-center/checkup/?src=s01_threads');
+        assert.strictEqual(clip, 'https://ck.test/bom-center/checkup/#src=s01_threads');
         await pg.click('[data-copy=""]'); assert.strictEqual(await pg.evaluate(() => navigator.clipboard.readText()), 'https://ck.test/bom-center/checkup/');
         await pg.selectOption('.lead[data-id="2"] [data-status]', '已聯絡'); await pg.waitForTimeout(100);
         await pg.fill('.lead[data-id="2"] [data-note]', '週五回電'); await pg.click('h1'); await pg.waitForTimeout(100);

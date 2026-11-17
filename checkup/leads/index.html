@@ -97,7 +97,7 @@ let leads=[], tab='open'; const briefs={};
 const focusId=Number(new URLSearchParams(location.search).get('id'))||null; let focused=false;
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('on'),1600)}
 async function copy(text,label){try{await navigator.clipboard.writeText(text);toast(label+' 已複製')}catch(e){prompt('請手動複製：',text)}}
-const link=src=>PAGE+(src?'?src='+src:'');
+const link=src=>PAGE+(src?(src==='s01_threads'?'#src=':'?src=')+src:''); // 脆個人檔案會改壞 ?src=，改用 #src=
 
 function login(msg){
   $('#out').hidden=true;

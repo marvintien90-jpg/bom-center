@@ -154,7 +154,7 @@ const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fmt=n=>Number(n).toLocaleString('zh-TW');
 const KEY='checkup-draft-v1';
 // 來源追蹤：?src= 優先，其次 utm，再來看從哪個網站點進來；記住第一次的來源
-const SRC=(()=>{const q=new URLSearchParams(location.search);let v=q.get('src')||(q.get('utm_source')?(q.get('utm_source')+(q.get('utm_campaign')?'_'+q.get('utm_campaign'):'')):'');
+const SRC=(()=>{const q=new URLSearchParams(location.search),hs=new URLSearchParams(location.hash.slice(1));let v=q.get('src')||hs.get('src')||(q.get('0[0]')==='src'?q.get('0[1]'):'')||(q.get('utm_source')?(q.get('utm_source')+(q.get('utm_campaign')?'_'+q.get('utm_campaign'):'')):'');
   if(!v){const r=(document.referrer||'').toLowerCase();if(r&&!r.includes(location.hostname)){v=/threads\./.test(r)?'ref_threads':/instagram\./.test(r)?'ref_ig':/facebook\.|fb\.com|fb\.me/.test(r)?'ref_fb':/line\.me|line\.naver/.test(r)?'ref_line':/google\./.test(r)?'ref_google':/wix|spicesup/.test(r)?'ref_web':'ref_other'}}
   v=String(v).replace(/[^\w.-]/g,'').slice(0,40);
   try{if(v)localStorage.setItem('ck_src',v);else v=localStorage.getItem('ck_src')||''}catch(e){}return v})();
