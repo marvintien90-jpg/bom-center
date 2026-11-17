@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>顧問工作台｜品牌加辣餐飲顧問工作室</title>
+<style>
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
+.wrap{max-width:920px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:0 0 6px}h3{font-size:17px;margin:0}
+.sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px;margin:6px 0 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.app{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px;min-height:200px}
+.app.on{border-color:var(--accent)}
+.app .ic{width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:15px}
+.app p{margin:0;color:var(--mute);font-size:14px}
+.app .go{margin-top:auto}
+label{display:block;font-size:14px;margin:10px 0 4px}
+input{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit;color:inherit}
+button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button:disabled{opacity:.6;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.who{font-size:14px;color:var(--mute);text-align:right}
+.msg{padding:10px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:13px;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mute{background:var(--field);color:var(--mute);border:1px solid var(--line)}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+a{color:var(--accent)}
+@media (max-width:560px){.who{text-align:left}.who .row{justify-content:flex-start!important}}
+</style>
+</head>
+<body>
+<style>
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:24px;line-height:1.2}.stat span{color:var(--mute);font-size:13px}
+.stat.alert b{color:var(--bad)}
+.sec{margin:22px 0 4px;font-size:15px;color:var(--mute);font-weight:600}
+.app{min-height:170px}.app .go{display:flex;gap:8px;flex-wrap:wrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips a{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;text-decoration:none}
+.tag{font-size:12px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div><h1>顧問工作台</h1><p class="sub">品牌加辣餐飲顧問工作室｜顧問專用，業主看不到這一頁</p></div><div class="who" id="who"></div></div>
+  <div id="app"><p class="sub">讀取中…</p></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+const BOM='https://marvintien90-jpg.github.io/bom-center/', PL='https://marvintien90-jpg.github.io/pl-center/', PORTAL=BOM+'portal/';
+const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* 顧問系統清單：加一筆就會出現在工作台。
+   go：[[按鈕文字,網址], …]，第一個是主按鈕；chips：小捷徑；where：放在哪裡（給自己看） */
+const GROUPS=[
+ {t:'① 開發業主',items:[
+  {ic:'檢',name:'經營健檢',desc:'業主自己填 30 題，六大面向打分，結果寄給業主也通知你。',where:'網頁（公開，業主用）',
+   go:[['打開健檢頁',BOM+'checkup/']],copy:BOM+'checkup/'},
+  {ic:'單',name:'名單管理＋顧問作業包',desc:'健檢名單、追蹤狀態、備註；每筆附問題、改善方案與話術。',where:'網頁（顧問專用）',
+   go:[['進入名單管理',BOM+'checkup/leads/']],stat:true}]},
+ {t:'② 診斷與評估',items:[
+  {ic:'址',name:'餐飲立地評估',desc:'店面地址 → 商圈客群、人流、直接／替代競爭、租金與損益試算。',where:'網頁（顧問專用）',
+   go:[['進入立地評估',BOM+'site/']]},
+  {ic:'B',name:'BOM 運算中心（顧問工具）',desc:'以管理員身分進客戶品牌，做菜單工程、新品試算、稽核、排班、現金流與月報。',where:'網頁（業主也用，你有管理員權限）',
+   go:[['進入 BOM 中心',BOM]],chips:[['菜單四象限','matrix'],['新品試算','newp'],['門市稽核','qsc'],['排班人力','shift'],['現金流','cash'],['顧客成長','grow'],['每月月報','mrep'],['授權管理','admin']]},
+  {ic:'損',name:'損益分析中心',desc:'客戶每月損益、成本結構、門市比較與紅燈。',where:'網頁（業主也用，你有管理員權限）',
+   go:[['進入損益中心',PL]]}]},
+ {t:'③ 提案與交付',items:[
+  {ic:'案',name:'品牌案件工作台',desc:'開案 → 問題樹 → 證據 → 策略 → 提案；一鍵出簡報與服務建議書。',where:'Claude 網頁（需登入 claude.ai）',
+   go:[['打開案件工作台','https://claude.ai/artifact/DEjP3mWn57z1SkgkkVhQMe']]},
+  {ic:'文',name:'文件與簡報管理',desc:'公告、SOP、提案簡報依範本產出與歸檔；在 Claude 專案「D_文件與簡報管理中心」裡下指令。',where:'Claude 專案＋技能（marvin-doc-manager、deck）',
+   go:[['打開 Claude 專案','https://claude.ai/projects']]},
+  {ic:'招',name:'招募考核範本包',desc:'職缺文案、面試題庫與評分表、到職 30 天、試用期與季度考核、勞動法規提醒。',where:'Google 文件（雲端硬碟 02_顧問工具）',
+   go:[['打開範本包','https://docs.google.com/document/d/1_fWOzW8MiPexgSS96_OB8lB7aj2NsZy1iLb_2FuOYgY/edit']]}]},
+ {t:'④ 客戶與帳號',items:[
+  {ic:'入',name:'業主入口（總覽）',desc:'每位業主可以進哪些系統、授權到期日。',where:'網頁',go:[['打開業主總覽',PORTAL]]},
+  {ic:'訂',name:'訂閱與會員管理',desc:'訂閱、試點名單、付款、發票與設定。',where:'網頁（管理員）',go:[['進入訂閱管理',BOM+'member/']]},
+  {ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢、投保級距與違規提醒；也可以陪業主一起看。',where:'網頁（業主也用）',go:[['進入人資中心',BOM+'hr/']]}]}
+];
+
+let me=null, ok=false, st=null, msg='';
+async function load(){
+  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; ok=false; st=null;
+  if(me){
+    const p=await sbc.from('bom_profiles').select('role,status').eq('user_id',me.id).maybeSingle();
+    ok=!!(p.data&&p.data.role==='admin'&&p.data.status==='active');
+    if(ok) st=await leadStats();
+  }
+  render();
+}
+async function leadStats(){
+  try{
+    const {data,error}=await sbc.from('checkup_leads').select('id,status,created_at,status_at').limit(1000);
+    if(error) return null;
+    const now=Date.now(), day=864e5, m0=new Date(new Date(now+8*3600e3).toISOString().slice(0,7)+'-01T00:00:00+08:00');
+    return {todo:data.filter(l=>l.status==='新名單').length,
+      late:data.filter(l=>(l.status==='新名單'&&now-new Date(l.created_at)>=day)||(l.status==='已聯絡'&&now-new Date(l.status_at||l.created_at)>=3*day)).length,
+      month:data.filter(l=>new Date(l.created_at)>=m0).length, won:data.filter(l=>l.status==='已成交').length};
+  }catch(e){return null}
+}
+function card(x){
+  const go=x.go.map((g,i)=>`<a class="btn ${i?'':'pri'}" href="${esc(g[1])}"${/^https:\/\/(claude\.ai|docs\.google)/.test(g[1])?' target="_blank" rel="noopener"':''}>${esc(g[0])}</a>`).join('')
+    +(x.copy?`<button type="button" data-copy="${esc(x.copy)}">複製連結給業主</button>`:'');
+  const chips=x.chips?`<div class="chips">${x.chips.map(c=>`<a href="${esc(BOM+'#'+c[1])}">${esc(c[0])}</a>`).join('')}</div>`:'';
+  const badge=x.stat&&st&&st.todo?`<span class="pill ${st.late?'bad':'warn'}">${st.todo} 筆新名單</span>`:'';
+  return `<div class="app"><div class="row" style="margin:0;justify-content:space-between"><div class="ic" aria-hidden="true">${esc(x.ic)}</div>${badge}</div><h3>${esc(x.name)}</h3><p>${esc(x.desc)}</p>${chips}<span class="tag">放在：${esc(x.where)}</span><div class="go">${go}</div></div>`;
+}
+function stats(){
+  if(!st) return '';
+  const s=(n,l,a)=>`<div class="stat ${a&&n?'alert':''}"><b>${n}</b><span>${l}</span></div>`;
+  return `<div class="stats">${s(st.todo,'新名單待聯絡')}${s(st.late,'該追蹤（逾期）',true)}${s(st.month,'本月新健檢')}${s(st.won,'累計成交')}</div>`;
+}
+function render(){
+  $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:4px"><a class="btn" href="${PORTAL}">業主入口</a><button type="button" data-out>登出</button></div>`:'';
+  const flash=msg?`<div class="msg">${esc(msg)}</div>`:'';
+  if(!me){ $('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">顧問工作台和業主入口用同一組帳號，登入一次兩邊都能用。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`; return }
+  if(!ok){ $('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><div class="row"><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`; return }
+  $('#app').innerHTML=flash+stats()+GROUPS.map(g=>`<div class="sec">${esc(g.t)}</div><div class="apps">${g.items.map(card).join('')}</div>`).join('')
+   +`<p class="note">網頁系統都在雲端，不用開你的電腦；「Claude」標示的要登入 claude.ai。要加新系統，改這一頁的 GROUPS 清單即可。</p>`;
+}
+document.addEventListener('click',async e=>{
+  const c=e.target.closest('[data-copy]');
+  if(c){ try{await navigator.clipboard.writeText(c.dataset.copy); msg='已複製健檢連結，可以直接貼給業主。'}catch(_){msg='複製失敗，請手動複製：'+c.dataset.copy} render(); return }
+  if(e.target.closest('[data-out]')){ await sbc.auth.signOut(); location.href=PORTAL }
+});
+sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
+load();
+</script>
+</body>
+</html>

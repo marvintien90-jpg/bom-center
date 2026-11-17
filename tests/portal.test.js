@@ -12,7 +12,7 @@ const sub = (o) => ({ id: 1, user_id: 'u1', email: 'o@x.com', company: '好吃�
 const cases = [
   ['未登入', { user: null, tables: {} }, ['BOM 運算中心', '損益分析中心', 'BOM＋損益 訂閱版', '忘記密碼', '到會員中心註冊'], ['業主總覽']],
   ['免費招待業主', { user: U, tables: { bom_profiles: [{ user_id: 'u1', role: 'client', status: 'active' }], pl_profiles: [{ user_id: 'u1', role: 'owner', status: 'active' }], sub_subscriptions: [sub({ status: 'comp' })] } },
-    ['進入 BOM 運算中心', '進入損益分析中心', '免費招待', '顧問會員', '不限期', '進入會員中心'], ['業主總覽', '未開通']],
+    ['進入 BOM 運算中心', '進入損益分析中心', '免費招待', '顧問會員', '不限期', '進入會員中心'], ['業主總覽', '未開通', '顧問工作台']],
   ['試用中只有 BOM', { user: U, tables: { bom_profiles: [{ user_id: 'u1', role: 'client', status: 'active', expires_on: '2099-01-01' }], sub_subscriptions: [sub({ status: 'trial', plan: 'basic', trial_ends_on: '2099-01-01' })] } },
     ['進入 BOM 運算中心', '可使用・到 2099-01-01', '試用中', '未開通', '到會員中心續訂'], ['進入損益分析中心']],
   ['等待開通', { user: U, tables: { bom_profiles: [{ user_id: 'u1', role: 'client', status: 'pending' }], pl_profiles: [{ user_id: 'u1', role: 'owner', status: 'active' }] } },
@@ -26,7 +26,7 @@ const cases = [
       bom_profiles: [{ user_id: 'a1', role: 'admin', status: 'active' }, { user_id: 'u1', email: 'o@x.com', role: 'client', status: 'active' }, { user_id: 'u2', email: 'p@x.com', role: 'client', status: 'pending' }],
       pl_profiles: [{ user_id: 'a1', role: 'admin', status: 'active' }, { user_id: 'u1', email: 'o@x.com', role: 'owner', status: 'active' }],
       sub_subscriptions: [sub({ status: 'comp' })] } },
-    ['業主總覽', '好吃餐飲', 'p@x.com', '免費招待', '進入訂閱管理', '管理員'], ['boss@x.com</span>']],
+    ['業主總覽', '好吃餐飲', 'p@x.com', '免費招待', '進入訂閱管理', '管理員', '進入顧問工作台'], ['boss@x.com</span>']],
 ];
 (async () => {
   const br = await chromium.launch(); let fail = 0;
