@@ -75,18 +75,28 @@
     return pois.map(p => ({ ...p, d: dist(site, p) })).filter(p => p.d <= R).sort((a, b) => a.d - b.d);
   }
 
-  function isFormat(p, F) {
+  function kwRe(kw) {
+    const parts = String(kw || '').split(/[\s,，、|]+/).map(x => x.trim()).filter(Boolean).map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    return parts.length ? new RegExp(parts.join('|'), 'i') : null;
+  }
+  function isFormat(p, F, kw) {
     if (!['food', 'drink', 'bar', 'bakery'].includes(p.cat)) return false;
+    if (kw) return kw.test(p.name || '') || kw.test(p.brand || '') || kw.test(p.sub || '');
     return F.re.test(p.name || '') || F.re.test(p.brand || '') || F.cuisine.test(p.sub || '');
   }
+  const isChain = p => CHAINS.test(p.name || '') || CHAINS.test(p.brand || '');
 
   /**
    * site: {lat, lon}; ctx: {pois, roads:[{lat,lon,cls,name}], villages, biz, rent, inc}
    * opt: {format, ticket, rent (monthly NT$), ping}
    */
   function evaluate(site, ctx, opt) {
-    const F = FORMATS[opt.format] || FORMATS.noodle;
-    const R = F.radius;
+    const F0 = FORMATS[opt.format] || FORMATS.noodle;
+    let W = F0.w;
+    if (opt.weights) { const t = Object.values(opt.weights).reduce((a, b) => a + (+b || 0), 0); if (t > 0) { W = {}; for (const k in F0.w) W[k] = (+opt.weights[k] || 0) / t; } }
+    const F = { ...F0, w: W };
+    const R = Math.max(150, Math.min(2000, +opt.radius || F0.radius));
+    const KW = kwRe(opt.keyword);
     const P3 = near(site, ctx.pois, 300), P5 = near(site, ctx.pois, 500), P10 = near(site, ctx.pois, 1000);
     const cnt = (arr, cat, sub) => arr.filter(p => p.cat === cat && (!sub || p.sub === sub)).length;
     const popR = population(site, ctx.villages, R), pop5 = population(site, ctx.villages, 500), pop10 = population(site, ctx.villages, 1000);
@@ -129,13 +139,13 @@
     sAccess = clamp(sAccess);
 
     // ---- 競爭 (same-format saturation vs clustering benefit)
-    const sameR = near(site, ctx.pois.filter(p => isFormat(p, F)), R);
+    const sameR = near(site, ctx.pois.filter(p => isFormat(p, F, KW)), R);
     const same3 = sameR.filter(p => p.d <= 300).length;
-    const foodR = (R === 300 ? P3 : R === 500 ? P5 : P10).filter(p => ['food', 'drink', 'bakery', 'bar'].includes(p.cat)).length;
+    const foodR = near(site, ctx.pois, R).filter(p => ['food', 'drink', 'bakery', 'bar'].includes(p.cat)).length;
     const perK = sameR.length / Math.max((popR.pop + flowRaw * 100) / 1000, 0.5); // 每千位（居民＋活動人口）同業家數
     let sComp = scale(perK, [[0, 90], [0.3, 80], [0.7, 65], [1.2, 50], [2, 35], [3.5, 20]]);
     sComp += scale(foodR, [[0, -10], [10, 0], [40, 8], [120, 5]]); // 有聚集效應但過度飽和不加分
-    const chains = sameR.filter(p => CHAINS.test(p.name || '') || CHAINS.test(p.brand || '')).length;
+    const chains = sameR.filter(isChain).length;
     sComp -= Math.min(chains * 3, 12);
     let bizRoad = null, bizTown = null;
     if (ctx.biz) {
@@ -200,16 +210,44 @@
     if (rentVsMarket != null && rentVsMarket > 1.2) cons.push(`開價比附近店面行情高約 ${Math.round((rentVsMarket - 1) * 100)}%，可議價`);
     if (popR.inc && F.income && popR.inc >= 900) pros.push(`周邊家戶所得中位數約 ${popR.inc} 千元，消費力佳`);
 
+    // ---- 時段潛力（依周邊設施組成推估，0–100）
+    const P5f = P5.filter(p => ['food', 'drink', 'bakery', 'bar'].includes(p.cat));
+    const bars5 = P5.filter(p => p.cat === 'bar').length, popS = scale(pop5.pop, [[0, 0], [6000, 50], [20000, 100]]);
+    const stS = nearestStation != null ? scale(-nearestStation, [[-500, 20], [-150, 60]]) : 0;
+    const young = share[1] + share[2];
+    const daypart = { // 各項上限加總為 100
+      breakfast: clamp(popS * .4 + stS / 60 * 20 + Math.min(g.school, 5) * 4 + Math.min(g.office, 40) * .5),
+      lunch: clamp(Math.min(g.office, 40) + Math.min(g.school, 5) * 3 + Math.min(g.hospital, 5) * 3 + Math.min(g.mall, 5) * 3 + popS * .15),
+      afternoon: clamp(Math.min(g.school, 5) * 4 + Math.min(g.mall, 5) * 4 + Math.min(g.attract, 10) * 2 + Math.min(P5f.length, 100) * .25 + stS / 60 * 15),
+      dinner: clamp(popS * .5 + Math.min(g.mall, 5) * 3 + (roadCls >= 3 ? 10 : 0) + Math.min(parking, 5) * 3 + stS / 60 * 10),
+      late: clamp(Math.min(bars5, 8) * 5 + Math.min(g.hotel, 5) * 2 + Math.min(P5f.length, 100) * .2 + young * 40 + Math.min(g.attract, 5) * 2)
+    };
+
+
     return {
-      format: opt.format, label: F.label, radius: R, total, grade, dims, weights: F.w,
+      format: opt.format, keyword: opt.keyword || '', custom: !!(opt.weights || opt.radius || opt.keyword), daypart, label: F.label, radius: R, total, grade, dims, weights: F.w,
       numbers: { pop5: pop5.pop, pop10: pop10.pop, hh5: pop5.hh, age5: pop5.age, inc: popR.inc, home: pop5.home,
         stations: stations5.slice(0, 3).map(p => ({ name: p.name, sub: p.sub, d: Math.round(p.d) })), ...g, parking,
         roadCls, roadName, flowRaw: Math.round(flowRaw), same: sameR.length, same3, perK: +perK.toFixed(2), foodR, chains, bizRoad, bizTown, market },
-      competitors: sameR.slice(0, 20).map(p => ({ name: p.name || '(未命名)', d: Math.round(p.d), lat: p.lat, lon: p.lon, chain: CHAINS.test(p.name || '') || CHAINS.test(p.brand || '') })),
+      competitors: sameR.slice(0, 60).map(p => ({ name: p.name || '(未命名)', d: Math.round(p.d), lat: p.lat, lon: p.lon, sub: p.sub || '', brand: p.brand || '', chain: isChain(p) })),
       revenue: rev, ticket, rentRatio, rentVsMarket, pros, cons
     };
   }
 
-  const api = { FORMATS, evaluate, dist, overlapFrac, population, scale };
+    // 損益試算：月營收 × (1 − 食材 − 雜支) − 租金 − 人事
+  const DEF_COST = { breakfast: [38, 70000], bento: [42, 90000], noodle: [38, 80000], drink: [30, 100000], cafe: [32, 90000], dinner: [40, 220000], night: [38, 120000] };
+  function pnl(res, inp) {
+    const d = DEF_COST[res.format] || [38, 90000];
+    const food = (inp.food ?? d[0]) / 100, other = (inp.other ?? 10) / 100, labor = inp.labor ?? d[1], rent = inp.rent || 0, invest = inp.invest || 0;
+    const fixed = labor + rent, margin = 1 - food - other;
+    const at = rev => Math.round(rev * margin - fixed);
+    const beRev = margin > 0 ? fixed / margin : null;
+    const beDaily = beRev && res.ticket ? Math.ceil(beRev / 30 / res.ticket) : null;
+    const mid = at(res.revenue.mid);
+    return { food: food * 100, other: other * 100, labor, rent, invest, low: at(res.revenue.low), mid, high: at(res.revenue.high),
+      beRev: beRev && Math.round(beRev), beDaily, payback: invest && mid > 0 ? +(invest / mid).toFixed(1) : null, defaults: d };
+  }
+
+  const api = { FORMATS, evaluate, dist, overlapFrac, population, scale, pnl, isChain };
   if (typeof module !== 'undefined') module.exports = api; else root.SiteScore = api;
 })(this);
