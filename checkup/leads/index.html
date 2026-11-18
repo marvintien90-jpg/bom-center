@@ -31,6 +31,8 @@ button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);c
 button.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .share{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chtbl td,.chtbl th{white-space:nowrap}
+.chtbl .num{text-align:right}
 @media (max-width:560px){.share{grid-template-columns:1fr 1fr}}
 .share button{padding:12px 6px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -81,13 +83,21 @@ const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STATUS=['新名單','已聯絡','已預約','已成交','不需要'];
 const OPEN=['新名單','已聯絡','已預約'];
-const CH=[['ig','Instagram'],['fb','Facebook'],['line','LINE'],['','直接分享']];
-const chName=s=>({ig:'IG',fb:'FB',line:'LINE',test:'測試'})[s]||'直接';
+// S01 品牌加辣自媒體各平台的追蹤連結（貼文、個人檔案、官網按鈕用）
+const CH=[['s01_fb','S01 Facebook'],['s01_ig','S01 Instagram'],['s01_threads','S01 Threads'],['s01_web','S01 官網'],['line','LINE 群組／私訊'],['','直接分享']];
+const CHN={s01_fb:'S01 FB',s01_ig:'S01 IG',s01_threads:'S01 Threads',s01_web:'S01 官網',ig:'IG',fb:'FB',line:'LINE',threads:'Threads',test:'測試',
+  ref_fb:'FB（自然點入）',ref_ig:'IG（自然點入）',ref_threads:'Threads（自然點入）',ref_line:'LINE（自然點入）',ref_google:'Google 搜尋',ref_web:'官網（自然點入）',ref_other:'其他網站'};
+const chName=s=>CHN[s]||(s?s:'直接');
+function chStats(){const g={};for(const l of leads){const k=chName(l.source);const x=g[k]||(g[k]={n:0,c:0,b:0,w:0,sum:0});x.n++;x.sum+=Number(l.total)||0;
+    if(['已聯絡','已預約','已成交'].includes(l.status))x.c++;if(['已預約','已成交'].includes(l.status))x.b++;if(l.status==='已成交')x.w++}
+  const rows=Object.entries(g).sort((a,b)=>b[1].n-a[1].n);if(!rows.length)return '';
+  return '<div class="card"><h2>來源成效</h2><p class="sub">每個平台帶來幾筆名單、聯絡到幾位、成交幾位。成交率高的平台，下次多放一點力氣。</p><div class="scroll"><table class="chtbl"><thead><tr><th>來源</th><th class="num">名單</th><th class="num">已聯絡</th><th class="num">已預約</th><th class="num">成交</th><th class="num">成交率</th><th class="num">平均分</th></tr></thead><tbody>'
+   +rows.map(([k,x])=>'<tr><td>'+esc(k)+'</td><td class="num">'+x.n+'</td><td class="num">'+x.c+'</td><td class="num">'+x.b+'</td><td class="num">'+x.w+'</td><td class="num">'+Math.round(x.w/x.n*100)+'%</td><td class="num">'+Math.round(x.sum/x.n)+'</td></tr>').join('')+'</tbody></table></div></div>'}
 let leads=[], tab='open'; const briefs={};
 const focusId=Number(new URLSearchParams(location.search).get('id'))||null; let focused=false;
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('on'),1600)}
 async function copy(text,label){try{await navigator.clipboard.writeText(text);toast(label+' 已複製')}catch(e){prompt('請手動複製：',text)}}
-const link=src=>PAGE+(src?'?src='+src:'');
+const link=src=>PAGE+(src?(src==='s01_threads'?'#src=':'?src=')+src:''); // 脆個人檔案會改壞 ?src=，改用 #src=
 
 function login(msg){
   $('#out').hidden=true;
@@ -148,16 +158,17 @@ function render(){
   const now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1);
   const month=leads.filter(l=>new Date(l.created_at)>=m0).length, todo=leads.filter(l=>l.status==='新名單').length, won=leads.filter(l=>l.status==='已成交').length;
   const list=leads.filter(l=>tab==='all'||OPEN.includes(l.status));
-  let h=`<div class="card"><h2>分享健檢</h2><p class="sub">點一下就複製連結，貼到對應的地方。名單會自動標出是從哪裡來的。</p>
+  let h=`<div class="card"><h2>分享健檢</h2><p class="sub">點一下就複製該平台專用連結，貼到貼文、個人檔案或官網按鈕。名單會自動標出是從哪個平台來的，下面的「來源成效」會分開統計。</p>
     <div class="share">${CH.map(([s,n])=>`<button data-copy="${s}">${n}</button>`).join('')}</div></div>
     <div class="stats"><div class="stat"><span class="note">待聯絡</span><b>${todo}</b></div><div class="stat"><span class="note">本月名單</span><b>${month}</b></div><div class="stat"><span class="note">已成交</span><b>${won}</b></div></div>
+    ${chStats()}
     <div class="tabs"><button data-tab="open" class="${tab==='open'?'on':''}">待處理</button><button data-tab="all" class="${tab==='all'?'on':''}">全部（${leads.length}）</button></div>`;
   if(!list.length) h+=`<div class="empty">${leads.length?'沒有待處理的名單。':'還沒有名單。先用上面的按鈕把健檢分享出去。'}</div>`;
   for(const l of list){
     const w=weak(l.scores), d=new Date(l.created_at);
     h+=`<div class="lead ${l.status==='新名單'?'new':''}${l.id===focusId?' focus':''}" data-id="${l.id}" id="lead-${l.id}">
       <div class="lead-top"><h3>${esc(l.brand||'（未填品牌）')}｜${esc(l.contact_name)}</h3><span class="note">${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}・${chName(l.source)}</span></div>
-      <div class="row" style="margin-top:4px"><span class="score">${l.total??'-'}</span><span class="note">分</span>${w.map(([n,s])=>`<span class="pill ${lv(s)}">${n} ${s}</span>`).join('')}${due(l)}${l.biz_type?`<span class="note">${esc(l.biz_type)}${l.stores?'・'+l.stores+' 店':''}</span>`:''}</div>
+      <div class="row" style="margin-top:4px"><span class="score">${l.total??'-'}</span><span class="note">分</span>${w.map(([n,s])=>`<span class="pill ${lv(s)}">${n} ${s}</span>`).join('')}${due(l)}${l.pref?`<span class="pill">方便：${esc(l.pref)}</span>`:''}${l.topic?`<span class="pill">想先解決：${esc(l.topic)}</span>`:''}${l.biz_type?`<span class="note">${esc(l.biz_type)}${l.stores?'・'+l.stores+' 店':''}</span>`:''}</div>
       <div class="contact">${l.phone?`<a class="btn" href="tel:${esc(l.phone)}">📞 ${esc(l.phone)}</a>`:''}${l.line_id?`<button data-line="${esc(l.line_id)}">LINE ${esc(l.line_id)}</button>`:''}${l.email?`<a class="btn" href="mailto:${esc(l.email)}">${esc(l.email)}</a>`:''}</div>
       <div class="edit"><select data-status aria-label="狀態">${STATUS.map(s=>`<option ${s===l.status?'selected':''}>${s}</option>`).join('')}</select><textarea data-note placeholder="備註（離開欄位自動儲存）" aria-label="備註">${esc(l.note||'')}</textarea></div>
       <details data-brief ${l.id===focusId?'open':''}><summary>顧問作業包（問題、改善方案、話術）</summary><div class="bw">${l.id in briefs?briefHtml(briefs[l.id]):'<p class="note">讀取中…</p>'}</div></details>
