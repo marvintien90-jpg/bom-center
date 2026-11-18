@@ -579,14 +579,14 @@ document.addEventListener('click',e=>{
 const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
 const LICENSOR='品牌加辣餐飲顧問工作室';
-const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','news','account','help','io','ing','semi','recipe','cost','price','order','cnt','po','rcv','waste','supp','ver','log'];
+const PLAN_NAME={basic:'基本版',pro:'進階版'}, BASIC=['home','sop','news','account','help','io','ing','semi','recipe','cost','price','order','cnt','po','rcv','waste','supp','ver','log'];
 let sbc=null, me=null, prof=null, G='loading', authMsg='', authMode='in', adm={profiles:[],access:[]}, adminTab=false, notice='', logRows=null, watchOn=false, rtT=null; const revs={}, saving=new Set();
 TABS[TABS.length-1][2].push(['log','修改紀錄']);
 /* 左側選單：照業主的工作順序分層 */
-const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['mrep','qsc','shift','cash','grow','order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
-const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',mrep:'每月經營月報',qsc:'門市稽核',shift:'排班與人力成本',cash:'現金流預估',grow:'顧客成長',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
+const NAV=[['data','資料建立',['ing','semi','recipe','combo','io']],['inv','庫存與進貨',['cnt','po','rcv','waste','sales','var','supp']],['price','成本與定價',['cost','matrix','newp','price','channel']],['ops','營運管理',['mrep','sop','qsc','shift','cash','grow','order','pricelog','pl','be','fc']],['hq','總部與加盟',['markup','hqitem','supply','frsim']],['sys','系統',['ver','log','account','help','brands','annc','admin']]];
+const LAB={fc:'預估與情境',po:'採購單',waste:'耗損登記',sales:'銷量匯入',var:'用量差異',cnt:'盤點',rcv:'進貨登記',supp:'供應商',news:'公告欄',annc:'公告管理',brands:'品牌管理',io:'上傳與下載表單',home:'首頁',ing:'食材主檔',semi:'半成品',recipe:'品項配方',combo:'套餐組合',cost:'成本毛利',matrix:'產品四象限',mrep:'每月經營月報',sop:'SOP 手冊',qsc:'門市稽核',shift:'排班與人力成本',cash:'現金流預估',grow:'顧客成長',newp:'新品試算',price:'定價漲價試算',channel:'外送通路定價',order:'叫貨推估',pricelog:'價格紀錄',pl:'損益趨勢',be:'損益兩平',markup:'疊價設定',hqitem:'單品獲利',supply:'總供貨試算',frsim:'加盟主損益',ver:'版本與備份',log:'修改紀錄',account:'我的帳號',help:'使用說明',admin:'授權管理'};
 /* 每頁一句話：這頁要先做什麼、做完去哪 */
-const TIP={mrep:['這頁自動彙整其他頁面的數字，不用另外填。每月月底看一次，照「本月優先三件事」去做；要給業主就按列印或複製文字。','pl'],grow:['每月月底從 POS 抄四個數字：來客數、客單價、會員回訪率、Google 評分。系統會看出營收是哪一項在掉，也能試算活動到底有沒有賺。','cash'],cash:['填今天帳戶和現金的總餘額，再確認每週收入、每月固定支出和哪天付款。系統排出未來 13 週每週剩多少錢，提早告訴你哪一週會不夠。','be'],shift:['先建員工和時薪／月薪，再排一週的標準班表。系統會算出每週人力成本、占營收幾 %，並標出人手不夠的時段和工時太長的人。','pl'],qsc:['用手機巡店，每一項點「符合／部分／不符合」。不符合和部分的項目會自動進到下面的改善追蹤，填好負責人和期限，改好按完成。','order'],fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
+const TIP={sop:['這是顧問交付給門市的標準作業手冊。新人訓練、交接班時照著做；有 ★ 的步驟是門市稽核會檢查的重點。','qsc'],mrep:['這頁自動彙整其他頁面的數字，不用另外填。每月月底看一次，照「本月優先三件事」去做；要給業主就按列印或複製文字。','pl'],grow:['每月月底從 POS 抄四個數字：來客數、客單價、會員回訪率、Google 評分。系統會看出營收是哪一項在掉，也能試算活動到底有沒有賺。','cash'],cash:['填今天帳戶和現金的總餘額，再確認每週收入、每月固定支出和哪天付款。系統排出未來 13 週每週剩多少錢，提早告訴你哪一週會不夠。','be'],shift:['先建員工和時薪／月薪，再排一週的標準班表。系統會算出每週人力成本、占營收幾 %，並標出人手不夠的時段和工時太長的人。','pl'],qsc:['用手機巡店，每一項點「符合／部分／不符合」。不符合和部分的項目會自動進到下面的改善追蹤，填好負責人和期限，改好按完成。','order'],fc:['導入 2 個月以上的損益表就能預估，滿 12 個月會自動考慮淡旺季。下面的情境模擬可以試「來客少一成」「肉價漲 15%」淨利會變多少。','be'],po:['先盤點一次，系統就會接著推估庫存。快用完的勾一勾就能依供應商開單，貨到了按「收貨」變成進貨單。','rcv'],waste:['每天收店前花一分鐘，把丟掉、做壞、招待的記下來。月底的用量差異會先扣掉這些。','var'],sales:['每月從 POS 匯出「商品銷售統計」上傳。對應過一次，下次同樣的品名就會自動對好。','var'],var:['先有兩次完成的盤點，中間的進貨都有登記，這裡才算得準。從差異金額最大的食材開始查。','cost'],cnt:['建議每月最後一天打烊後盤點一次。可以多人用手機同時盤，填完離開格子就自動存。','rcv'],rcv:['每次廠商送貨，照送貨單登記數量和價錢。進價變了可以一鍵更新食材主檔。','cnt'],supp:['先建好常往來的廠商，進貨登記時就能直接選。','rcv'],ing:['從這裡開始。每樣食材填名稱、進貨價和一包的量，後面的配方才選得到。','recipe'],semi:['有先煮好再用的醬料、高湯才需要填，沒有可以跳過。','recipe'],recipe:['左邊選一道菜，右邊填它用了哪些食材和用量，再填售價和月銷量。','cost'],combo:['先建好單品，才能在這裡把它們綁成套餐。','cost'],
  cost:['紅色代表成本超過目標。想知道該賣多少錢，到定價試算。','price'],matrix:['有匯入 POS 銷量就能選「銷量來源」用實際銷量分類；沒有的話用品項配方填的月銷量。','newp'],newp:['新品上市前先在這裡算成本、建議售價，並和同分類的菜比賺不賺。確定上市再按「加入品項配方」。','matrix'],price:['上半部看建議售價，下半部試算食材漲價的影響。這頁的試算不會改到你的資料。','order'],channel:['先新增外送平台和抽成比例，就能看外送價該加幾成。','be'],
  order:['要先在品項配方填月銷量，才算得出每樣食材該叫多少。',''],pricelog:['不用手動填。只要在食材主檔改進貨價，這裡就會自動記一筆。',''],pl:['每個月把損益表的數字填進來，就能看成本率的走勢。','be'],be:['先填每月固定費用，就能算出一個月要做多少營收才不賠。',''],
  markup:['先設一個預設疊價，個別食材要不一樣再單獨填。','hqitem'],hqitem:['這頁只看不用填，數字來自疊價設定和配方。','supply'],supply:['先在上方填直營店和加盟店的家數。','frsim'],frsim:['填一家加盟店的營收和費用，看它賺不賺、多久回本。','']};
@@ -944,7 +944,7 @@ async function loadAll(){ try{
     brands={}; Object.keys(revs).forEach(k=>delete revs[k]); (bs.data||[]).forEach(applyRemote);
     await plLoad(); await loadVersions(); await loadAnns();
     if(isAdmin()){ if(!adminTab){ TABS[TABS.length-1][2].push(['admin','授權管理']); adminTab=true } await loadAdmin(); try{ plEnts=(await sbc.rpc('bom_pl_entities')).data||[] }catch(x){ plEnts=[] } }
-    cur=null; pick(); if(wantAdmin&&!isAdmin()) notice='你開的是管理員專用的連結，但目前登入的是業主帳號 '+me.email+'。要進授權管理，請先登出，再用管理員帳號登入。'; if(isAdmin()) wantAdmin=false; if(!V[tab]||!allowed(tab)||((tab==='admin'||tab==='brands'||tab==='annc')&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }); loadUps().then(()=>{ if(tab==='home'||tab==='io') render() }) }
+    cur=null; if(wantBrand&&brands[wantBrand]) cur=wantBrand; wantBrand=null; pick(); if(wantAdmin&&!isAdmin()) notice='你開的是管理員專用的連結，但目前登入的是業主帳號 '+me.email+'。要進授權管理，請先登出，再用管理員帳號登入。'; if(isAdmin()) wantAdmin=false; if(!V[tab]||!allowed(tab)||((tab==='admin'||tab==='brands'||tab==='annc')&&!isAdmin())) tab='home'; G='app'; setStatus('已連線'); startWatch(); render(); loadLog().then(()=>{ if(tab==='home') render() }); loadUps().then(()=>{ if(tab==='home'||tab==='io') render() }) }
   catch(e){ G='error'; authMsg='讀取資料時發生問題，請重新整理頁面。'; render() } }
 
 function render(){ const app=G==='app', ub=$('#userbar'), sh=$('#shell'); sh.classList.toggle('bare',!app); if(!app) sh.classList.remove('open');
@@ -1531,7 +1531,8 @@ document.addEventListener('change',e=>{ const d=e.target.dataset||{}; if(!d.fc) 
 document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t||!t.dataset.fcpre) return; const k=t.dataset.fcpre, b=B(); if(!b) return;
   const base={traffic:'',price:'',food:'',cat:'',catPct:'',labor:'',rent:'',n:fcS.n};
   fcS=k==='slow'?{...base,traffic:'-10'}:k==='up'?{...base,price:'5',traffic:'-3'}:k==='meat'?{...base,cat:Object.entries(fcCatShare(b,ctx(b))).sort((x,y)=>y[1]-x[1])[0]?.[0]||'',catPct:'15'}:k==='wage'?{...base,labor:'4'}:base; render() });
-async function siteBoot(){ const h=location.hash.slice(1); tab=LAB[h]?h:'home'; wantAdmin=h==='admin';
+let wantBrand=null;
+async function siteBoot(){ const h0=location.hash.slice(1), hm=h0.match(/^(\w+)&b=(.+)$/), h=hm?hm[1]:h0; if(hm) wantBrand=decodeURIComponent(hm[2]); tab=LAB[h]?h:'home'; wantAdmin=h==='admin';
   if(/error_code=|error=access_denied/.test(h)){ authMsg='這個連結已經過期或已經用過。請在下面重新操作一次（忘記密碼或重寄驗證信），再點最新那封信裡的連結。'; try{history.replaceState(null,'',location.pathname)}catch(x){} }
   if(!window.supabase){ G='error'; authMsg='無法載入登入元件，請檢查網路後重新整理。'; return render() }
   sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
@@ -1610,6 +1611,24 @@ document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t
   if(d.npline){ const first=b.ingredients[0]?'i:'+b.ingredients[0].id:(b.semis[0]?'s:'+b.semis[0].id:null); if(first){ it.lines.push({ref:first,qty:0}); touch(); render() } return }
   if(d.npgo){ const m={id:uid('m'),name:it.name,cat:it.cat,price:+it.price||0,monthlySales:+it.monthlySales||0,lines:it.lines.map(l=>({ref:l.ref,qty:+l.qty||0}))}; b.items.push(m); b.drafts=b.drafts.filter(x=>x.id!==it.id); npSel=null; selItem=m.id; tab='recipe'; try{history.replaceState(null,'','#recipe')}catch(x){} touch(); render(); return } });
 
+/* ===== SOP 手冊（顧問從顧問工作台交付，門市只讀） ===== */
+let sopQ='', sopOpen=null;
+V.sop=(b)=>{ const m=b.sop;
+  if(!m||!Array.isArray(m.sections)||!m.sections.length) return '<div class="head"><div><h2>SOP 手冊</h2><p class="sub">門市的標準作業手冊會放在這裡。</p></div></div><p>顧問還沒有交付這個品牌的 SOP 手冊。需要的話請聯絡顧問。</p>';
+  const q=sopQ.trim().toLowerCase(), hit=s=>!q||[s.text,s.std,s.role].some(v=>String(v||'').toLowerCase().includes(q));
+  let n=0; const secs=m.sections.map((sec,si)=>{ const st=(sec.steps||[]).filter(hit); n+=st.length; if(q&&!st.length) return '';
+    const open=q||sopOpen===null||sopOpen===si;
+    return '<section style="border:1px solid var(--line);border-radius:10px;background:var(--panel);margin:10px 0"><button data-sopsec="'+si+'" aria-expanded="'+open+'" style="width:100%;text-align:left;border:0;background:none;padding:12px 14px;font-weight:600">'+(si+1)+'. '+esc(sec.name)+(sec.when?' <span class="note">'+esc(sec.when)+'</span>':'')+' <span class="note">（'+(sec.steps||[]).length+' 步）</span></button>'
+      +(open?'<ol style="margin:0;padding:0 16px 12px 36px">'+st.map(x=>'<li style="margin:6px 0">'+(x.audit?'<b title="稽核重點">★ </b>':'')+esc(x.text)+(x.std?'<div class="note">標準：'+esc(x.std)+'</div>':'')+(x.role?'<div class="note">負責：'+esc(x.role)+'</div>':'')+'</li>').join('')+'</ol>':'')+'</section>' }).join('');
+  return '<div class="head"><div><h2>'+esc(m.title||'SOP 手冊')+'</h2><p class="sub">'+esc(m.biz||'')+(m.ver?'　第 '+esc(m.ver)+' 版':'')+(m.at?'　'+esc(String(m.at).slice(0,10))+' 交付':'')+'</p></div><div class="brandbar"><button data-sopprint="1">列印／存成 PDF</button></div></div>'
+    +'<div class="params"><label style="flex:1">搜尋 <input type="search" id="sopq" value="'+esc(sopQ)+'" placeholder="例：冷藏、收銀、開店" aria-label="搜尋 SOP" style="width:100%"></label>'+(q?'<span class="note">找到 '+n+' 步</span>':'<button data-sopall="1">'+(sopOpen===null?'全部收起':'全部展開')+'</button>')+'</div>'
+    +'<p class="note">★ 是門市稽核會檢查的重點。</p>'+secs };
+document.addEventListener('input',e=>{ if(e.target.id!=='sopq') return; sopQ=e.target.value; const p=e.target.selectionStart; render(); const i=document.getElementById('sopq'); if(i){ i.focus(); try{ i.setSelectionRange(p,p) }catch(x){} } });
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset;
+  if(d.sopsec!=null){ const i=+d.sopsec; sopOpen=sopOpen===i?-1:i; render(); return }
+  if(d.sopall){ sopOpen=sopOpen===null?-1:null; render(); return }
+  if(d.sopprint){ sopOpen=null; render(); setTimeout(()=>window.print(),50); return } });
+
 /* ===== ③ 門市稽核（QSC） ===== */
 const QSC_DEF=[['品質','出餐份量符合食譜卡'],['品質','出餐溫度正確（熱食夠熱、冷食夠冰）'],['品質','擺盤符合標準照'],['品質','食材效期標示清楚，沒有過期品'],['品質','冷藏 0–7°C、冷凍 −18°C 以下，並有溫度紀錄'],['品質','食材先進先出'],
  ['服務','客人入座 1 分鐘內有人招呼'],['服務','出餐時間符合標準'],['服務','員工服裝儀容整齊、名牌配戴'],['服務','結帳正確，發票或收據有開立'],['服務','客訴有紀錄並處理到結案'],['服務','外送包裝完整、封口、附餐具'],
@@ -1620,15 +1639,37 @@ let qsSel=null, qsEdit=false;
 function qsInit(b){ if(!b.qscItems) b.qscItems=QSC_DEF.map((x,i)=>({id:'q'+(i+1),cat:x[0],text:x[1]})); b.audits=b.audits||[] }
 function qsScore(a,items){ let got=0,max=0; items.forEach(it=>{ const r=a.res[it.id]; if(r&&r.s!=null&&r.s!==''){ got+=+r.s; max+=2 } }); return max?Math.round(got/max*100):null }
 function qsOpen(b){ const out=[]; b.audits.forEach(a=>{ if(!a.done) return; Object.keys(a.res).forEach(k=>{ const r=a.res[k]; if(r&&r.s!=null&&+r.s<2&&!r.ok) out.push({a,k,r}) }) }); return out }
+const QS_KIND=[['self','門市自檢'],['supervisor','督導巡店']];
+let qsUrl={}, qsUrlWait=new Set(), qsArm=null, qsSig={}, qsMsg='';
+function qsPhotos(a,iid,r,edit){ const ph=r.ph||[]; if(!ph.length&&!(edit&&!RO())) return '';
+  const miss=ph.filter(p=>!qsUrl[p]&&!qsUrlWait.has(p)); if(miss.length){ miss.forEach(p=>qsUrlWait.add(p)); const id=cur;
+    sbc.storage.from('qsc-photos').createSignedUrls(miss,3600).then(({data})=>{ (data||[]).forEach(x=>{ if(x&&x.signedUrl) qsUrl[x.path]=x.signedUrl }); if(cur===id&&tab==='qsc') render() }).catch(()=>{}) }
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center">'+ph.map((p,i)=>'<span style="display:inline-flex;flex-direction:column;gap:2px;align-items:center">'+(qsUrl[p]?'<a href="'+esc(qsUrl[p])+'" target="_blank" rel="noopener"><img src="'+esc(qsUrl[p])+'" alt="缺失照片 '+(i+1)+'" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line)"></a>':'<span class="note" style="width:72px;height:72px;display:grid;place-items:center;border:1px dashed var(--line);border-radius:6px">照片 '+(i+1)+'</span>')
+      +(edit&&!RO()?'<button data-qsphdel="'+esc(a.id)+'|'+esc(iid)+'|'+i+'" style="font-size:12px;padding:1px 6px">'+(qsArm===a.id+'|'+iid+'|'+i?'再按一次刪除':'刪除')+'</button>':'')+'</span>').join('')
+    +(edit&&!RO()?'<label style="display:inline-block"><input type="file" accept="image/*" capture="environment" data-qsph="'+esc(a.id)+'|'+esc(iid)+'" style="display:none"><span role="button" tabindex="0" style="display:inline-block;border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer">📷 拍照／加照片</span></label>':'')+'</div>' }
+function qsImg(f){ return new Promise((ok,no)=>{ const im=new Image(), u=URL.createObjectURL(f); im.onload=()=>{ const k=Math.min(1,1280/Math.max(im.width,im.height)), cv=document.createElement('canvas'); cv.width=Math.round(im.width*k); cv.height=Math.round(im.height*k); cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height); URL.revokeObjectURL(u); cv.toBlob(b=>b?ok(b):no(new Error('壓縮失敗')),'image/jpeg',0.72) }; im.onerror=()=>{ URL.revokeObjectURL(u); no(new Error('讀不到這張圖')) }; im.src=u }) }
+document.addEventListener('change',async e=>{ const d=e.target.dataset||{}; if(!d.qsph) return; const f=e.target.files&&e.target.files[0]; if(!f) return; const b=B(), id=cur; if(!b||RO()) return;
+  const [aid,iid]=d.qsph.split('|'), a=b.audits.find(x=>x.id===aid); if(!a) return; setStatus('上傳照片中…');
+  try{ const blob=await qsImg(f), path=id+'/'+aid+'/'+iid+'-'+Date.now().toString(36)+'.jpg';
+    const up=await sbc.storage.from('qsc-photos').upload(path,blob,{contentType:'image/jpeg'}); if(up.error) throw up.error;
+    a.res[iid]=a.res[iid]||{}; (a.res[iid].ph=a.res[iid].ph||[]).push(path); touch(); setStatus('照片已上傳'); render() }
+  catch(x){ setStatus('照片上傳失敗：'+String(x&&x.message||x).slice(0,60)+'。請再試一次，或先在備註寫下狀況。') } });
+function qsRows(b,id){ const items=b.qscItems||[], today=new Date().toISOString().slice(0,10);
+  return b.audits.filter(a=>a.done).map(a=>{ const rs=Object.values(a.res||{}).filter(r=>r&&r.s!=null&&r.s!==''&&+r.s<2), op=rs.filter(r=>!r.ok);
+    return {audit_id:a.id,brand_id:id,store:a.store||null,audit_date:a.date||today,kind:a.kind==='supervisor'?'supervisor':'self',auditor:a.by||null,score:qsScore(a,items),item_count:items.length,bad_count:rs.length,open_count:op.length,overdue_count:op.filter(r=>r.due&&r.due<today).length} }) }
+function qsSyncLater(b,id){ if(!id||RO()||!sbc) return; const rows=qsRows(b,id), sig=JSON.stringify(rows); if(qsSig[id]===sig) return; const first=qsSig[id]===undefined; qsSig[id]=sig;
+  setTimeout(async()=>{ try{ if(rows.length){ const r=await sbc.from('qsc_audits').upsert(rows.map(x=>Object.assign({updated_at:new Date().toISOString()},x)),{onConflict:'audit_id'}); if(r.error) return }
+      const ex=await sbc.from('qsc_audits').select('audit_id').eq('brand_id',id); const keep=new Set(rows.map(x=>x.audit_id)), gone=(ex.data||[]).map(x=>x.audit_id).filter(k=>!keep.has(k));
+      if(gone.length) await sbc.from('qsc_audits').delete().in('audit_id',gone) }catch(x){} },first?300:50) }
 V.qsc=(b,c)=>{ qsInit(b); const items=b.qscItems, cats=[...new Set(items.map(i=>i.cat||'其他'))];
   const head='<div class="head"><div><h2>門市稽核</h2><p class="sub">巡店時用手機逐項檢查品質、服務、清潔、管理。系統自動算分，不符合的項目會變成改善追蹤，直到改好為止。</p></div><button class="pri" data-qsnew="1">開始新稽核</button></div>';
   const ai=b.audits.findIndex(a=>a.id===qsSel), a=b.audits[ai];
   if(a&&!a.done){ const sc=qsScore(a,items), n=items.filter(it=>a.res[it.id]&&a.res[it.id].s!=null).length;
-    return head+'<div class="params"><label>日期 <input type="date" data-p="audits.'+ai+'.date" value="'+esc(a.date)+'" aria-label="日期"></label><label>門市 '+txt('audits.'+ai+'.store',a.store,'門市')+'</label><label>稽核人 '+txt('audits.'+ai+'.by',a.by,'稽核人')+'</label></div>'
+    return head+'<div class="params"><label>日期 <input type="date" data-p="audits.'+ai+'.date" value="'+esc(a.date)+'" aria-label="日期"></label><label>門市 '+txt('audits.'+ai+'.store',a.store,'門市')+'</label><label>稽核人 '+txt('audits.'+ai+'.by',a.by,'稽核人')+'</label><label>類型 <select data-p="audits.'+ai+'.kind" aria-label="稽核類型">'+QS_KIND.map(k=>'<option value="'+k[0]+'"'+((a.kind||'self')===k[0]?' selected':'')+'>'+k[1]+'</option>').join('')+'</select></label></div>'
      +'<div class="tiles"><div class="tile"><span>目前分數</span><b>'+(sc==null?'—':sc+' 分')+'</b><span>已檢查 '+n+' / '+items.length+' 項</span></div></div>'
-     +cats.map(ct=>'<h2 style="margin-top:16px">'+esc(ct)+'</h2><div style="display:grid;gap:8px">'+items.filter(it=>(it.cat||'其他')===ct).map(it=>{ const r=a.res[it.id]||{}; return '<div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel)"><div>'+esc(it.text)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'
+     +cats.map(ct=>'<h2 style="margin-top:16px">'+esc(ct)+'</h2><div style="display:grid;gap:8px">'+items.filter(it=>(it.cat||'其他')===ct).map(it=>{ const r=a.res[it.id]||{}; return '<div style="border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel)"><div>'+esc(it.text)+'</div>'+(it.std?'<div class="note">標準：'+esc(it.std)+(it.sop?'（SOP「'+esc(it.sop)+'」）':'')+'</div>':'')+'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'
        +QS_V.map(v=>'<button data-qsv="'+esc(a.id)+'|'+esc(it.id)+'|'+v[2]+'" class="'+(r.s===v[2]?'pri':'')+'" aria-pressed="'+(r.s===v[2])+'">'+v[0]+'</button>').join('')+'</div>'
-       +(r.s!=null&&r.s<2?'<input type="text" data-p="audits.'+ai+'.res.'+it.id+'.n" value="'+esc(r.n||'')+'" placeholder="哪裡不符合？（例：冷藏 9°C）" aria-label="缺失說明" style="margin-top:6px;width:100%">':'')+'</div>' }).join('')+'</div>').join('')
+       +(r.s!=null&&r.s<2?'<input type="text" data-p="audits.'+ai+'.res.'+it.id+'.n" value="'+esc(r.n||'')+'" placeholder="哪裡不符合？（例：冷藏 9°C）" aria-label="缺失說明" style="margin-top:6px;width:100%">'+qsPhotos(a,it.id,r,true):'')+'</div>' }).join('')+'</div>').join('')
      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="pri" data-qsdone="1">完成稽核</button><button data-qsback="1">先存著，回列表</button>'+del('audits.'+ai)+'</div>' }
   // 列表＋改善追蹤
   const done=b.audits.filter(x=>x.done).sort((x,z)=>String(z.date).localeCompare(String(x.date)));
@@ -1642,19 +1683,20 @@ V.qsc=(b,c)=>{ qsInit(b); const items=b.qscItems, cats=[...new Set(items.map(i=>
   if(!open.length) h+='<p class="sub">目前沒有待改善的項目。</p>';
   else h+='<div style="display:grid;gap:8px">'+open.sort((x,z)=>String(x.r.due||'9').localeCompare(String(z.r.due||'9'))).map(o=>{ const it=items.find(i=>i.id===o.k), x=b.audits.indexOf(o.a), late=o.r.due&&o.r.due<today;
       return '<div style="border:1px solid var(--line);border-left:4px solid var('+(late?'--bad':'--warn')+');border-radius:8px;padding:10px 12px;background:var(--panel)"><b>'+esc(it?it.text:'（項目已刪除）')+'</b> <span class="pill '+(+o.r.s===0?'bad':'warn')+'">'+(+o.r.s===0?'不符合':'部分')+'</span>'+(late?' <span class="pill bad">已逾期</span>':'')
-       +'<div class="note">'+esc(o.a.store||'')+' '+esc(o.a.date)+(o.r.n?'：'+esc(o.r.n):'')+'</div>'
+       +'<div class="note">'+esc(o.a.store||'')+' '+esc(o.a.date)+(o.r.n?'：'+esc(o.r.n):'')+'</div>'+qsPhotos(o.a,o.k,o.r,false)
        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center"><input type="text" data-p="audits.'+x+'.res.'+o.k+'.who" value="'+esc(o.r.who||'')+'" placeholder="負責人" aria-label="負責人" style="width:110px"><input type="date" data-p="audits.'+x+'.res.'+o.k+'.due" value="'+esc(o.r.due||'')+'" aria-label="改善期限"><button data-qsok="'+esc(o.a.id)+'|'+esc(o.k)+'">已改善</button></div></div>' }).join('')+'</div>';
   h+='<h2 style="margin-top:18px">稽核紀錄</h2>';
   if(!done.length) h+='<p class="sub">按「開始新稽核」做第一次巡店。</p>';
   else { const pts=done.slice(0,12).reverse(), W=560,H=150,L=30,R=10,T=10,Bm=24, X=i=>L+(pts.length<2?(W-L-R)/2:i*(W-L-R)/(pts.length-1)), Y=v=>T+(100-v)/100*(H-T-Bm);
     h+='<div class="scroll" style="padding:8px"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="稽核分數趨勢" style="width:100%;max-width:640px;height:auto">'+[100,80,60].map(v=>'<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)"/><text x="'+(L-4)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+v+'</text>').join('')
       +'<polyline fill="none" stroke="var(--accent)" stroke-width="2" points="'+pts.map((x,i)=>X(i)+','+Y(qsScore(x,items)||0)).join(' ')+'"/>'+pts.map((x,i)=>'<circle cx="'+X(i)+'" cy="'+Y(qsScore(x,items)||0)+'" r="4" fill="var(--accent)"/><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="var(--mute)">'+esc(String(x.date).slice(5))+'</text>').join('')+'</svg></div>';
-    h+='<div class="scroll"><table><thead><tr><th>日期</th><th>門市</th><th>稽核人</th><th class="n">分數</th><th class="n">缺失</th><th></th></tr></thead><tbody>'+done.map(x=>{ const bad=Object.values(x.res).filter(r=>r&&r.s!=null&&+r.s<2).length; return '<tr><td>'+esc(x.date)+'</td><td>'+esc(x.store||'')+'</td><td>'+esc(x.by||'')+'</td><td class="n">'+qsScore(x,items)+'</td><td class="n">'+bad+'</td><td><button data-qsreopen="'+esc(x.id)+'">修改</button></td></tr>' }).join('')+'</tbody></table></div>' }
+    h+='<div class="scroll"><table><thead><tr><th>日期</th><th>門市</th><th>類型</th><th>稽核人</th><th class="n">分數</th><th class="n">缺失</th><th></th></tr></thead><tbody>'+done.map(x=>{ const bad=Object.values(x.res).filter(r=>r&&r.s!=null&&+r.s<2).length; return '<tr><td>'+esc(x.date)+'</td><td>'+esc(x.store||'')+'</td><td>'+(x.kind==='supervisor'?'督導巡店':'門市自檢')+'</td><td>'+esc(x.by||'')+'</td><td class="n">'+qsScore(x,items)+'</td><td class="n">'+bad+'</td><td><button data-qsreopen="'+esc(x.id)+'">修改</button></td></tr>' }).join('')+'</tbody></table></div>' }
   h+='<h2 style="margin-top:18px">稽核項目</h2><p class="sub">預設 '+QSC_DEF.length+' 項，可以依門市需求改字、增加或刪除。</p><button data-qsedit="1">'+(qsEdit?'收起':'編輯稽核項目')+'</button>';
   if(qsEdit) h+='<div class="scroll" style="margin-top:8px"><table><thead><tr><th>分類</th><th>檢查項目</th><th></th></tr></thead><tbody>'+items.map((it,i)=>'<tr><td>'+txt('qscItems.'+i+'.cat',it.cat,'分類')+'</td><td style="min-width:220px">'+txt('qscItems.'+i+'.text',it.text,'檢查項目')+'</td><td>'+del('qscItems.'+i)+'</td></tr>').join('')+'</tbody></table></div><button data-qsadd="1">加一個項目</button>';
-  return h };
-document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset; if(!(d.qsnew||d.qsv||d.qsdone||d.qsback||d.qspick||d.qsok||d.qsreopen||d.qsedit||d.qsadd)) return; const b=B(); if(!b) return; qsInit(b);
-  if(d.qsnew){ const last=b.audits.filter(x=>x.done).slice(-1)[0], a={id:uid('a'),date:new Date().toISOString().slice(0,10),store:last?last.store:'',by:(me&&me.email)||'',done:false,res:{}}; b.qscItems.forEach(it=>a.res[it.id]={}); b.audits.push(a); qsSel=a.id; touch(); render(); window.scrollTo(0,0); return }
+  qsSyncLater(b,cur); return h };
+document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const d=t.dataset; if(!(d.qsnew||d.qsv||d.qsdone||d.qsback||d.qspick||d.qsok||d.qsreopen||d.qsedit||d.qsadd||d.qsphdel)) return; const b=B(); if(!b) return; qsInit(b);
+  if(d.qsphdel){ if(RO()) return; if(qsArm!==d.qsphdel){ qsArm=d.qsphdel; render(); return } qsArm=null; const [aid,iid,i]=d.qsphdel.split('|'), a=b.audits.find(x=>x.id===aid), r=a&&a.res[iid]; if(r&&r.ph){ const p=r.ph.splice(+i,1)[0]; if(p) sbc.storage.from('qsc-photos').remove([p]).catch(()=>{}); touch(); render() } return }
+  if(d.qsnew){ const last=b.audits.filter(x=>x.done).slice(-1)[0], a={id:uid('a'),date:new Date().toISOString().slice(0,10),store:last?last.store:'',by:(me&&me.email)||'',kind:isAdmin()?'supervisor':'self',done:false,res:{}}; b.qscItems.forEach(it=>a.res[it.id]={}); b.audits.push(a); qsSel=a.id; touch(); render(); window.scrollTo(0,0); return }
   if(d.qspick||d.qsreopen){ const a=b.audits.find(x=>x.id===(d.qspick||d.qsreopen)); if(a){ a.done=false; b.qscItems.forEach(it=>{ if(!a.res[it.id]) a.res[it.id]={} }); qsSel=a.id; if(d.qsreopen) touch() } render(); window.scrollTo(0,0); return }
   if(d.qsback){ qsSel=null; render(); return }
   if(d.qsedit){ qsEdit=!qsEdit; render(); return }
