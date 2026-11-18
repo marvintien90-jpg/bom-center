@@ -4,53 +4,112 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>業主入口｜品牌加辣餐飲顧問工作室</title>
+<link rel="stylesheet" href="../consult/kit/kit.css" data-kit>
 <style>
 :root{
-  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --bg:#f2f4f3; --panel:#ffffff; --line:#e0e5e2; --fg:#16201c; --mute:#5d6a65;
   --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
   --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
-  --field:#f7f9f8;
+  --field:#f6f8f7; --side:#0e2a24; --side-fg:#d6e6e1; --side-mute:#8fb0a7;
+  --c1:#0f6b5c; --c2:#2557c7; --c3:#a35a06; --c4:#6d3fc4; --c5:#b0452b;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --bg:#101614; --panel:#18201d; --line:#2a3632; --fg:#e7eeeb; --mute:#98a7a1;
   --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
   --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
-  --field:#141c19; color-scheme:dark}}
+  --field:#141c19; --side:#0b1311; --side-fg:#d6e6e1; --side-mute:#7f9a92;
+  --c1:#4fc3ad; --c2:#7ea6ff; --c3:#f0a94a; --c4:#b49bff; --c5:#ff9a7a; color-scheme:dark}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
-.wrap{max-width:920px;margin:0 auto;padding:28px 16px 60px}
-h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:0 0 6px}h3{font-size:17px;margin:0}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3{line-height:1.3}h1{font-size:26px;margin:0}h2{font-size:17px;margin:0 0 8px}h3{font-size:16px;margin:0}
+a{color:var(--accent)}
 .sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px;margin:6px 0 0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
-.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
-.app{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px;min-height:200px}
-.app.on{border-color:var(--accent)}
-.app .ic{width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:15px}
-.app p{margin:0;color:var(--mute);font-size:14px}
-.app .go{margin-top:auto}
-label{display:block;font-size:14px;margin:10px 0 4px}
-input{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit;color:inherit}
-button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
-button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:0 0 16px}
+label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
+input{width:100%;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;color:inherit}
+button,a.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:9px;padding:8px 15px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
 button:disabled{opacity:.6;cursor:not-allowed}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
-.who{font-size:14px;color:var(--mute);text-align:right}
-.msg{padding:10px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}.msg.bad{background:var(--bad-bg);color:var(--bad)}
-.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:13px;white-space:nowrap}
+.msg{padding:10px 12px;border-radius:10px;background:var(--accent-soft);margin:10px 0}.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12px;white-space:nowrap;line-height:1.75}
 .pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mute{background:var(--field);color:var(--mute);border:1px solid var(--line)}
 .scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-a{color:var(--accent)}
-@media (max-width:560px){.who{text-align:left}.who .row{justify-content:flex-start!important}}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}th{font-size:12px;color:var(--mute);font-weight:600}
+tbody tr{transition:background .15s}tbody tr:hover{background:var(--field)}
+
+/* 登入頁：左品牌、右登入 */
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr);min-height:100vh}
+.brand{background:radial-gradient(1200px 600px at -10% -20%,#1d6b5c 0,transparent 60%),linear-gradient(160deg,#0e2a24,#0a1e1a);color:#e6f1ed;padding:56px 56px 40px;display:flex;flex-direction:column;gap:26px}
+.brand .lm{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#e2552b,#f2a93b);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px;box-shadow:0 8px 20px rgba(226,85,43,.35)}
+.brand h1{font-size:34px;color:#fff;letter-spacing:.01em}
+.brand p{color:#a9c6bd;margin:8px 0 0;max-width:30em}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:6px}
+.feat div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;animation:kit-in .5s cubic-bezier(.2,.8,.2,1) both}
+.feat div:nth-child(2){animation-delay:.06s}.feat div:nth-child(3){animation-delay:.12s}.feat div:nth-child(4){animation-delay:.18s}
+.feat b{display:block;color:#fff;font-size:15px}.feat span{font-size:13px;color:#a9c6bd}
+.feat i{font-style:normal;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.12);margin-bottom:8px;font-weight:700}
+.brand .foot{margin-top:auto;font-size:12px;color:#7fa197}
+.auth{display:grid;place-items:center;padding:40px 24px}
+.auth .card{width:100%;max-width:400px;padding:28px;box-shadow:0 10px 40px rgba(16,24,22,.08)}
+.auth h2{font-size:22px}
+.auth button.pri{width:100%;padding:11px}
+
+/* 登入後：左側選單＋主畫面 */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:var(--side);color:var(--side-fg);padding:22px 14px;display:flex;flex-direction:column;gap:4px;overflow:auto}
+.logo{display:flex;gap:10px;align-items:center;padding:0 8px 18px}
+.logo .lm{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#e2552b,#f2a93b);color:#fff;display:grid;place-items:center;font-weight:800;font-size:17px}
+.logo b{display:block;font-size:15px;color:#fff}.logo span{font-size:12px;color:var(--side-mute)}
+.nav-h{font-size:11px;letter-spacing:.08em;color:var(--side-mute);padding:14px 10px 4px}
+.side .nv{width:100%;justify-content:flex-start;background:transparent;border:0;color:var(--side-fg);padding:8px 10px;border-radius:9px;font-size:14px;gap:10px;text-decoration:none;display:flex;align-items:center}
+.side .nv:hover{background:rgba(255,255,255,.07)}
+.side .nv.on{background:rgba(255,255,255,.12);color:#fff;font-weight:600}
+.side .nv i{font-style:normal;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:700;background:rgba(255,255,255,.1)}
+.side .nv.lock{opacity:.5}
+.side .foot{margin-top:auto;padding:14px 8px 0;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:var(--side-mute);word-break:break-all}
+.side .foot button{width:100%;margin-top:8px;font-size:12px;padding:6px;background:rgba(255,255,255,.08);border:0;color:var(--side-fg)}
+.main{padding:30px 36px 64px;max-width:1240px;width:100%}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.hero p{margin:4px 0 0;color:var(--mute)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 12px}.sec h2{margin:0}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin:0 0 24px}
+.app{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;min-height:206px;position:relative;overflow:hidden;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s}
+.app::after{content:"";position:absolute;right:-40px;top:-40px;width:130px;height:130px;border-radius:50%;background:var(--cc);opacity:.07;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.app:hover{transform:translateY(-3px);box-shadow:var(--kit-shadow-up);border-color:color-mix(in srgb,var(--cc) 40%,var(--line))}
+.app:hover::after{transform:scale(1.25)}
+.app.on{border-color:color-mix(in srgb,var(--cc) 35%,var(--line))}
+.app.off{background:color-mix(in srgb,var(--panel) 70%,var(--bg))}
+.app.off .ic{filter:grayscale(1);opacity:.6}
+.app .hd{display:flex;justify-content:space-between;align-items:center}
+.app .ic{width:44px;height:44px;border-radius:13px;background:color-mix(in srgb,var(--cc) 14%,transparent);color:var(--cc);display:grid;place-items:center;font-weight:800;font-size:16px}
+.app p{margin:0;color:var(--mute);font-size:14px}
+.app .go{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
+.subbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:0 0 24px}
+.subbar .ic{width:44px;height:44px;border-radius:13px;background:color-mix(in srgb,var(--c4) 14%,transparent);color:var(--c4);display:grid;place-items:center;font-weight:800}
+.subbar b{font-size:16px}
+.consult{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:linear-gradient(120deg,#0e2a24,#145247);color:#e6f1ed;border-radius:16px;padding:20px 22px;margin:0 0 20px}
+.consult h2{color:#fff;margin:0 0 4px}.consult p{margin:0;color:#a9c6bd;font-size:14px}
+.consult a.btn{background:#fff;color:#0e2a24;border-color:#fff;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 14px}
+.kpi{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.kpi b{display:block;font-size:24px;font-variant-numeric:tabular-nums}.kpi span{font-size:12px;color:var(--mute)}
+.search{max-width:280px;padding:7px 12px;border-radius:999px}
+@media (max-width:1000px){.split{grid-template-columns:1fr}.brand{padding:32px 20px}.brand h1{font-size:26px}.auth{padding:24px 16px 40px}}
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 16px;gap:6px}
+  .side .nv{width:auto;padding:6px 10px}
+  .logo{padding:0 8px 0 0}.nav-h,.side .foot,.side .navs{display:none}
+  .main{padding:20px 16px 56px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .subbar{grid-template-columns:auto minmax(0,1fr)}.subbar .go{grid-column:1/-1}
+}
+@media (max-width:560px){.feat{grid-template-columns:1fr}h1{font-size:22px}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top"><div><h1>業主入口</h1><p class="sub">品牌加辣餐飲顧問工作室｜一組帳號，進入你可以使用的所有系統</p></div><div class="who" id="who"></div></div>
-  <div id="app"><p class="sub">讀取中…</p></div>
-</div>
+<div id="root"><p class="sub" style="padding:24px">讀取中…</p></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
@@ -100,53 +159,84 @@ async function loadAll(){
   all=Object.values(rows).filter(r=>!((r.bom&&r.bom.role==='admin')||(r.pl&&r.pl.role==='admin')));
 }
 
+const FEAT=[['B','BOM 運算中心','食材成本、配方 BOM、叫貨與庫存'],['損','損益分析中心','每月損益、成本結構與門市比較'],['人','人資與勞基法','人資範本、勞基法查詢'],['訂','BOM＋損益 訂閱版','線上訂閱、發票與每月健檢簡報']];
 function viewLogin(){
   const fg=mode==='forgot';
-  return `<div class="apps">
-${appCard('B','BOM 運算中心','食材成本、配方 BOM、叫貨與庫存。',null,'')}
-${appCard('損','損益分析中心','每月損益、成本結構與門市比較。',null,'')}
-${appCard('訂','BOM＋損益 訂閱版','線上訂閱方案、付款、發票與每月健檢簡報。',null,'')}
-</div>
-<div class="card" style="max-width:460px"><h2>${fg?'重設密碼':'登入'}</h2>${flash()}
-<form id="auth"><label for="em">Email</label><input id="em" type="email" required autocomplete="email">
-${fg?'':'<label for="pw">密碼</label><input id="pw" type="password" required minlength="6" autocomplete="current-password">'}
-<div class="row"><button class="pri" type="submit">${fg?'寄重設信':'登入'}</button>${fg?'<button type="button" data-mode="login">回到登入</button>':'<button type="button" data-mode="forgot">忘記密碼</button>'}</div></form>
-<p class="note">還沒有帳號？<a href="${MEMBER}?mode=up">到會員中心註冊</a>，可以免費試用 14 天。顧問開通的業主，請用顧問給你的 Email 登入。</p></div>`;
+  return `<div class="split"><section class="brand"><div style="display:flex;gap:12px;align-items:center"><div class="lm">辣</div><div><b style="color:#fff">品牌加辣餐飲顧問工作室</b><div style="font-size:12px;color:#8fb0a7">業主入口</div></div></div>
+  <div><h1>一組帳號，<br>進入你的所有經營系統</h1><p>成本、損益、人資和訂閱都在這裡。登入一次，各系統之間不用再重新登入。</p></div>
+  <div class="feat">${FEAT.map(f=>`<div><i>${f[0]}</i><b>${f[1]}</b><span>${f[2]}</span></div>`).join('')}</div>
+  <div class="foot">資料存在雲端，手機、平板、電腦都能用。</div></section>
+  <section class="auth"><div class="card"><h2>${fg?'重設密碼':'登入'}</h2><p class="sub">${fg?'輸入註冊的 Email，我們會寄重設連結給你。':'歡迎回來，請用你的 Email 登入。'}</p><div id="flash">${flash()}</div>
+  <form id="auth"><label for="em">Email</label><input id="em" type="email" required autocomplete="email" placeholder="name@example.com">
+  ${fg?'':'<label for="pw">密碼</label><input id="pw" type="password" required minlength="6" autocomplete="current-password">'}
+  <div class="row" style="margin-top:18px"><button class="pri" type="submit">${fg?'寄重設信':'登入'}</button></div>
+  <div class="row" style="justify-content:center;margin-top:8px">${fg?'<button type="button" class="kit-calm" data-mode="login" style="border:0;background:none;color:var(--accent)">回到登入</button>':'<button type="button" class="kit-calm" data-mode="forgot" style="border:0;background:none;color:var(--accent)">忘記密碼</button>'}</div></form>
+  <p class="note" style="text-align:center">還沒有帳號？<a href="${MEMBER}?mode=up">到會員中心註冊</a>，可以免費試用 14 天。<br>顧問開通的業主，請用顧問給你的 Email 登入。</p></div></section></div>`;
 }
-function appCard(ic,name,desc,a,go){
-  return `<div class="app ${a&&a.k==='ok'?'on':''}"><div class="row" style="margin:0;justify-content:space-between"><div class="ic" aria-hidden="true">${ic}</div>${a?pillOf(a):''}</div><h3>${name}</h3><p>${desc}</p>${go?`<div class="go">${go}</div>`:''}</div>`;
+function appCard(ic,name,desc,a,go,color){
+  const cls=a&&a.k==='ok'?'on':a&&(a.k==='none'||a.k==='off')?'off':'';
+  return `<article class="app ${cls}" style="--cc:var(${color||'--c1'})"><div class="hd"><div class="ic" aria-hidden="true">${ic}</div>${a?pillOf(a):''}</div><h3>${name}</h3><p>${desc}</p>${go?`<div class="go">${go}</div>`:''}</article>`;
+}
+function systems(){
+  const ab=access(bom,false), ap=access(pl,true);
+  const renew=`<a class="btn" href="${MEMBER}">到會員中心${sub?'續訂':'訂閱'}</a>`;
+  const btn=(a,url,label)=>a.k==='ok'?`<a class="btn pri" href="${url}">${label}</a>`:a.k==='pending'?`<a class="btn" href="${url}">查看開通進度</a>`:renew;
+  const list=[{ic:'B',name:'BOM 運算中心',desc:'食材成本、配方 BOM、叫貨與庫存。',a:ab,url:BOM,label:'進入 BOM 運算中心',c:'--c1'},
+    {ic:'損',name:'損益分析中心',desc:'每月損益、成本結構與門市比較。',a:ap,url:PL,label:'進入損益分析中心',c:'--c2'}];
+  EXTRA.filter(x=>x.rule!=='admin'||isAdmin).forEach((x,i)=>{const a=(x.rule==='login'||x.rule==='admin'||(x.rule==='any'&&(ab.k==='ok'||ap.k==='ok')))?{k:'ok',admin:isAdmin}:{k:'none'};
+    list.push({ic:esc(x.ic),name:esc(x.name),desc:esc(x.desc),a,url:esc(x.url),label:'進入'+esc(x.name),c:i?'--c5':'--c3',extra:1})});
+  return {ab,ap,list,btn,renew};
+}
+function sideNav(S){
+  const nav=S.list.map(x=>`<a class="nv ${x.a.k==='ok'?'':'lock'}" href="${x.a.k==='ok'?x.url:MEMBER}"><i>${x.ic}</i>${x.name}</a>`).join('');
+  return `<aside class="side"><div class="logo"><div class="lm">辣</div><div><b>業主入口</b><span>品牌加辣餐飲顧問</span></div></div>
+   <div class="nav-h">首頁</div><a class="nv on" href="#"><i>⌂</i>我的系統</a><a class="nv" href="${MEMBER}"><i>訂</i>${isAdmin?'訂閱管理':'會員中心'}</a>
+   ${isAdmin?`<a class="nv" href="${BOM}consult/"><i>顧</i>顧問工作台</a><button type="button" class="nv" data-jump="owners"><i>總</i>業主總覽</button>`:''}
+   <div class="navs"><div class="nav-h">系統</div>${nav}</div>
+   <div class="foot">${esc(me.email)}<button type="button" data-act="out">登出</button></div></aside>`;
 }
 function viewHome(){
-  const ab=access(bom,false), ap=access(pl,true);
-  const btn=(a,url,label,alt)=>a.k==='ok'?`<a class="btn pri" href="${url}">${label}</a>`:a.k==='pending'?`<a class="btn" href="${url}">查看開通進度</a>`:alt;
+  const S=systems(), {ab,ap}=S;
   const subA=sub?SUB[sub.status]||[sub.status,'mute']:null;
-  const subPill=subA?`<span class="pill ${subA[1]}">${subA[0]}</span>`:'<span class="pill mute">還沒訂閱</span>';
-  const subDesc=sub?`${esc(PLAN[sub.plan]||sub.plan)}・${sub.stores} 店・${sub.status==='comp'?'不限期':sub.status==='trial'?'試用到 '+esc(sub.trial_ends_on||''):'已付到 '+esc(sub.period_end||'–')}`:'線上選方案、綁卡付款、下載發票與每月健檢簡報。';
-  const renew=`<a class="btn" href="${MEMBER}">到會員中心${sub?'續訂':'訂閱'}</a>`;
-  return `${flash()}<div class="apps">
-${appCard('B','BOM 運算中心','食材成本、配方 BOM、叫貨與庫存。',ab,btn(ab,BOM,'進入 BOM 運算中心',renew))}
-${appCard('損','損益分析中心','每月損益、成本結構與門市比較。',ap,btn(ap,PL,'進入損益分析中心',renew))}
-${EXTRA.filter(x=>x.rule!=='admin'||isAdmin).map(x=>{const a=(x.rule==='login'||x.rule==='admin'||(x.rule==='any'&&(ab.k==='ok'||ap.k==='ok')))?{k:'ok',admin:isAdmin}:{k:'none'}; return appCard(esc(x.ic),esc(x.name),esc(x.desc),a,a.k==='ok'?`<a class="btn pri" href="${esc(x.url)}">進入${esc(x.name)}</a>`:renew)}).join('')}
-<div class="app ${sub&&['trial','active','comp','past_due'].includes(sub.status)?'on':''}"><div class="row" style="margin:0;justify-content:space-between"><div class="ic" aria-hidden="true">訂</div>${isAdmin?'<span class="pill good">管理員</span>':subPill}</div><h3>BOM＋損益 訂閱版</h3><p>${isAdmin?'訂閱、試點名單、發票、設定。':subDesc}</p><div class="go"><a class="btn pri" href="${MEMBER}">${isAdmin?'進入訂閱管理':sub?'進入會員中心':'看方案、免費試用'}</a></div></div>
-</div>
-${ab.k!=='ok'&&ap.k!=='ok'&&!sub&&!isAdmin?`<div class="card"><h2>這個帳號還沒開通任何系統</h2><p class="sub">如果你已經跟顧問簽約，請等開通通知信；也可以先到會員中心開始 14 天免費試用。</p></div>`:''}
-${isAdmin?viewAdmin():''}`;
+  const subPill=isAdmin?'<span class="pill good">管理員</span>':subA?`<span class="pill ${subA[1]}">${subA[0]}</span>`:'<span class="pill mute">還沒訂閱</span>';
+  const subDesc=isAdmin?'訂閱、試點名單、發票、設定。':sub?`${esc(PLAN[sub.plan]||sub.plan)}・${sub.stores} 店・${sub.status==='comp'?'不限期':sub.status==='trial'?'試用到 '+esc(sub.trial_ends_on||''):'已付到 '+esc(sub.period_end||'–')}`:'線上選方案、綁卡付款、下載發票與每月健檢簡報。';
+  const h=new Date(Date.now()+8*3600e3).getUTCHours(), g=h<11?'早安':h<18?'午安':'晚安';
+  const who=sub&&sub.company||'';
+  const okN=S.list.filter(x=>x.a.k==='ok').length;
+  return `<div class="shell">${sideNav(S)}<main class="main" id="app">
+  <header class="hero"><div><h1>${g}${who?'，'+esc(who):''}</h1><p>你目前可以使用 <b data-count="${okN}">${okN}</b> 個系統。點卡片直接進入，不用再登入。</p></div></header>
+  <div id="flash">${flash()}</div>
+  ${isAdmin?`<section class="consult"><div><h2>顧問工作台</h2><p>健檢名單、輔導客戶、組織診斷、加盟、SOP 等顧問專用系統，一頁切換。業主看不到。</p></div><a class="btn" href="${BOM}consult/">進入顧問工作台 →</a></section>`:''}
+  <div class="sec"><h2>我的系統</h2><span class="note" style="margin:0">綠色標籤＝可以使用</span></div>
+  <div class="apps">${S.list.map(x=>appCard(x.ic,x.name,x.desc,x.a,x.extra?(x.a.k==='ok'?`<a class="btn pri" href="${x.url}">${x.label}</a>`:S.renew):S.btn(x.a,x.url,x.label),x.c)).join('')}</div>
+  <div class="sec"><h2>訂閱與帳號</h2></div>
+  <section class="subbar"><div class="ic" aria-hidden="true">訂</div><div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>BOM＋損益 訂閱版</b>${subPill}</div><div class="note" style="margin:2px 0 0">${subDesc}</div></div><div class="go"><a class="btn pri" href="${MEMBER}">${isAdmin?'進入訂閱管理':sub?'進入會員中心':'看方案、免費試用'}</a></div></section>
+  ${ab.k!=='ok'&&ap.k!=='ok'&&!sub&&!isAdmin?`<div class="card"><h2>這個帳號還沒開通任何系統</h2><p class="sub" style="margin:0">如果你已經跟顧問簽約，請等開通通知信；也可以先到會員中心開始 14 天免費試用。</p></div>`:''}
+  ${isAdmin?viewAdmin():''}</main></div>`;
 }
 function viewAdmin(){
   const rows=(all||[]).slice().sort((a,b)=>(mail(a)).localeCompare(mail(b)));
-  return `<div class="card" style="border-color:var(--accent)"><div class="row" style="margin:0;justify-content:space-between"><div><h2>顧問工作台</h2><p class="sub" style="margin:0">健檢名單、立地評估、案件提案等顧問專用系統，一頁切換。業主看不到。</p></div><a class="btn pri" href="${BOM}consult/">進入顧問工作台</a></div></div>
-<div class="card"><h2>業主總覽</h2><p class="sub">每位業主可以進哪些系統。要開通、延長或停用，請到各系統的管理頁。</p>
-<div class="scroll"><table><thead><tr><th>業主</th><th>BOM 運算中心</th><th>損益分析中心</th><th>訂閱版</th></tr></thead><tbody>
-${rows.map(r=>{const s=r.sub, sa=s?SUB[s.status]||[s.status,'mute']:null; return `<tr><td>${esc(s&&s.company||'')}${s&&s.company?'<br>':''}<span class="note">${esc(mail(r))}</span></td><td>${pillOf(access(r.bom,false))}</td><td>${pillOf(access(r.pl,false))}</td><td>${sa?`<span class="pill ${sa[1]}">${sa[0]}</span> ${esc(PLAN[s.plan]||s.plan)}`:'<span class="pill mute">沒有</span>'}</td></tr>`}).join('')||'<tr><td colspan="4">還沒有業主。</td></tr>'}
-</tbody></table></div>
-<div class="row"><a class="btn" href="${BOM}">BOM 帳號管理</a><a class="btn" href="${PL}">損益中心帳號管理</a><a class="btn" href="${MEMBER}">訂閱管理</a></div></div>`;
+  const q=(ownerQ||'').trim().toLowerCase(), shown=rows.filter(r=>!q||(mail(r)+' '+(r.sub&&r.sub.company||'')).toLowerCase().includes(q));
+  const soon=d=>d&&d>=today()&&d<=new Date(Date.now()+8*3600e3+30*864e5).toISOString().slice(0,10);
+  const k={n:rows.length,act:rows.filter(r=>access(r.bom,false).k==='ok'||access(r.pl,false).k==='ok').length,
+    pend:rows.filter(r=>access(r.bom,false).k==='pending'||access(r.pl,false).k==='pending').length,
+    soon:rows.filter(r=>soon(r.bom&&r.bom.expires_on)||soon(r.pl&&r.pl.expires_on)||soon(r.sub&&r.sub.period_end)).length};
+  return `<section class="card" id="owners"><div class="sec" style="margin-top:0"><h2>業主總覽</h2><input class="search" id="ownerq" type="search" placeholder="搜尋業主或 Email" value="${esc(ownerQ)}" aria-label="搜尋業主"></div>
+  <p class="sub">每位業主可以進哪些系統。要開通、延長或停用，請到各系統的管理頁。</p>
+  <div class="kpis"><div class="kpi"><b data-count="${k.n}">${k.n}</b><span>業主</span></div><div class="kpi"><b data-count="${k.act}">${k.act}</b><span>使用中</span></div><div class="kpi"><b data-count="${k.pend}">${k.pend}</b><span>等待開通</span></div><div class="kpi"><b data-count="${k.soon}">${k.soon}</b><span>30 天內到期</span></div></div>
+  <div class="scroll"><table><thead><tr><th>業主</th><th>BOM 運算中心</th><th>損益分析中心</th><th>訂閱版</th></tr></thead><tbody id="ownerrows">${ownerRows(shown)}</tbody></table></div>
+  <div class="row"><a class="btn" href="${BOM}">BOM 帳號管理</a><a class="btn" href="${PL}">損益中心帳號管理</a><a class="btn" href="${MEMBER}">訂閱管理</a></div></section>`;
 }
+function ownerRows(rows){
+  return rows.map(r=>{const s=r.sub, sa=s?SUB[s.status]||[s.status,'mute']:null; return `<tr><td>${esc(s&&s.company||'')}${s&&s.company?'<br>':''}<span class="note">${esc(mail(r))}</span></td><td>${pillOf(access(r.bom,false))}</td><td>${pillOf(access(r.pl,false))}</td><td>${sa?`<span class="pill ${sa[1]}">${sa[0]}</span> ${esc(PLAN[s.plan]||s.plan)}`:'<span class="pill mute">沒有</span>'}</td></tr>`}).join('')||`<tr><td colspan="4">${(all||[]).length?'找不到符合的業主。':'還沒有業主。'}</td></tr>`;
+}
+let ownerQ='';
 const mail=r=>(r.sub&&r.sub.email)||(r.bom&&r.bom.email)||(r.pl&&r.pl.email)||'';
 const flash=()=>msg?`<div class="msg ${bad?'bad':''}" role="status">${esc(msg)}</div>`:'';
 
 function render(){
-  $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:6px"><button data-act="out">登出</button></div>`:'';
-  $('#app').innerHTML=me?viewHome():viewLogin();
+  $('#root').innerHTML=me?viewHome():viewLogin();
+  if(window.Kit) Kit.countUp($('#root'));
 }
 const say=(t,b)=>{msg=t;bad=!!b;render()};
 const errMsg=e=>{const m=(e&&(e.message||e))+''; if(/Invalid login/i.test(m)) return 'Email 或密碼不正確。'; if(/Email not confirmed/i.test(m)) return '這個 Email 還沒驗證，請先到信箱點驗證信。'; return '登入失敗，請稍後再試。（'+m.slice(0,80)+'）'};
@@ -155,7 +245,9 @@ document.addEventListener('click',async ev=>{
   const b=ev.target.closest('button'); if(!b) return; const d=b.dataset;
   if(d.mode){ mode=d.mode; msg=''; return render() }
   if(d.act==='out'){ await sbc.auth.signOut(); msg=''; mode='login'; return load() }
+  if(d.jump){ const t=document.getElementById(d.jump); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}) }
 });
+document.addEventListener('input',ev=>{ if(ev.target.id==='ownerq'){ ownerQ=ev.target.value; const q=ownerQ.trim().toLowerCase(); const rows=(all||[]).slice().sort((a,b)=>mail(a).localeCompare(mail(b))).filter(r=>!q||(mail(r)+' '+(r.sub&&r.sub.company||'')).toLowerCase().includes(q)); $('#ownerrows').innerHTML=ownerRows(rows) } });
 document.addEventListener('submit',async ev=>{
   if(ev.target.id!=='auth') return; ev.preventDefault();
   const btn=ev.target.querySelector('button[type=submit]'); btn.disabled=true;
@@ -168,5 +260,7 @@ document.addEventListener('submit',async ev=>{
 sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
 load();
 </script>
+<script src="../consult/kit/kit.js"></script>
+<script>window.Kit&&Kit.init({tool:'portal',bar:false})</script>
 </body>
 </html>

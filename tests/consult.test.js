@@ -7,7 +7,7 @@ const { chromium } = require('playwright'); const path = require('path'); const 
 const ROOT = path.join(__dirname, '..');
 const fake = (state) => `window.__S=${JSON.stringify(state)};window.supabase={createClient(){const S=window.__S;let seq=100;
 const q=(t)=>{const T=S.tables[t]=S.tables[t]||[];let f=[],op='select',v=null,one=false;
- const o={select(){return o},eq(k,x){f.push(r=>r[k]===x);return o},not(k,a,x){f.push(r=>r[k]!=null);return o},order(){return o},limit(){return o},
+ const o={select(){return o},eq(k,x){f.push(r=>r[k]===x);return o},not(k,a,x){f.push(r=>r[k]!=null);return o},neq(k,x){f.push(r=>r[k]!==x);return o},in(k,x){f.push(r=>x.includes(r[k]));return o},gte(){return o},lte(){return o},order(){return o},limit(){return o},
  insert(x){op='insert';v=x;return o},update(x){op='update';v=x;return o},upsert(x){op='insert';v=x;return o},delete(){op='del';return o},
  single(){one=true;return o},maybeSingle(){one=true;return o},
  then(res,rej){let out;if(S.missing&&S.missing.includes(t))out={data:null,error:{message:'relation does not exist'}};
@@ -16,7 +16,7 @@ const q=(t)=>{const T=S.tables[t]=S.tables[t]||[];let f=[],op='select',v=null,on
   else if(op==='update'){const rows=T.filter(r=>f.every(g=>g(r)));rows.forEach(r=>Object.assign(r,JSON.parse(JSON.stringify(v))));out={data:JSON.parse(JSON.stringify(rows)),error:null}}
   else {S.tables[t]=T.filter(r=>!f.every(g=>g(r)));out={data:null,error:null}}
   return Promise.resolve(out).then(res,rej)}};return o};
-return {from:q,rpc:async()=>({data:[],error:null}),auth:{getSession:async()=>({data:{session:S.user?{user:S.user}:null}}),onAuthStateChange(){},signOut:async()=>{}}}}}`;
+return {from:q,rpc:async()=>({data:[],error:null}),auth:{getSession:async()=>({data:{session:S.user?{user:S.user}:null}}),onAuthStateChange(){},signOut:async()=>{},signInWithPassword:async(a)=>({error:a.password==='badpass'?{message:'Invalid login credentials'}:null}),resetPasswordForEmail:async()=>({error:null})}}}}`;
 const iso = d => new Date(Date.now() - d * 864e5).toISOString(), ds = d => iso(d).slice(0, 10);
 const A = { id: 'a1', email: 'boss@x.com' }, U = { id: 'u1', email: 'o@x.com' };
 const data = () => ({
@@ -136,6 +136,28 @@ const toastText = pg => pg.$$eval('.kit-toast', e => e.map(x => x.textContent).j
   log((await toastText(pg)).includes('健檢名單已標成「已成交」'), 'convert toast');
   await pg.screenshot({ path: path.join(__dirname, 'consult-coach-toast.png') });
   await clean(pg, 'coach with kit'); await pg.close();
+
+  // 業主入口（含共用元件）
+  const U1 = { id: 'u1', email: 'o@x.com', email_confirmed_at: '2026-11-01' };
+  const own = { user: U1, tables: { bom_profiles: [{ user_id: 'u1', role: 'client', status: 'active', expires_on: '2099-01-01' }], pl_profiles: [{ user_id: 'u1', role: 'owner', status: 'pending' }], sub_subscriptions: [{ user_id: 'u1', company: '好吃餐飲', plan: 'pro', stores: 2, status: 'active', period_end: '2099-01-01' }] } };
+  for (const w of [{ width: 1440, height: 900 }, { width: 375, height: 800 }]) {
+    const W = w.width, tag = W < 500 ? 'mobile' : 'desktop';
+    pg = await open(br, { user: null, tables: {} }, w, 'portal/'); await clean(pg, 'portal login ' + W);
+    if (W > 500) await pg.screenshot({ path: path.join(__dirname, 'portal-login-desktop.png') });
+    await pg.fill('#em', 'o@x.com'); await pg.fill('#pw', 'badpass'); await pg.click('#auth button[type=submit]'); await pg.waitForTimeout(300);
+    log((await toastText(pg)).includes('Email 或密碼不正確'), 'portal login error toast', W); await pg.close();
+    pg = await open(br, own, w, 'portal/'); let t = await clean(pg, 'portal owner ' + W);
+    log(t.includes('午安') || t.includes('早安') || t.includes('晚安'), 'portal greeting', W);
+    log(t.includes('進入 BOM 運算中心') && t.includes('查看開通進度') && t.includes('訂閱中') && !t.includes('顧問工作台'), 'portal owner systems', W);
+    await pg.screenshot({ path: path.join(__dirname, `portal-owner-${tag}.png`), fullPage: true }); await pg.close();
+    const adm = { user: { id: 'a1', email: 'boss@x.com' }, tables: { bom_profiles: [{ user_id: 'a1', role: 'admin', status: 'active' }, { user_id: 'u1', email: 'o@x.com', role: 'client', status: 'active' }, { user_id: 'u2', email: 'p@x.com', role: 'client', status: 'pending' }], pl_profiles: [], sub_subscriptions: [{ user_id: 'u1', email: 'o@x.com', company: '好吃餐飲', plan: 'member', stores: 1, status: 'comp' }] } };
+    pg = await open(br, adm, w, 'portal/'); t = await clean(pg, 'portal admin ' + W);
+    log(t.includes('進入顧問工作台') && t.includes('業主總覽') && t.includes('等待開通'), 'portal admin', W);
+    await pg.fill('#ownerq', 'p@'); await pg.waitForTimeout(100); const rows = await pg.$$eval('#ownerrows tr', r => r.length); log(rows === 1, 'owner search filters', rows, W);
+    await pg.screenshot({ path: path.join(__dirname, `portal-admin-${tag}.png`), fullPage: true }); await pg.close();
+  }
+  // 人資、會員中心載入共用元件不出錯
+  for (const u of ['hr/', 'member/']) { pg = await open(br, own, vw, u); await pg.waitForTimeout(300); log(await pg.evaluate(() => document.documentElement.classList.contains('kit-on')), 'kit on ' + u); log(!pg.errs.length, 'no errors ' + u, pg.errs.join(';')); await pg.close() }
 
   await br.close(); console.log(fail ? fail + ' failed' : 'all passed'); process.exit(fail ? 1 : 0);
 })();

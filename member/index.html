@@ -86,7 +86,7 @@ async function loadAdmin(){
   adm={subs:s.data||[],pilots:pl.data||[],log:lg.data||[],invs:iv.data||[]};
 }
 const planCards=(sel,click)=>`<div class="plans">${plans.map(p=>`<div class="plan ${sel===p.code?'sel':''}"><h3>${esc(p.name)}</h3><div class="price">${money(p.price_per_store)}<small> ／每店每月</small></div><ul>${(p.features||[]).map(f=>`<li>${esc(f)}</li>`).join('')}</ul>${click?`<div class="row" style="margin-top:auto"><button data-plan="${p.code}" ${sel===p.code?'class="pri"':''}>${sel===p.code?'已選擇':'選這個'}</button></div>`:''}</div>`).join('')}</div>`;
-const flash=()=>msg?`<div class="msg ${bad?'bad':''}" role="status">${esc(msg)}</div>`:'';
+const flash=()=>msg?`<div id="flash"><div class="msg ${bad?'bad':''}" role="status">${esc(msg)}</div></div>`:'';
 const total=()=>{const p=plans.find(x=>x.code===pick.plan);return p&&p.price_per_store!=null?p.price_per_store*pick.stores:null};
 
 function viewAuth(){
@@ -209,5 +209,7 @@ document.addEventListener('submit',async e=>{
 sbc.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
 load();
 </script>
+<script src="../consult/kit/kit.js"></script>
+<script>window.Kit&&Kit.init({tool:'member',bar:false})</script>
 </body>
 </html>
