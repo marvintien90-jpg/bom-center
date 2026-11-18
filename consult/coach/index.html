@@ -430,7 +430,10 @@ document.addEventListener('click',async e=>{
   if(d.copyrep){const c=D.clients.find(x=>x.id===+d.copyrep); const m=val('r_month'); const txt=reportText(c,m);
     try{await navigator.clipboard.writeText(txt); say('已複製報告文字，可以直接貼到 LINE。')}catch(_){say('瀏覽器不讓複製，請改用「列印／存成 PDF」。',true)} return}
   if(d.saveClient) return act(async()=>{const o=readClient(); if(!o) return; o.updated_at=new Date().toISOString();
-    if(d.saveClient==='new'){const r=await q(sbc.from('coach_clients').insert(o).select().single(),'建立'); D.clients.push(r); say('已建立客戶。下一步：記第一筆訪視或填 KPI。'); go('c='+r.id)}
+    if(d.saveClient==='new'){const r=await q(sbc.from('coach_clients').insert(o).select().single(),'建立'); D.clients.push(r);
+      const ld=r.lead_id&&D.leads.find(l=>l.id===r.lead_id); let extra='';
+      if(ld&&r.stage==='輔導中'&&ld.status!=='已成交'){const u=await sbc.from('checkup_leads').update({status:'已成交'}).eq('id',ld.id); if(!u.error){ld.status='已成交'; extra='健檢名單已標成「已成交」。'}}
+      say('已建立客戶。'+extra+'下一步：記第一筆訪視或填 KPI。'); if(window.Kit) Kit.refresh(); go('c='+r.id)}
     else{const id=+d.saveClient; await q(sbc.from('coach_clients').update(o).eq('id',id)); Object.assign(D.clients.find(x=>x.id===id),o); say('已儲存設定。'); go('c='+id)}});
   if(d.saveVisit) return act(async()=>{const cid=+d.saveVisit;
     const o={client_id:cid,visit_on:val('v_on')||today(),kind:val('v_kind'),store:val('v_store')||null,attendees:val('v_att')||null,summary:val('v_sum')||null,findings:val('v_find')||null,
@@ -471,5 +474,7 @@ window.addEventListener('hashchange',()=>{armed=null; say(flash&&!flashBad?flash
 sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
 load();
 </script>
+<script src="../kit/kit.js"></script>
+<script>window.Kit&&Kit.init({tool:'coach',sb:sbc})</script>
 </body>
 </html>

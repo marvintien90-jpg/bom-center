@@ -4,158 +4,394 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>顧問工作台｜品牌加辣餐飲顧問工作室</title>
+<link rel="stylesheet" href="kit/kit.css" data-kit>
 <style>
 :root{
-  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --bg:#f2f4f3; --panel:#ffffff; --line:#e0e5e2; --fg:#16201c; --mute:#5d6a65;
   --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
   --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
-  --field:#f7f9f8;
+  --field:#f6f8f7; --side:#0e2a24; --side-fg:#d6e6e1; --side-mute:#8fb0a7;
+  --g1:#0f6b5c; --g2:#2557c7; --g3:#a35a06; --g4:#6d3fc4; --g5:#4b5b66;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --bg:#101614; --panel:#18201d; --line:#2a3632; --fg:#e7eeeb; --mute:#98a7a1;
   --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
   --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
-  --field:#141c19; color-scheme:dark}}
+  --field:#141c19; --side:#0b1311; --side-fg:#d6e6e1; --side-mute:#7f9a92;
+  --g1:#4fc3ad; --g2:#7ea6ff; --g3:#f0a94a; --g4:#b49bff; --g5:#a3b3bd; color-scheme:dark}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
-.wrap{max-width:920px;margin:0 auto;padding:28px 16px 60px}
-h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:0 0 6px}h3{font-size:17px;margin:0}
-.sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px;margin:6px 0 0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
-.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
-.app{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px;min-height:200px}
-.app.on{border-color:var(--accent)}
-.app .ic{width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:15px}
-.app p{margin:0;color:var(--mute);font-size:14px}
-.app .go{margin-top:auto}
-label{display:block;font-size:14px;margin:10px 0 4px}
-input{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit;color:inherit}
-button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
-button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-button:disabled{opacity:.6;cursor:not-allowed}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
-.who{font-size:14px;color:var(--mute);text-align:right}
-.msg{padding:10px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}.msg.bad{background:var(--bad-bg);color:var(--bad)}
-.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:13px;white-space:nowrap}
-.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mute{background:var(--field);color:var(--mute);border:1px solid var(--line)}
-.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3{line-height:1.3}
 a{color:var(--accent)}
-@media (max-width:560px){.who{text-align:left}.who .row{justify-content:flex-start!important}}
+.note{color:var(--mute);font-size:13px;margin:6px 0 0}.sub{color:var(--mute);margin:0 0 12px}
+button,a.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:9px;padding:7px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+a.btn.ghost,button.ghost{background:transparent;border-color:transparent;color:var(--mute)}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;white-space:nowrap;line-height:1.7}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mute{background:var(--field);color:var(--mute);border:1px solid var(--line)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+
+/* ---- 版面：左側選單＋主畫面 ---- */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:var(--side);color:var(--side-fg);padding:22px 14px;display:flex;flex-direction:column;gap:4px;overflow:auto}
+.logo{display:flex;gap:10px;align-items:center;padding:0 8px 18px}
+.logo .lm{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#e2552b,#f2a93b);color:#fff;display:grid;place-items:center;font-weight:800;font-size:17px;box-shadow:0 6px 16px rgba(226,85,43,.35)}
+.logo b{display:block;font-size:15px;color:#fff}.logo span{font-size:12px;color:var(--side-mute)}
+.nav-h{font-size:11px;letter-spacing:.08em;color:var(--side-mute);padding:14px 10px 4px}
+.side button.nv{width:100%;justify-content:flex-start;background:transparent;border:0;color:var(--side-fg);padding:8px 10px;border-radius:9px;font-size:14px;gap:10px}
+.side button.nv:hover{background:rgba(255,255,255,.07);box-shadow:none;transform:none}
+.side button.nv.on{background:rgba(255,255,255,.12);color:#fff;font-weight:600}
+.side .nd{width:8px;height:8px;border-radius:3px;background:var(--gc,var(--side-mute))}
+.side svg{width:17px;height:17px;flex:none}
+.side .cnt{margin-left:auto;font-size:12px;background:rgba(255,255,255,.12);border-radius:999px;padding:0 8px}
+.side .cnt.bad{background:#e0533f;color:#fff}
+.side .foot{margin-top:auto;padding:14px 8px 0;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:var(--side-mute);word-break:break-all}
+.side .foot .row{display:flex;gap:6px;margin-top:8px}
+.side .foot a,.side .foot button{flex:1;font-size:12px;padding:5px 8px;background:rgba(255,255,255,.08);border:0;color:var(--side-fg)}
+.main{padding:28px 36px 64px;max-width:1280px;width:100%}
+
+/* ---- 標題列 ---- */
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.hero h1{font-size:26px;margin:0}.hero p{margin:4px 0 0;color:var(--mute)}
+.qa{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---- 數字卡 ---- */
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;cursor:pointer;text-align:left;display:block;width:100%;font:inherit;color:inherit}
+.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sc,var(--accent));opacity:.85}
+.stat b{display:block;font-size:28px;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat span{color:var(--mute);font-size:13px}
+.stat.alert b{color:var(--bad)}.stat.alert{--sc:var(--bad)}
+.stat:hover{transform:translateY(-2px)}
+
+/* ---- 今日要做＋客戶旅程 ---- */
+.two{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(0,1.6fr);gap:18px;margin-bottom:26px;align-items:start}
+.sh{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px}.sh h2{font-size:17px;margin:0}
+.todo{list-style:none;margin:0;padding:0}
+.todo li a{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:10px;text-decoration:none;color:inherit;transition:background .15s}
+.todo li a:hover{background:var(--field)}
+.todo .tk{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--field);color:var(--mute)}
+.todo .tk.bad{background:var(--bad-bg);color:var(--bad)}.todo .tk.warn{background:var(--warn-bg);color:var(--warn)}
+.todo b{font-weight:600;display:block;font-size:14px}.todo small{color:var(--mute);font-size:12px}
+.empty{color:var(--mute);text-align:center;padding:22px 0;font-size:14px}
+.empty .big{font-size:30px;display:block;margin-bottom:4px}
+
+.pipe{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.col{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:10px;min-height:120px}
+.col h3{font-size:13px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;color:var(--mute)}
+.col h3 .n{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:0 8px;font-size:12px;color:var(--fg)}
+.cc{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:8px;cursor:pointer;font:inherit;color:inherit;white-space:normal}
+.cc:hover{border-color:var(--accent)}
+.cc b{display:block;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cc small{display:block;color:var(--mute);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dots{display:flex;gap:3px;margin-top:6px;flex-wrap:wrap}
+.dots i{font-style:normal;font-size:11px;border-radius:5px;padding:0 5px;background:var(--field);color:var(--mute);border:1px solid var(--line)}
+.dots i.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.dots i.bad{background:var(--bad-bg);color:var(--bad);border-color:transparent}
+.more{font-size:12px;color:var(--mute);text-align:center}
+
+/* ---- 工具箱 ---- */
+.flow{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+.flow button{border-radius:999px;padding:6px 14px;font-size:13px;color:var(--mute)}
+.flow button .nd{width:8px;height:8px;border-radius:3px;background:var(--gc)}
+.flow button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.gsec{margin:0 0 22px}
+.gt{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.gt .num{width:26px;height:26px;border-radius:8px;background:var(--gc);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
+.gt h3{margin:0;font-size:16px}.gt span{color:var(--mute);font-size:13px}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.app{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s}
+.app:hover{transform:translateY(-3px);box-shadow:var(--kit-shadow-up);border-color:color-mix(in srgb,var(--gc) 45%,var(--line))}
+.app .hd{display:flex;gap:12px;align-items:center}
+.app .ic{flex:none;width:40px;height:40px;border-radius:11px;background:color-mix(in srgb,var(--gc) 14%,transparent);color:var(--gc);display:grid;place-items:center;font-weight:800;font-size:14px}
+.app h4{margin:0;font-size:15px}.app .where{font-size:12px;color:var(--mute)}
+.app p{margin:0;color:var(--mute);font-size:13.5px;line-height:1.6}
+.app .go{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;padding-top:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips a{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;text-decoration:none;color:var(--mute)}
+.chips a:hover{color:var(--gc);border-color:var(--gc)}
+
+/* ---- 客戶檔案（右側抽屜） ---- */
+.scrim{position:fixed;inset:0;background:rgba(10,20,17,.38);z-index:80;animation:fade .2s}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--bg);z-index:81;box-shadow:-20px 0 50px rgba(0,0,0,.18);display:flex;flex-direction:column;animation:slide .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes slide{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}}
+.dh{padding:20px 22px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+.dh .x{float:right}
+.dh .av{width:46px;height:46px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:19px;flex:none}
+.dh h2{margin:0;font-size:20px}
+.db{padding:16px 22px 40px;overflow:auto;flex:1}
+.steps{list-style:none;margin:0;padding:0;position:relative}
+.steps::before{content:"";position:absolute;left:17px;top:18px;bottom:18px;width:2px;background:var(--line)}
+.step{position:relative;display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0}
+.step .sn{width:36px;height:36px;border-radius:50%;background:var(--panel);border:2px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--mute);z-index:1}
+.step.done .sn{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.step.warn .sn{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.step b{display:block;font-size:14.5px}.step small{color:var(--mute);font-size:12.5px;display:block}
+.step .act{display:flex;gap:6px}
+.step .act a{padding:5px 11px;font-size:13px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:6px 0 0}.kv span{color:var(--mute)}
+
+/* ---- 手機與小螢幕 ---- */
+@media (max-width:1180px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.two{grid-template-columns:1fr}}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 16px;gap:6px}
+  .logo{padding:0 8px 0 0}.nav-h,.side .foot,.side .gnav{display:none}
+  .side button.nv{width:auto;padding:6px 10px}
+  .main{padding:20px 16px 56px}
+  .pipe{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.hero h1{font-size:22px}.pipe{grid-template-columns:1fr}.step{grid-template-columns:36px minmax(0,1fr)}.step .act{grid-column:2}}
 </style>
 </head>
 <body>
-<style>
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-.stat b{display:block;font-size:24px;line-height:1.2}.stat span{color:var(--mute);font-size:13px}
-.stat.alert b{color:var(--bad)}
-.sec{margin:22px 0 4px;font-size:15px;color:var(--mute);font-weight:600}
-.app{min-height:170px}.app .go{display:flex;gap:8px;flex-wrap:wrap}
-.chips{display:flex;gap:6px;flex-wrap:wrap}.chips a{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;text-decoration:none}
-.tag{font-size:12px;color:var(--mute)}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="top"><div><h1>顧問工作台</h1><p class="sub">品牌加辣餐飲顧問工作室｜顧問專用，業主看不到這一頁</p></div><div class="who" id="who"></div></div>
-  <div id="app"><p class="sub">讀取中…</p></div>
-</div>
+<div id="root"><div class="main"><p class="sub">讀取中…</p></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
-const BOM='https://marvintien90-jpg.github.io/bom-center/', PL='https://marvintien90-jpg.github.io/pl-center/', PORTAL=BOM+'portal/';
+const BOM='https://marvintien90-jpg.github.io/bom-center/', PL='https://marvintien90-jpg.github.io/pl-center/', PORTAL=BOM+'portal/', C=BOM+'consult/';
 const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast=(t,k)=>window.Kit?Kit.toast(t,k):0;
 
-/* 顧問系統清單：加一筆就會出現在工作台。
-   go：[[按鈕文字,網址], …]，第一個是主按鈕；chips：小捷徑；where：放在哪裡（給自己看） */
+/* 顧問系統清單：加一筆就會出現在工作台。依顧問流程排序（開發 → 診斷 → 輔導 → 總部建置 → 帳號）。
+   go：[[按鈕文字,網址], …]，第一個是主按鈕；chips：BOM 捷徑；where：放在哪裡 */
 const GROUPS=[
- {t:'① 開發業主',items:[
-  {ic:'檢',name:'經營健檢',desc:'業主自己填 30 題，六大面向打分，結果寄給業主也通知你。',where:'網頁（公開，業主用）',
+ {k:'g1',t:'開發業主',s:'把健檢分享出去、追蹤名單',items:[
+  {ic:'檢',name:'經營健檢',desc:'業主自己填 30 題，六大面向打分，結果寄給業主也通知你。',where:'公開網頁（業主用）',
    go:[['打開健檢頁',BOM+'checkup/']],copy:BOM+'checkup/'},
-  {ic:'單',name:'名單管理＋顧問作業包',desc:'健檢名單、追蹤狀態、備註；每筆附問題、改善方案與話術。',where:'網頁（顧問專用）',
+  {ic:'單',name:'名單管理＋顧問作業包',desc:'健檢名單、追蹤狀態、備註；每筆附問題、改善方案與話術，可一鍵轉成輔導客戶。',where:'顧問專用',
    go:[['進入名單管理',BOM+'checkup/leads/']],stat:true}]},
- {t:'② 診斷與評估',items:[
-  {ic:'址',name:'餐飲立地評估',desc:'店面地址 → 商圈客群、人流、直接／替代競爭、租金與損益試算。',where:'網頁（顧問專用）',
-   go:[['進入立地評估',BOM+'site/']]},
-  {ic:'B',name:'BOM 運算中心（顧問工具）',desc:'以管理員身分進客戶品牌，做菜單工程、新品試算、稽核、排班、現金流與月報。',where:'網頁（業主也用，你有管理員權限）',
+ {k:'g2',t:'診斷與評估',s:'進客戶的數字裡找問題',items:[
+  {ic:'B',name:'BOM 運算中心（顧問工具）',desc:'以管理員身分進客戶品牌，做菜單工程、新品試算、稽核、排班、現金流與月報。',where:'業主也用，你有管理員權限',
    go:[['進入 BOM 中心',BOM]],chips:[['菜單四象限','matrix'],['新品試算','newp'],['門市稽核','qsc'],['排班人力','shift'],['現金流','cash'],['顧客成長','grow'],['每月月報','mrep'],['授權管理','admin']]},
-  {ic:'損',name:'損益分析中心',desc:'客戶每月損益、成本結構、門市比較與紅燈。',where:'網頁（業主也用，你有管理員權限）',
-   go:[['進入損益中心',PL]]}]},
- {t:'③ 提案、輔導與交付',items:[
-  {ic:'導',name:'營運輔導',desc:'成交後的輔導客戶：訪視紀錄、改善待辦追蹤、每月 KPI 對目標，一鍵產出給業主的進度報告。',where:'網頁（顧問專用）',
-   go:[['進入營運輔導',BOM+'consult/coach/'],['全部待辦',BOM+'consult/coach/#todo']]},
+  {ic:'損',name:'損益分析中心',desc:'客戶每月損益、成本結構、門市比較與紅燈。',where:'業主也用，你有管理員權限',go:[['進入損益中心',PL]]},
+  {ic:'址',name:'餐飲立地評估',desc:'店面地址 → 商圈客群、人流、直接／替代競爭、租金與損益試算。',where:'顧問專用',go:[['進入立地評估',BOM+'site/']]}]},
+ {k:'g3',t:'提案與輔導',s:'成交、輔導、交付',items:[
+  {ic:'導',name:'營運輔導',desc:'輔導客戶主檔：訪視紀錄、改善待辦、每月 KPI 對目標，一鍵產出業主進度報告。其他工具都從這裡帶入客戶。',where:'顧問專用',
+   go:[['進入營運輔導',C+'coach/'],['全部待辦',C+'coach/#todo']]},
   {ic:'案',name:'品牌案件工作台',desc:'開案 → 問題樹 → 證據 → 策略 → 提案；一鍵出簡報與服務建議書。',where:'Claude 網頁（需登入 claude.ai）',
    go:[['打開案件工作台','https://claude.ai/artifact/DEjP3mWn57z1SkgkkVhQMe']]},
-  {ic:'文',name:'文件與簡報管理',desc:'公告、SOP、提案簡報依範本產出與歸檔；在 Claude 專案「D_文件與簡報管理中心」裡下指令。',where:'Claude 專案＋技能（marvin-doc-manager、deck）',
+  {ic:'文',name:'文件與簡報管理',desc:'公告、SOP、提案簡報依範本產出與歸檔；在 Claude 專案「D_文件與簡報管理中心」裡下指令。',where:'Claude 專案＋技能',
    go:[['打開 Claude 專案','https://claude.ai/projects']]},
-  {ic:'招',name:'招募考核範本包',desc:'職缺文案、面試題庫與評分表、到職 30 天、試用期與季度考核、勞動法規提醒。',where:'Google 文件（雲端硬碟 02_顧問工具）',
+  {ic:'招',name:'招募考核範本包',desc:'職缺文案、面試題庫與評分表、到職 30 天、試用期與季度考核、勞動法規提醒。',where:'Google 文件',
    go:[['打開範本包','https://docs.google.com/document/d/1_fWOzW8MiPexgSS96_OB8lB7aj2NsZy1iLb_2FuOYgY/edit']]}]},
- {t:'④ 客戶與帳號',items:[
+ {k:'g4',t:'總部建置',s:'多店、加盟與標準化',items:[
+  {ic:'組',name:'總部組織與權責診斷',desc:'依店數階段找職能缺口，畫現況與建議組織圖，自動產出部門職責、RACI 與主管 KPI。',where:'顧問專用',
+   go:[['進入組織診斷',C+'org/'],['新增診斷',C+'org/#t=new']]},
+  {ic:'盟',name:'加盟體系',desc:'加盟準備度、模式與條件、權利金與回本試算、合約與揭露書、加盟店督導與繳款。',where:'顧問專用',go:[['進入加盟體系',C+'franchise/']]},
+  {ic:'SOP',name:'SOP 手冊與督導稽核',desc:'選業態產出門市 SOP，一鍵交付到門市；督導總覽看各店稽核分數與待改善。',where:'顧問專用；門市在 BOM 中心看手冊',
+   go:[['進入 SOP 手冊',C+'sop/'],['督導總覽',C+'sop/#audit']]}]},
+ {k:'g5',t:'客戶與帳號',s:'授權、訂閱與人資',items:[
   {ic:'入',name:'業主入口（總覽）',desc:'每位業主可以進哪些系統、授權到期日。',where:'網頁',go:[['打開業主總覽',PORTAL]]},
-  {ic:'訂',name:'訂閱與會員管理',desc:'訂閱、試點名單、付款、發票與設定。',where:'網頁（管理員）',go:[['進入訂閱管理',BOM+'member/']]},
-  {ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢、投保級距與違規提醒；也可以陪業主一起看。',where:'網頁（業主也用）',go:[['進入人資中心',BOM+'hr/']]}]},
- {t:'⑤ 總部建置',items:[
-  {ic:'組',name:'總部組織與權責診斷',desc:'依店數階段找職能缺口，畫現況與建議組織圖，自動產出部門職責、RACI 分工與主管 KPI，一鍵出業主報告。',where:'網頁（顧問專用）',
-   go:[['進入組織診斷',BOM+'consult/org/'],['新增診斷',BOM+'consult/org/#t=new']]},
-  {ic:'盟',name:'加盟體系',desc:'加盟準備度健檢、模式與條件、權利金與回本試算、合約與揭露書、加盟店督導與繳款。',where:'網頁（顧問專用）',
-   go:[['進入加盟體系',BOM+'consult/franchise/']]},
-  {ic:'SOP',name:'SOP 手冊與督導稽核',desc:'選業態產出門市 SOP（開店到客訴九大章），可改、可匯出 Word／PDF，一鍵交付到門市；督導總覽看各店稽核分數、待改善與逾期。',where:'網頁（顧問專用；門市在 BOM 中心看手冊、做自檢）',
-   go:[['進入 SOP 手冊',BOM+'consult/sop/'],['督導總覽',BOM+'consult/sop/#audit']]}]}
+  {ic:'訂',name:'訂閱與會員管理',desc:'訂閱、試點名單、付款、發票與設定。',where:'管理員',go:[['進入訂閱管理',BOM+'member/']]},
+  {ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢、投保級距與違規提醒；也可以陪業主一起看。',where:'業主也用',go:[['進入人資中心',BOM+'hr/']]}]}
 ];
+const STAGE_COLS=[['名單','健檢名單'],['洽談中','洽談中'],['輔導中','輔導中'],['暫停','暫停／結案']];
 
-let me=null, ok=false, st=null, msg='';
+let me=null, ok=false, D=null, filt='all', view='home';
+const day=864e5, todayStr=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const ago=d=>Math.floor((Date.now()-new Date(d))/day);
+async function rows(qb){ try{ const r=await qb; return r.error?null:(r.data||[]) }catch(_){ return null } }
+
 async function load(){
-  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; ok=false; st=null;
+  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; ok=false; D=null;
   if(me){
     const p=await sbc.from('bom_profiles').select('role,status').eq('user_id',me.id).maybeSingle();
     ok=!!(p.data&&p.data.role==='admin'&&p.data.status==='active');
-    if(ok) st=await leadStats();
+    if(ok) await loadData();
   }
   render();
 }
-async function leadStats(){
-  try{
-    const {data,error}=await sbc.from('checkup_leads').select('id,status,created_at,status_at').limit(1000);
-    if(error) return null;
-    const now=Date.now(), day=864e5, m0=new Date(new Date(now+8*3600e3).toISOString().slice(0,7)+'-01T00:00:00+08:00');
-    return {todo:data.filter(l=>l.status==='新名單').length,
-      late:data.filter(l=>(l.status==='新名單'&&now-new Date(l.created_at)>=day)||(l.status==='已聯絡'&&now-new Date(l.status_at||l.created_at)>=3*day)).length,
-      month:data.filter(l=>new Date(l.created_at)>=m0).length, won:data.filter(l=>l.status==='已成交').length};
-  }catch(e){return null}
+async function loadData(){
+  const r=await Promise.all([
+    rows(sbc.from('checkup_leads').select('id,brand,contact_name,status,created_at,status_at,total,biz_type,stores,phone,line_id,email,source').order('created_at',{ascending:false}).limit(1000)),
+    rows(sbc.from('coach_clients').select('*').order('name')),
+    rows(sbc.from('coach_actions').select('id,client_id,title,status,due_on,priority').order('due_on',{ascending:true})),
+    rows(sbc.from('coach_visits').select('client_id,visit_on').order('visit_on',{ascending:false}).limit(1000)),
+    rows(sbc.from('org_plans').select('id,client_id,client_name,stores,target_stores,updated_at')),
+    rows(sbc.from('fr_plans').select('id,name,status,coach_client_id,brand_id,updated_at')),
+    rows(sbc.from('sop_manuals').select('id,title,status,version,brand_id,coach_client_id,updated_at')),
+    rows(sbc.from('qsc_audits').select('brand_id,score,audit_date,kind,open_count,overdue_count').order('audit_date',{ascending:false}).limit(500)),
+    rows(sbc.from('bom_brands').select('id,name').order('name'))
+  ]);
+  const k=['leads','clients','actions','visits','org','fr','sop','qsc','brands'];
+  D={}; k.forEach((n,i)=>D[n]=r[i]||[]); D.leadsOk=!!r[0];
 }
-function card(x){
-  const go=x.go.map((g,i)=>`<a class="btn ${i?'':'pri'}" href="${esc(g[1])}"${/^https:\/\/(claude\.ai|docs\.google)/.test(g[1])?' target="_blank" rel="noopener"':''}>${esc(g[0])}</a>`).join('')
-    +(x.copy?`<button type="button" data-copy="${esc(x.copy)}">複製連結給業主</button>`:'');
-  const chips=x.chips?`<div class="chips">${x.chips.map(c=>`<a href="${esc(BOM+'#'+c[1])}">${esc(c[0])}</a>`).join('')}</div>`:'';
-  const badge=x.stat&&st&&st.todo?`<span class="pill ${st.late?'bad':'warn'}">${st.todo} 筆新名單</span>`:'';
-  return `<div class="app"><div class="row" style="margin:0;justify-content:space-between"><div class="ic" aria-hidden="true">${esc(x.ic)}</div>${badge}</div><h3>${esc(x.name)}</h3><p>${esc(x.desc)}</p>${chips}<span class="tag">放在：${esc(x.where)}</span><div class="go">${go}</div></div>`;
+
+/* ---------- 計算 ---------- */
+function leadStats(){
+  if(!D.leadsOk) return null;
+  const L=D.leads, now=Date.now(), m0=new Date(new Date(now+8*3600e3).toISOString().slice(0,7)+'-01T00:00:00+08:00');
+  return {todo:L.filter(l=>l.status==='新名單').length,
+    late:L.filter(l=>(l.status==='新名單'&&now-new Date(l.created_at)>=day)||(l.status==='已聯絡'&&now-new Date(l.status_at||l.created_at)>=3*day)).length,
+    month:L.filter(l=>new Date(l.created_at)>=m0).length, won:L.filter(l=>l.status==='已成交').length};
+}
+const convertedLead=id=>D.clients.find(c=>c.lead_id===id);
+function links(c){
+  const org=D.org.find(x=>x.client_id===c.id), fr=D.fr.find(x=>x.coach_client_id===c.id)||(c.brand_id&&D.fr.find(x=>x.brand_id===c.brand_id));
+  const sop=D.sop.find(x=>x.coach_client_id===c.id)||(c.brand_id&&D.sop.find(x=>x.brand_id===c.brand_id));
+  const qsc=c.brand_id&&D.qsc.find(x=>x.brand_id===c.brand_id);
+  const lead=c.lead_id&&D.leads.find(l=>l.id===c.lead_id);
+  const acts=D.actions.filter(a=>a.client_id===c.id&&a.status!=='已完成'), t=todayStr();
+  const late=acts.filter(a=>a.due_on&&a.due_on<t);
+  const lastV=(D.visits.find(v=>v.client_id===c.id)||{}).visit_on||null;
+  const visitDue=c.stage==='輔導中'&&(!lastV||ago(lastV)>=(c.visit_every_days||14));
+  return {org,fr,sop,qsc,lead,acts,late,lastV,visitDue};
+}
+function todos(){
+  const out=[], t=todayStr();
+  for(const l of D.leads){
+    if(convertedLead(l.id)) continue;
+    if(l.status==='新名單'&&ago(l.created_at)>=1) out.push({w:3,k:'bad',ic:'單',t:`聯絡健檢名單：${l.brand||l.contact_name||'未命名'}`,s:`${ago(l.created_at)} 天沒聯絡｜健檢 ${l.total??'-'} 分`,u:BOM+'checkup/leads/?id='+l.id});
+    else if(l.status==='已聯絡'&&ago(l.status_at||l.created_at)>=3) out.push({w:2,k:'warn',ic:'單',t:`追蹤：${l.brand||l.contact_name||'未命名'}`,s:`${ago(l.status_at||l.created_at)} 天沒進展`,u:BOM+'checkup/leads/?id='+l.id});
+  }
+  for(const c of D.clients){ if(c.stage!=='輔導中') continue; const x=links(c);
+    x.late.forEach(a=>out.push({w:3,k:'bad',ic:'辦',t:a.title,s:`${c.name}｜逾期 ${ago(a.due_on)} 天`,u:C+'coach/#c='+c.id+'&t=actions'}));
+    if(x.visitDue) out.push({w:1,k:'warn',ic:'訪',t:`該訪視了：${c.name}`,s:x.lastV?`上次 ${x.lastV}（${ago(x.lastV)} 天前）`:'還沒有訪視紀錄',u:C+'coach/#c='+c.id+'&t=visits'});
+    if(x.qsc&&x.qsc.overdue_count>0) out.push({w:2,k:'warn',ic:'稽',t:`稽核改善逾期：${c.name}`,s:`${x.qsc.overdue_count} 項逾期｜最近 ${x.qsc.score??'-'} 分`,u:C+'sop/#audit'});
+  }
+  return out.sort((a,b)=>b.w-a.w);
+}
+
+/* ---------- 畫面 ---------- */
+const ICO={home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c1.9.7 3.1 2.4 3.5 5.2"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg>'};
+function side(st,td){
+  const gn=GROUPS.map((g,i)=>`<button type="button" class="nv" data-jump="${g.k}" style="--gc:var(--${g.k})"><span class="nd"></span>${i+1}. ${esc(g.t)}</button>`).join('');
+  return `<aside class="side"><div class="logo"><div class="lm">辣</div><div><b>顧問工作台</b><span>品牌加辣餐飲顧問</span></div></div>
+   <div class="nav-h">工作</div>
+   <button type="button" class="nv on" data-jump="top">${ICO.home}今日總覽</button>
+   <button type="button" class="nv" data-jump="todo">${ICO.check}今日要做${td?`<span class="cnt ${td>0?'bad':''}">${td}</span>`:''}</button>
+   <button type="button" class="nv" data-jump="clients">${ICO.users}客戶旅程<span class="cnt">${D.clients.filter(c=>c.stage!=='結案').length}</span></button>
+   <button type="button" class="nv" data-jump="tools">${ICO.grid}工具箱</button>
+   <div class="gnav"><div class="nav-h">顧問流程</div>${gn}</div>
+   <div class="foot">${esc(me.email)}<div class="row"><a class="btn" href="${PORTAL}">業主入口</a><button type="button" data-out>登出</button></div></div></aside>`;
+}
+function hero(){
+  const h=new Date(Date.now()+8*3600e3).getUTCHours(), g=h<11?'早安':h<14?'午安':h<18?'午安':'晚安';
+  const d=new Date(Date.now()+8*3600e3), wd='日一二三四五六'[d.getUTCDay()];
+  return `<header class="hero" id="top"><div><h1>${g}，今天也辛苦了</h1><p>${d.getUTCMonth()+1} 月 ${d.getUTCDate()} 日（週${wd}）｜顧問專用，業主看不到這一頁</p></div>
+   <div class="qa"><button type="button" data-copy="${esc(BOM+'checkup/')}">分享健檢連結</button><a class="btn" href="${C}coach/#todo">全部待辦</a><a class="btn pri" href="${C}coach/#new">＋ 新增輔導客戶</a></div></header>`;
 }
 function stats(){
-  if(!st) return '';
-  const s=(n,l,a)=>`<div class="stat ${a&&n?'alert':''}"><b>${n}</b><span>${l}</span></div>`;
-  return `<div class="stats">${s(st.todo,'新名單待聯絡')}${s(st.late,'該追蹤（逾期）',true)}${s(st.month,'本月新健檢')}${s(st.won,'累計成交')}</div>`;
+  const st=leadStats(), t=todayStr();
+  const act=D.clients.filter(c=>c.stage==='輔導中');
+  const late=D.actions.filter(a=>a.status!=='已完成'&&a.due_on&&a.due_on<t&&act.some(c=>c.id===a.client_id)).length;
+  const s=(n,l,col,jump,alert)=>`<button type="button" class="stat ${alert&&n?'alert':''}" style="--sc:${col}" data-jump="${jump}"><b data-count="${n??0}">${n??'-'}</b><span>${l}</span></button>`;
+  return `<div class="stats">${st?s(st.todo,'新名單待聯絡','var(--g1)','todo')+s(st.late,'該追蹤（逾期）','var(--warn)','todo',true):''}
+   ${s(act.length,'輔導中客戶','var(--g3)','clients')}${s(late,'輔導待辦逾期','var(--bad)','todo',true)}
+   ${st?s(st.month,'本月新健檢','var(--g2)','clients')+s(st.won,'累計成交','var(--good)','clients'):''}</div>`;
 }
+function todoCard(list){
+  const top=list.slice(0,8);
+  return `<section class="card" id="todo"><div class="sh"><h2>今日要做</h2><span class="pill ${list.length?'bad':'good'}">${list.length?list.length+' 項':'全部完成'}</span></div>
+   ${top.length?`<ul class="todo">${top.map(x=>`<li><a href="${esc(x.u)}"><span class="tk ${x.k}">${esc(x.ic)}</span><span><b>${esc(x.t)}</b><small>${esc(x.s)}</small></span></a></li>`).join('')}</ul>${list.length>8?`<p class="more">還有 ${list.length-8} 項，到營運輔導「全部待辦」或名單管理看。</p>`:''}`
+   :`<div class="empty"><span class="big">✓</span>今天沒有逾期的事，可以專心做提案。</div>`}</section>`;
+}
+function dots(c){
+  const x=links(c), d=(on,l,bad)=>`<i class="${bad?'bad':on?'on':''}">${l}</i>`;
+  return `<div class="dots">${d(x.lead,'健檢')}${d(1,'輔導',x.late.length)}${d(x.org,'組織')}${d(x.fr,'加盟')}${d(x.sop,'SOP')}${d(c.brand_id,'BOM')}</div>`;
+}
+function pipe(){
+  const L=D.leads.filter(l=>['新名單','已聯絡','已預約'].includes(l.status)&&!convertedLead(l.id));
+  const cols={名單:L,洽談中:D.clients.filter(c=>c.stage==='洽談中'),輔導中:D.clients.filter(c=>c.stage==='輔導中'),暫停:D.clients.filter(c=>c.stage==='暫停'||c.stage==='結案')};
+  const card=(k,x)=>k==='名單'?`<button type="button" class="cc" data-open="l=${x.id}"><b>${esc(x.brand||x.contact_name||'未命名')}</b><small>健檢 ${x.total??'-'} 分｜${esc(x.status)}｜${ago(x.created_at)} 天前</small></button>`
+    :`<button type="button" class="cc" data-open="c=${x.id}"><b>${esc(x.name)}</b><small>${esc([x.biz_type,x.stores?x.stores+' 店':'',x.stage==='結案'?'已結案':''].filter(Boolean).join('｜')||'—')}</small>${dots(x)}</button>`;
+  return `<section class="card" id="clients"><div class="sh"><h2>客戶旅程</h2><span class="note" style="margin:0">點客戶看他在每個工具的進度</span></div>
+   <div class="pipe">${STAGE_COLS.map(([k,l])=>{const xs=cols[k]; return `<div class="col"><h3>${l}<span class="n">${xs.length}</span></h3>${xs.slice(0,6).map(x=>card(k,x)).join('')||'<p class="more">（沒有）</p>'}${xs.length>6?`<p class="more">還有 ${xs.length-6} 位</p>`:''}</div>`}).join('')}</div></section>`;
+}
+function appCard(x,g){
+  const go=x.go.map((b,i)=>`<a class="btn ${i?'':'pri'}" href="${esc(b[1])}"${/^https:\/\/(claude\.ai|docs\.google)/.test(b[1])?' target="_blank" rel="noopener"':''}>${esc(b[0])}</a>`).join('')
+    +(x.copy?`<button type="button" data-copy="${esc(x.copy)}">複製連結給業主</button>`:'');
+  const chips=x.chips?`<div class="chips">${x.chips.map(c=>`<a href="${esc(BOM+'#'+c[1])}">${esc(c[0])}</a>`).join('')}</div>`:'';
+  const st=leadStats(), badge=x.stat&&st&&st.todo?`<span class="pill ${st.late?'bad':'warn'}" style="margin-left:auto">${st.todo} 筆新名單</span>`:'';
+  return `<article class="app" style="--gc:var(--${g.k})"><div class="hd"><div class="ic" aria-hidden="true">${esc(x.ic)}</div><div><h4>${esc(x.name)}</h4><div class="where">${esc(x.where)}</div></div>${badge}</div><p>${esc(x.desc)}</p>${chips}<div class="go">${go}</div></article>`;
+}
+function tools(){
+  const gs=GROUPS.filter(g=>filt==='all'||filt===g.k);
+  return `<section id="tools" style="margin-top:6px"><div class="sh"><h2>工具箱</h2><span class="note" style="margin:0">依顧問流程排列</span></div>
+   <div class="flow" role="tablist"><button type="button" role="tab" data-filt="all" class="${filt==='all'?'on':''}">全部</button>${GROUPS.map((g,i)=>`<button type="button" role="tab" data-filt="${g.k}" class="${filt===g.k?'on':''}" style="--gc:var(--${g.k})"><span class="nd"></span>${i+1}. ${esc(g.t)}</button>`).join('')}</div>
+   ${gs.map(g=>`<div class="gsec" id="${g.k}" style="--gc:var(--${g.k})"><div class="gt"><span class="num">${GROUPS.indexOf(g)+1}</span><h3>${esc(g.t)}</h3><span>${esc(g.s)}</span></div><div class="apps">${g.items.map(x=>appCard(x,g)).join('')}</div></div>`).join('')}
+   <p class="note">網頁系統都在雲端，不用開你的電腦；「Claude」標示的要登入 claude.ai。要加新系統，改這一頁的 GROUPS 清單即可。</p></section>`;
+}
+
+/* ---------- 客戶檔案 ---------- */
+function stepRow(n,state,title,info,acts){
+  return `<li class="step ${state}"><span class="sn">${state==='done'?'✓':n}</span><div><b>${esc(title)}</b><small>${info}</small></div><div class="act">${acts.map(([l,u,p,ext])=>`<a class="btn ${p?'pri':''}" href="${esc(u)}"${ext?' target="_blank" rel="noopener"':''}>${esc(l)}</a>`).join('')}</div></li>`;
+}
+function drawerClient(c){
+  const x=links(c), bn=c.brand_id&&(D.brands.find(b=>b.id===c.brand_id)||{}).name;
+  const steps=[
+    stepRow(1,x.lead?'done':'', '經營健檢', x.lead?`${x.lead.total??'-'} 分｜${esc(x.lead.created_at.slice(0,10))}填寫`:'沒有健檢紀錄，可以請業主填一份當基準',
+      x.lead?[['看健檢與作業包',BOM+'checkup/leads/?id='+x.lead.id]]:[['打開健檢頁',BOM+'checkup/',0,1]]),
+    stepRow(2,x.late.length?'warn':'done','營運輔導',`未完成待辦 ${x.acts.length} 項${x.late.length?`（逾期 ${x.late.length}）`:''}｜${x.lastV?'上次訪視 '+esc(x.lastV):'還沒訪視'}${x.visitDue?'｜該訪視了':''}`,
+      [['打開',C+'coach/#c='+c.id,1],['業主報告',C+'coach/#c='+c.id+'&t=report']]),
+    stepRow(3,x.org?'done':'','總部組織診斷',x.org?`${x.org.stores||'-'} 店 → 目標 ${x.org.target_stores||'-'} 店｜更新 ${esc(String(x.org.updated_at||'').slice(0,10))}`:'多店或準備展店時做',
+      x.org?[['打開',C+'org/#p='+x.org.id]]:[['＋ 建立',C+'org/#t=new&client='+c.id]]),
+    stepRow(4,x.fr?'done':'','加盟體系',x.fr?`${esc(x.fr.status)}｜${esc(x.fr.name)}`:'要開放加盟時做準備度健檢',
+      x.fr?[['打開',C+'franchise/#p='+x.fr.id]]:[['＋ 建立',C+'franchise/#new&client='+c.id]]),
+    stepRow(5,x.sop?(x.qsc&&x.qsc.overdue_count?'warn':'done'):'','SOP 與督導稽核',(x.sop?`${esc(x.sop.title)}（${esc(x.sop.status)}，第 ${x.sop.version||1} 版）`:'還沒有 SOP 手冊')+(x.qsc?`｜最近稽核 ${x.qsc.score??'-'} 分${x.qsc.overdue_count?`，${x.qsc.overdue_count} 項逾期`:''}`:''),
+      x.sop?[['打開',C+'sop/#m='+x.sop.id]]:[['＋ 建立',C+'sop/#new&client='+c.id]]),
+    stepRow(6,c.brand_id?'done':'','BOM 與損益',c.brand_id?`BOM 品牌：${esc(bn||c.brand_id)}${c.pl_client?`｜損益中心：${esc(c.pl_client)}`:''}`:'還沒連結 BOM 品牌（到營運輔導「設定」選）',
+      c.brand_id?[['每月月報',BOM+'#mrep&b='+encodeURIComponent(c.brand_id)],['菜單四象限',BOM+'#matrix&b='+encodeURIComponent(c.brand_id)]].concat(c.pl_client?[['損益中心',PL]]:[]):[['去連結',C+'coach/#c='+c.id+'&t=edit']]),
+    stepRow(7,'','立地評估與品牌提案','展店選址、品牌升級提案時用',[['立地評估',BOM+'site/'],['案件工作台','https://claude.ai/artifact/DEjP3mWn57z1SkgkkVhQMe',0,1]])
+  ].join('');
+  return `<div class="dh"><a class="btn ghost x" href="#" aria-label="關閉">✕</a><div style="display:flex;gap:14px;align-items:center"><div class="av">${esc(c.name.slice(0,1))}</div><div><h2>${esc(c.name)}</h2><div class="note" style="margin:2px 0 0"><span class="pill ${c.stage==='輔導中'?'good':'mute'}">${esc(c.stage)}</span> ${esc([c.biz_type,c.stores?c.stores+' 店':'',c.contact_name,c.phone].filter(Boolean).join('｜'))}</div></div></div></div>
+   <div class="db"><p class="note" style="margin:0 0 6px">同一位客戶在每個工具的進度。按「＋ 建立」會自動帶入客戶名稱與連結，不用重打。</p><ul class="steps">${steps}</ul></div>`;
+}
+function drawerLead(l){
+  const c=convertedLead(l.id);
+  return `<div class="dh"><a class="btn ghost x" href="#" aria-label="關閉">✕</a><div style="display:flex;gap:14px;align-items:center"><div class="av">${esc((l.brand||l.contact_name||'?').slice(0,1))}</div><div><h2>${esc(l.brand||'（未填品牌）')}</h2><div class="note" style="margin:2px 0 0"><span class="pill warn">${esc(l.status)}</span> 健檢名單</div></div></div></div>
+   <div class="db"><div class="card"><div class="kv"><span>健檢分數</span><b>${l.total??'-'} 分</b><span>聯絡人</span><div>${esc(l.contact_name||'')}</div>${l.phone?`<span>電話</span><div><a href="tel:${esc(l.phone)}">${esc(l.phone)}</a></div>`:''}${l.line_id?`<span>LINE</span><div>${esc(l.line_id)}</div>`:''}${l.email?`<span>Email</span><div>${esc(l.email)}</div>`:''}<span>業態／店數</span><div>${esc([l.biz_type,l.stores?l.stores+' 店':''].filter(Boolean).join('｜')||'—')}</div><span>填寫</span><div>${esc(String(l.created_at).slice(0,10))}（${ago(l.created_at)} 天前）</div></div>
+   <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${c?`<a class="btn pri" href="#c=${c.id}">看客戶檔案</a>`:`<a class="btn pri" href="${C}coach/#new&lead=${l.id}">轉成輔導客戶 →</a>`}<a class="btn" href="${BOM}checkup/leads/?id=${l.id}">看作業包與話術</a></div>
+   <p class="note">轉成輔導客戶後，名稱、聯絡方式、業態與店數會自動帶入；之後組織診斷、加盟、SOP 都從這位客戶帶入。</p></div></div>`;
+}
+function drawer(){
+  const p=new URLSearchParams(location.hash.slice(1)), cid=+p.get('c'), lid=+p.get('l');
+  let body='';
+  if(cid){const c=D.clients.find(x=>x.id===cid); body=c?drawerClient(c):`<div class="db"><p>找不到這位客戶。</p><a class="btn" href="#">關閉</a></div>`; if(c&&window.Kit) Kit.store.set(c.id)}
+  else if(lid){const l=D.leads.find(x=>x.id===lid); body=l?drawerLead(l):`<div class="db"><p>找不到這筆名單。</p><a class="btn" href="#">關閉</a></div>`}
+  let el=$('#drawer');
+  if(!body){ if(el) el.remove(); document.body.style.overflow=''; return }
+  if(!el){el=document.createElement('div');el.id='drawer';document.body.appendChild(el)}
+  el.innerHTML=`<div class="scrim" data-close></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="客戶檔案">${body}</aside>`;
+  document.body.style.overflow='hidden';
+}
+
 function render(){
-  $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:4px"><a class="btn" href="${PORTAL}">業主入口</a><button type="button" data-out>登出</button></div>`:'';
-  const flash=msg?`<div class="msg">${esc(msg)}</div>`:'';
-  if(!me){ $('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">顧問工作台和業主入口用同一組帳號，登入一次兩邊都能用。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`; return }
-  if(!ok){ $('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><div class="row"><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`; return }
-  $('#app').innerHTML=flash+stats()+GROUPS.map(g=>`<div class="sec">${esc(g.t)}</div><div class="apps">${g.items.map(card).join('')}</div>`).join('')
-   +`<p class="note">網頁系統都在雲端，不用開你的電腦；「Claude」標示的要登入 claude.ai。要加新系統，改這一頁的 GROUPS 清單即可。</p>`;
+  const root=$('#root');
+  if(!me){ root.innerHTML=`<div class="main" style="max-width:520px;margin:40px auto"><div class="card"><h2>請先登入</h2><p class="sub">顧問工作台和業主入口用同一組帳號，登入一次兩邊都能用。</p><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`; return }
+  if(!ok){ root.innerHTML=`<div class="main" style="max-width:560px;margin:40px auto"><div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`; return }
+  const td=todos();
+  root.innerHTML=`<div class="shell">${side(leadStats(),td.length)}<main class="main" id="app">${hero()}${stats()}<div class="two">${todoCard(td)}${pipe()}</div>${tools()}</main></div>`;
+  if(window.Kit) Kit.countUp(root);
+  drawer();
 }
 document.addEventListener('click',async e=>{
   const c=e.target.closest('[data-copy]');
-  if(c){ try{await navigator.clipboard.writeText(c.dataset.copy); msg='已複製健檢連結，可以直接貼給業主。'}catch(_){msg='複製失敗，請手動複製：'+c.dataset.copy} render(); return }
-  if(e.target.closest('[data-out]')){ await sbc.auth.signOut(); location.href=PORTAL }
+  if(c){ try{await navigator.clipboard.writeText(c.dataset.copy); toast('已複製健檢連結，可以直接貼給業主。','ok')}catch(_){toast('瀏覽器不讓複製，請手動複製：'+c.dataset.copy,'bad')} return }
+  if(e.target.closest('[data-out]')){ await sbc.auth.signOut(); location.href=PORTAL; return }
+  const o=e.target.closest('[data-open]'); if(o){ location.hash=o.dataset.open; return }
+  if(e.target.closest('[data-close]')){ location.hash=''; return }
+  const f=e.target.closest('[data-filt]'); if(f){ filt=f.dataset.filt; const t=$('#tools'); t.outerHTML=tools(); return }
+  const j=e.target.closest('[data-jump]');
+  if(j){ const k=j.dataset.jump; if(/^g\d$/.test(k)&&filt!=='all'&&filt!==k){filt='all'; $('#tools').outerHTML=tools()}
+    const t=document.getElementById(k); if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+    document.querySelectorAll('.side .nv').forEach(b=>b.classList.toggle('on',b===j));
+    if(k==='todo'||k==='clients'){const el=document.getElementById(k); el.animate&&el.animate([{boxShadow:'0 0 0 3px var(--accent)'},{boxShadow:'0 0 0 0 transparent'}],{duration:900})} }
 });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('#drawer')) location.hash='' });
+window.addEventListener('hashchange',()=>{ if(D) drawer() });
 sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
 load();
 </script>
+<script src="kit/kit.js"></script>
+<script>window.Kit&&Kit.init({tool:'home',sb:sbc,bar:false})</script>
 </body>
 </html>
