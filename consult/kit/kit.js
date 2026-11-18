@@ -22,7 +22,7 @@
   function toast(text,type){
     text=String(text||'').trim(); if(!text) return;
     const now=Date.now(); if(text===last.t&&now-last.at<2500) return; last={t:text,at:now};
-    type=type==='bad'||type==='ok'?type:(/失敗|錯誤|請先|請填|請選|不能|無法|找不到|沒有存/.test(text)?'bad':'ok');
+    type=type==='bad'||type==='ok'||type==='info'?type:(/失敗|錯誤|請先|請填|請選|不能|無法|找不到|沒有存/.test(text)?'bad':'ok');
     if(!box){box=document.createElement('div');box.className='kit-toasts';box.setAttribute('role','status');box.setAttribute('aria-live','polite');document.body.appendChild(box)}
     const ms=type==='bad'?6000:Math.min(6000,2600+text.length*40);
     const el=document.createElement('div'); el.className='kit-toast '+type;
@@ -153,21 +153,29 @@
   /* ---------- 監看畫面：#flash → 跳出訊息、換頁淡入、帶入客戶 ---------- */
   let routeChanged=true;
   window.addEventListener('hashchange',()=>{routeChanged=true; resolve()});
-  function watch(){
-    const fl=document.getElementById('flash');
-    if(fl) new MutationObserver(()=>{const m=fl.querySelector('.msg'); if(m) toast(m.textContent,m.classList.contains('bad')?'bad':'ok')}).observe(fl,{childList:true,subtree:true,characterData:true});
-    const app=document.getElementById('app');
-    if(app) new MutationObserver(()=>{
-      if(routeChanged&&!reduce){routeChanged=false; app.classList.remove('kit-in'); void app.offsetWidth; app.classList.add('kit-in')}
-      countUp(app); if(K.ok) prefill();
-    }).observe(app,{childList:true});
+  const BAD=/失敗|錯誤|沒有存|不能|無法|中斷|權限|上限/;
+  function watch(extra){
+    const attached=new WeakSet();
+    const hook=()=>(extra||[]).forEach(([sel,mode])=>{const el=document.querySelector(sel); if(!el||attached.has(el)) return; attached.add(el); let prev=el.textContent.trim();
+      new MutationObserver(()=>{const t=el.textContent.trim(); if(!t||t===prev){prev=t;return} prev=t; if(/(…|\.\.\.)$/.test(t)) return;
+        const bad=BAD.test(t); if(mode==='bad'&&!bad) return; toast(t,bad?'bad':'ok')}).observe(el,{childList:true,subtree:true,characterData:true})});
+    // #flash 裡的訊息（就算整個畫面重畫、#flash 被換掉也抓得到）→ 跳出訊息；#app 換頁淡入、帶入客戶
+    const seen=new WeakSet(); let raf=0, appEl=null, appObs=null;
+    const scan=()=>{ raf=0; hook();
+      const m=document.querySelector('#flash .msg'); if(m&&!seen.has(m)){seen.add(m); toast(m.textContent,m.classList.contains('bad')?'bad':'ok')}
+      const app=document.getElementById('app');
+      if(app&&app!==appEl){ appEl=app; if(appObs) appObs.disconnect(); appObs=new MutationObserver(onApp); appObs.observe(app,{childList:true}); countUp(app) } };
+    const onApp=()=>{ if(routeChanged&&!reduce){routeChanged=false; appEl.classList.remove('kit-in'); void appEl.offsetWidth; appEl.classList.add('kit-in')}
+      countUp(appEl); if(K.ok) prefill() };
+    new MutationObserver(()=>{ if(!raf) raf=requestAnimationFrame(scan) }).observe(document.body,{childList:true,subtree:true});
+    scan();
   }
 
   async function init(o){
     o=o||{}; K.tool=o.tool||''; K.sb=o.sb||null;
     document.documentElement.classList.add('kit-on');
     if(!document.querySelector('link[data-kit]')){const l=document.createElement('link');l.rel='stylesheet';l.href=new URL('kit.css',me).href;l.dataset.kit='';document.head.appendChild(l)}
-    watch();
+    watch(o.watch);
     if(o.bar===false||!K.sb) return;
     try{
       const {data:{session}}=await K.sb.auth.getSession(); if(!session) return;

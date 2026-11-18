@@ -20,6 +20,9 @@
 .kit-on input,.kit-on select,.kit-on textarea{transition:border-color .15s,box-shadow .15s}
 .kit-on input:focus,.kit-on select:focus,.kit-on textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 
+/* 選單類按鈕不要浮起，只保留按下回饋 */
+.kit-on nav button:not(:disabled):hover,.kit-on #side button:not(:disabled):hover,.kit-on .tabs button:not(:disabled):hover,.kit-on .kit-calm:hover{transform:none;box-shadow:none}
+
 /* 畫面切換淡入 */
 .kit-in{animation:kit-in .28s var(--kit-ease)}
 @keyframes kit-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
