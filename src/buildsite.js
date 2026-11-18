@@ -78,5 +78,7 @@ main tbody th{width:140px}
 </style>`);
 const i=h.lastIndexOf("boot();"); h=h.slice(0,i)+fs.readFileSync('sitecode.js','utf8')+h.slice(i+7);
 h='<!doctype html>\n<html lang="zh-Hant">\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<meta name="robots" content="noindex">\n'+h+'\n</html>\n';
+// 共用跳出訊息與按鈕動態（consult/kit）：只把失敗訊息跳出來，自動存檔的「已儲存」不打擾
+h=h.replace(/\n<\/html>\n$/,'\n<script src="consult/kit/kit.js"></script>\n<script>window.Kit&&Kit.init({tool:\'bom\',bar:false,watch:[[\'#status\',\'bad\']]})</script>\n</html>\n');
 fs.mkdirSync('site',{recursive:true});fs.writeFileSync('site/index.html',h);
 const js=h.split("<script>")[1].split("</script>")[0];new Function(js);console.log('syntax ok',h.length);
