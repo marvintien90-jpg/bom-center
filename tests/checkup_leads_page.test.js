@@ -5,7 +5,7 @@ const html = fs.readFileSync(path.join(__dirname, '../checkup/leads/index.html')
 const js = fs.readFileSync(path.join(__dirname, '../checkup/score.js'), 'utf8');
 const L = [
   { id: 3, created_at: '2026-10-20T03:00:00Z', status_at: new Date(Date.now()-5*864e5).toISOString(), brand: '追蹤店', contact_name: '陳', phone: null, line_id: 'chen', email: null, total: 55, scores: { prod: 50 }, finance: {}, answers: {}, source: 'fb', status: '已聯絡', note: null },
-  { id: 2, created_at: new Date().toISOString(), brand: '好吃鍋', contact_name: '王老闆', phone: '0912', line_id: 'wang', email: null, biz_type: '火鍋／鍋物', stores: 2, total: 48, scores: { prod: 60, mkt: 40, hr: 30, rd: 50, fin: 55, info: 53 }, finance: { revenue: '600000', food: '220000', labor: '150000', rent: '60000' }, answers: {}, source: 'ig', status: '新名單', note: null },
+  { id: 2, created_at: new Date().toISOString(), brand: '好吃鍋', contact_name: '王老闆', phone: '0912', line_id: 'wang', email: null, biz_type: '火鍋／鍋物', stores: 2, total: 48, scores: { prod: 60, mkt: 40, hr: 30, rd: 50, fin: 55, info: 53 }, finance: { revenue: '600000', food: '220000', labor: '150000', rent: '60000' }, answers: {}, source: 's01_ig', pref: '平日晚上', topic: '人力資源', status: '新名單', note: null },
   { id: 1, created_at: '2026-10-01T03:00:00Z', brand: '舊客', contact_name: '李', phone: null, line_id: null, email: 'a@b.c', total: 80, scores: {}, finance: {}, answers: { p1: 3, p2: 0 }, source: '', status: '不需要', note: 'x' },
 ];
 const BRIEF = { weak: [{ dim: 'mkt', name: '銷', full: '行銷與營收', score: 40, issues: [{ q: '清楚知道目標客群', answer: '沒有', issue: '定位不清楚<b>', fix: '做一次客群與競品調研' }], ask: ['客人大多從哪裡知道你們？'], tool: '品牌調研' }],
@@ -17,7 +17,7 @@ return {from:q,rpc:async(n,a)=>{(window.__rpc=window.__rpc||[]).push([n,a]);retu
 const cases = [
   ['未登入', { user: null, tables: {} }, ['登入', '管理員帳號']],
   ['非管理員', { user: { id: 'u' }, tables: { bom_profiles: [{ user_id: 'u', role: 'client' }] } }, ['只限管理員']],
-  ['管理員', { user: { id: 'a' }, tables: { bom_profiles: [{ user_id: 'a', role: 'admin' }], checkup_leads: L }, brief: BRIEF }, ['分享健檢', 'Instagram', '好吃鍋｜王老闆', '待聯絡', '人 30', '銷 40', '5 天沒進展，該追蹤']],
+  ['管理員', { user: { id: 'a' }, tables: { bom_profiles: [{ user_id: 'a', role: 'admin' }], checkup_leads: L }, brief: BRIEF }, ['分享健檢', 'S01 Instagram', 'S01 Threads', '來源成效', 'S01 IG', '方便：平日晚上', '想先解決：人力資源', '好吃鍋｜王老闆', '待聯絡', '人 30', '銷 40', '5 天沒進展，該追蹤']],
 ];
 (async () => {
   const br = await chromium.launch(); let fail = 0;
@@ -34,8 +34,8 @@ const cases = [
       if (name === '管理員') {
         assert.ok(!txt.includes('舊客'), 'closed lead hidden in 待處理');
         await pg.click('[data-tab=all]'); assert.ok((await pg.innerText('body')).includes('舊客'));
-        await pg.click('[data-copy=ig]'); const clip = await pg.evaluate(() => navigator.clipboard.readText());
-        assert.strictEqual(clip, 'https://ck.test/bom-center/checkup/?src=ig');
+        await pg.click('[data-copy=s01_threads]'); const clip = await pg.evaluate(() => navigator.clipboard.readText());
+        assert.strictEqual(clip, 'https://ck.test/bom-center/checkup/#src=s01_threads');
         await pg.click('[data-copy=""]'); assert.strictEqual(await pg.evaluate(() => navigator.clipboard.readText()), 'https://ck.test/bom-center/checkup/');
         await pg.selectOption('.lead[data-id="2"] [data-status]', '已聯絡'); await pg.waitForTimeout(100);
         await pg.fill('.lead[data-id="2"] [data-note]', '週五回電'); await pg.click('h1'); await pg.waitForTimeout(100);

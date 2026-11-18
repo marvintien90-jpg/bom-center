@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>營運輔導｜品牌加辣餐飲顧問工作室</title>
+<style>
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 2px}h2{font-size:18px;margin:0 0 8px}h3{font-size:16px;margin:14px 0 6px}
+.sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px;margin:6px 0 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 3px}
+input,select,textarea{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;color:inherit}
+textarea{min-height:76px;resize:vertical}
+input[type=checkbox]{width:auto}
+button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:7px 13px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button.sm{padding:3px 9px;font-size:13px}
+button.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+button:disabled{opacity:.6;cursor:wait}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.who{font-size:14px;color:var(--mute);text-align:right}
+.msg{padding:9px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.pill{display:inline-block;border-radius:999px;padding:0 9px;font-size:12px;white-space:nowrap;border:1px solid transparent}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mute{background:var(--field);color:var(--mute);border-color:var(--line)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:24px;line-height:1.2}.stat span{color:var(--mute);font-size:13px}
+.stat.alert b{color:var(--bad)}
+.clients{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.cl{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;text-decoration:none;color:inherit;display:block}
+.cl.red{border-left-color:var(--bad)}.cl.yellow{border-left-color:var(--warn)}.cl.green{border-left-color:var(--good)}
+.cl h3{margin:0 0 4px}.cl ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--mute)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:12px 0}
+.tabs a{padding:7px 12px;text-decoration:none;color:var(--mute);border-bottom:3px solid transparent}
+.tabs a.on{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0 12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}@media (max-width:640px){.g2{grid-template-columns:1fr}}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+.item{border-top:1px solid var(--line);padding:10px 0}.item:first-child{border-top:0}
+.item .meta{font-size:13px;color:var(--mute)}
+.goal{display:grid;grid-template-columns:1fr 110px 90px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.goal:first-child{border-top:0}
+.goal svg{width:110px;height:30px}
+.gl{display:grid;grid-template-columns:1.4fr 1fr .8fr auto;gap:6px;margin:4px 0}
+.al{display:grid;grid-template-columns:2fr .8fr 1fr auto;gap:6px;margin:4px 0}
+@media (max-width:560px){.who{text-align:left}.gl,.al{grid-template-columns:1fr 1fr}.al [data-a=title],.gl [data-g=kpi]{grid-column:1/-1}.goal{grid-template-columns:1fr 90px}.goal svg{display:none}}
+a{color:var(--accent)}
+.pre{white-space:pre-wrap}
+.report h2{font-size:20px}.report table{margin:6px 0 10px}
+@media print{body{background:#fff;color:#000}.noprint,.tabs,.top,#flash{display:none!important}.card{border:0;padding:0}.wrap{padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top noprint"><div><h1>營運輔導</h1><p class="sub">輔導客戶、訪視紀錄、改善待辦與 KPI 追蹤｜顧問專用，業主看不到</p></div><div class="who" id="who"></div></div>
+  <div id="flash"></div>
+  <div id="app"><p class="sub">讀取中…</p></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+const BOM='https://marvintien90-jpg.github.io/bom-center/', PORTAL=BOM+'portal/', CONSULT=BOM+'consult/';
+const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const addDays=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*864e5).toISOString().slice(0,10);
+const daysBetween=(a,b)=>Math.round((Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/864e5);
+const ym=d=>String(d||'').slice(0,7);
+const num=v=>v===''||v==null||isNaN(+v)?null:+v;
+const fmt=(v,d=0)=>v==null||isNaN(+v)?'—':(+v).toLocaleString('zh-TW',{maximumFractionDigits:d,minimumFractionDigits:0});
+
+const KPI={
+  revenue:{l:'月營收',u:'元',dir:'up',d:0},
+  food_pct:{l:'食材成本率',u:'%',dir:'down',d:1},
+  labor_pct:{l:'人事費用率',u:'%',dir:'down',d:1},
+  rent_pct:{l:'租金占比',u:'%',dir:'down',d:1},
+  net_pct:{l:'淨利率',u:'%',dir:'up',d:1},
+  avg_ticket:{l:'客單價',u:'元',dir:'up',d:0},
+  guests:{l:'月來客數',u:'人',dir:'up',d:0},
+  qsc:{l:'QSC 分數',u:'分',dir:'up',d:0}
+};
+const STAGES=['洽談中','輔導中','暫停','結案'], KINDS=['到店訪視','線上會議','電話','稽核','教育訓練'], ASTAT=['待辦','進行中','卡關','已完成'];
+
+let me=null, ok=false, D={clients:[],visits:[],actions:[],kpis:[],leads:[],brands:[],pl:[]}, flash='', flashBad=false, armed=null, busy=false;
+
+function say(t,bad){flash=t;flashBad=!!bad;$('#flash').innerHTML=t?`<div class="msg ${bad?'bad':''}">${esc(t)}</div>`:''}
+async function q(p,what){const r=await p; if(r.error){say((what||'存檔')+'失敗：'+r.error.message+'。請重新整理後再試一次，還是不行就把這段訊息傳給 Claude。',true); throw r.error} return r.data}
+
+async function load(){
+  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; ok=false;
+  if(me){
+    const p=await sbc.from('bom_profiles').select('role,status').eq('user_id',me.id).maybeSingle();
+    ok=!!(p.data&&p.data.role==='admin'&&p.data.status==='active');
+  }
+  if(ok) await loadData();
+  render();
+}
+async function loadData(){
+  const r=await Promise.all([
+    sbc.from('coach_clients').select('*').order('name'),
+    sbc.from('coach_visits').select('*').order('visit_on',{ascending:false}),
+    sbc.from('coach_actions').select('*').order('due_on',{ascending:true}),
+    sbc.from('coach_kpis').select('*').order('month',{ascending:true}),
+    sbc.from('checkup_leads').select('id,brand,biz_type,stores,contact_name,phone,line_id,email,status,total').order('id',{ascending:false}).limit(300),
+    sbc.from('bom_brands').select('id,name').order('name'),
+    sbc.rpc('coach_pl_clients')
+  ]);
+  if(r[0].error){ D.missing=true; return }
+  D.missing=false;
+  [D.clients,D.visits,D.actions,D.kpis,D.leads,D.brands,D.pl]=r.map(x=>x.error?[]:(x.data||[]));
+}
+
+/* ---------- 健康燈號 ---------- */
+function kpiRows(cid){return D.kpis.filter(k=>k.client_id===cid).sort((a,b)=>a.month<b.month?-1:1)}
+function visitQsc(cid,month){
+  const v=D.visits.filter(x=>x.client_id===cid&&ym(x.visit_on)===month).flatMap(x=>[x.q_score,x.s_score,x.c_score]).filter(x=>x!=null);
+  return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null;
+}
+function kval(cid,row,k){ if(!row) return null; const v=num(row[k]); if(k==='qsc'&&v==null) return visitQsc(cid,ym(row.month)); return v }
+function goalHit(g,v){ if(v==null||num(g.target)==null) return null; const dir=g.dir||(KPI[g.kpi]||{}).dir||'up'; return dir==='down'?v<=+g.target:v>=+g.target }
+function health(c){
+  const t=today(), acts=D.actions.filter(a=>a.client_id===c.id&&a.status!=='已完成');
+  const overdue=acts.filter(a=>a.due_on&&a.due_on<t), stuck=acts.filter(a=>a.status==='卡關');
+  const vs=D.visits.filter(v=>v.client_id===c.id); const last=vs.length?vs.map(v=>v.visit_on).sort().pop():null;
+  const every=c.visit_every_days||14, since=last?daysBetween(last,t):(c.start_on?daysBetween(c.start_on,t):null);
+  const rows=kpiRows(c.id), lr=rows[rows.length-1];
+  const missed=(c.goals||[]).filter(g=>goalHit(g,kval(c.id,lr,g.kpi))===false);
+  const why=[]; let lv='green';
+  if(c.stage!=='輔導中') return {lv:'mute',why:[c.stage],acts,overdue,last,since,missed,next:null};
+  if(overdue.length){lv='red';why.push(`${overdue.length} 項待辦逾期`)}
+  if(since!=null&&since>every*1.5){lv='red';why.push(last?`${since} 天沒訪視`:`開始 ${since} 天還沒訪視`)}
+  else if(since!=null&&since>every){if(lv!=='red')lv='yellow';why.push(`${since} 天沒訪視（每 ${every} 天）`)}
+  if(stuck.length){if(lv==='green')lv='yellow';why.push(`${stuck.length} 項卡關`)}
+  if(missed.length){if(lv==='green')lv='yellow';why.push(`${missed.length} 個目標未達（${ym(lr.month)}）`)}
+  if(!why.length) why.push(last?`上次訪視 ${last}`:'尚無訪視紀錄');
+  const next=last?addDays(last,every):(c.start_on||null);
+  return {lv,why,acts,overdue,last,since,missed,next};
+}
+const LV={red:['bad','要處理'],yellow:['warn','注意'],green:['good','正常'],mute:['mute','']};
+
+/* ---------- 路由 ---------- */
+function route(){const h=location.hash.slice(1); const p=new URLSearchParams(h); return {c:+p.get('c')||null,t:p.get('t')||'home',v:h.split('&')[0]}}
+function go(h){ if(location.hash==='#'+h) render(); else location.hash=h }
+
+function render(){
+  $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:4px"><a class="btn" href="${CONSULT}">顧問工作台</a><button type="button" data-out>登出</button></div>`:'';
+  if(!me){$('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">和業主入口、顧問工作台同一組帳號。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`;return}
+  if(!ok){$('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><div class="row"><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`;return}
+  if(D.missing){$('#app').innerHTML=`<div class="card"><h2>資料表還沒建立</h2><p class="sub">營運輔導的資料表尚未安裝到資料庫，請 Claude 幫你執行安裝。</p></div>`;return}
+  const r=route();
+  let h;
+  if(r.v==='new') h=vNew();
+  else if(r.v==='todo') h=vTodo();
+  else if(r.c){const c=D.clients.find(x=>x.id===r.c); h=c?vClient(c,r.t):`<div class="card"><h2>找不到這位客戶</h2><div class="row"><a class="btn" href="#">回客戶清單</a></div></div>`}
+  else h=vHome();
+  $('#app').innerHTML=h;
+}
+
+/* ---------- 首頁 ---------- */
+function vHome(){
+  const t=today(), wk=addDays(t,7), act=D.clients.filter(c=>c.stage==='輔導中');
+  const H=new Map(D.clients.map(c=>[c.id,health(c)]));
+  const open=D.actions.filter(a=>a.status!=='已完成'&&(D.clients.find(c=>c.id===a.client_id)||{}).stage==='輔導中');
+  const over=open.filter(a=>a.due_on&&a.due_on<t), week=open.filter(a=>a.due_on&&a.due_on>=t&&a.due_on<=wk);
+  const needVisit=act.filter(c=>{const h=H.get(c.id);return h.next&&h.next<=wk});
+  const s=(n,l,a,href)=>`<a class="stat ${a&&n?'alert':''}" href="${href||'#'}" style="text-decoration:none;color:inherit"><b>${n}</b><span>${l}</span></a>`;
+  const order={red:0,yellow:1,green:2,mute:3};
+  const list=D.clients.slice().sort((a,b)=>order[H.get(a.id).lv]-order[H.get(b.id).lv]||a.name.localeCompare(b.name,'zh-Hant'));
+  const cards=list.map(c=>{const h=H.get(c.id),[cls,lab]=LV[h.lv];
+    return `<a class="cl ${h.lv}" href="#c=${c.id}"><div class="row" style="margin:0;justify-content:space-between"><h3>${esc(c.name)}</h3>${lab?`<span class="pill ${cls}">${lab}</span>`:`<span class="pill mute">${esc(c.stage)}</span>`}</div>
+      <div class="note" style="margin:0">${esc([c.biz_type,c.stores?c.stores+' 店':'',c.contact_name].filter(Boolean).join('｜'))}</div>
+      <ul>${h.why.map(w=>`<li>${esc(w)}</li>`).join('')}${h.acts.length?`<li>未完成待辦 ${h.acts.length} 項</li>`:''}${h.next&&c.stage==='輔導中'?`<li>下次該訪視：${esc(h.next)}</li>`:''}</ul></a>`}).join('');
+  const due=over.concat(week).slice(0,12);
+  return `${stats4(s(act.length,'輔導中客戶'),s(over.length,'逾期待辦',true,'#todo'),s(week.length,'7 天內到期','', '#todo'),s(needVisit.length,'7 天內該訪視'))}
+  <div class="row noprint"><a class="btn pri" href="#new">＋ 新增輔導客戶</a><a class="btn" href="#todo">全部待辦</a></div>
+  ${D.clients.length?`<h3>客戶（紅燈排最前）</h3><div class="clients">${cards}</div>`:`<div class="card"><h2>還沒有輔導客戶</h2><p class="sub">按「新增輔導客戶」，可以直接從健檢名單或 BOM 品牌帶入資料。</p></div>`}
+  ${due.length?`<h3>近期要追的待辦</h3><div class="card">${actTable(due,true)}</div>`:''}
+  <p class="note">燈號規則：紅＝有待辦逾期或超過訪視間隔 1.5 倍沒去；黃＝超過訪視間隔、有卡關或 KPI 目標未達；綠＝正常。</p>`;
+}
+const stats4=(...a)=>`<div class="stats">${a.join('')}</div>`;
+
+/* ---------- 全部待辦 ---------- */
+function vTodo(){
+  const t=today(); const cn=id=>(D.clients.find(c=>c.id===id)||{}).name||'';
+  const open=D.actions.filter(a=>a.status!=='已完成').sort((a,b)=>(a.due_on||'9')<(b.due_on||'9')?-1:1);
+  const done=D.actions.filter(a=>a.status==='已完成').sort((a,b)=>(b.done_on||'')<(a.done_on||'')?-1:1).slice(0,20);
+  return `<div class="row noprint"><a class="btn" href="#">← 客戶清單</a></div>
+  <div class="card"><h2>所有未完成待辦（${open.length}）</h2>${open.length?actTable(open,true):'<p class="sub">沒有未完成的待辦。</p>'}</div>
+  <div class="card"><h2>最近完成</h2>${done.length?actTable(done,true):'<p class="sub">還沒有完成的待辦。</p>'}</div>`;
+}
+function actTable(list,withClient){
+  const t=today(); const cn=id=>(D.clients.find(c=>c.id===id)||{}).name||'';
+  return `<div class="scroll"><table><tr>${withClient?'<th>客戶</th>':''}<th>待辦</th><th>負責</th><th>期限</th><th>狀態</th></tr>${list.map(a=>{
+    const late=a.status!=='已完成'&&a.due_on&&a.due_on<t;
+    return `<tr>${withClient?`<td><a href="#c=${a.client_id}&t=actions">${esc(cn(a.client_id))}</a></td>`:''}<td>${esc(a.title)}${a.priority==='高'?' <span class="pill bad">高</span>':''}${a.result?`<div class="note">${esc(a.result)}</div>`:''}</td>
+    <td style="white-space:nowrap">${esc(a.side)}${a.assignee?'・'+esc(a.assignee):''}</td><td style="white-space:nowrap" class="${late?'':''}">${a.due_on?esc(a.due_on):'—'}${late?' <span class="pill bad">逾期</span>':''}</td>
+    <td><select data-astat="${a.id}" aria-label="狀態">${ASTAT.map(s=>`<option${s===a.status?' selected':''}>${s}</option>`).join('')}</select></td></tr>`}).join('')}</table></div>`;
+}
+
+/* ---------- 新增客戶 ---------- */
+function vNew(){
+  return `<div class="row noprint"><a class="btn" href="#">← 客戶清單</a></div>
+  <div class="card"><h2>新增輔導客戶</h2><p class="sub">先選資料來源（可不選），會自動帶入名稱、聯絡人與連結。</p>
+  <div class="g2"><div><label for="n_lead">從健檢名單帶入</label><select id="n_lead"><option value="">（不使用）</option>${D.leads.map(l=>`<option value="${l.id}">${esc(l.brand||'未命名')}｜${esc(l.contact_name||'')}｜${esc(l.status||'')}</option>`).join('')}</select></div>
+  <div><label for="n_brand">連結 BOM 品牌</label><select id="n_brand"><option value="">（不連結）</option>${D.brands.map(b=>`<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}</select></div></div>
+  ${clientForm({stage:'輔導中',visit_every_days:14,start_on:today(),goals:defaultGoals()})}
+  <div class="row"><button class="pri" data-save-client="new">建立客戶</button></div></div>`;
+}
+function defaultGoals(){return [{kpi:'food_pct',target:'',dir:'down'},{kpi:'labor_pct',target:'',dir:'down'},{kpi:'net_pct',target:'',dir:'up'}]}
+function clientForm(c){
+  const pl=D.pl.map(p=>`${p.client_name}｜${p.brand_name||''}`);
+  const cur=c.pl_client?`${c.pl_client}｜${c.pl_brand||''}`:'';
+  const goals=(c.goals&&c.goals.length?c.goals:[]).concat([{kpi:'',target:''}]);
+  return `<div class="grid">
+   <div><label for="f_name">客戶／品牌名稱 *</label><input id="f_name" value="${esc(c.name)}"></div>
+   <div><label for="f_stage">階段</label><select id="f_stage">${STAGES.map(s=>`<option${s===c.stage?' selected':''}>${s}</option>`).join('')}</select></div>
+   <div><label for="f_biz">業態</label><input id="f_biz" value="${esc(c.biz_type)}" placeholder="例：火鍋、手搖飲"></div>
+   <div><label for="f_stores">店數</label><input id="f_stores" type="number" min="0" value="${esc(c.stores)}"></div>
+   <div><label for="f_contact">聯絡人</label><input id="f_contact" value="${esc(c.contact_name)}"></div>
+   <div><label for="f_phone">電話</label><input id="f_phone" value="${esc(c.phone)}"></div>
+   <div><label for="f_line">LINE</label><input id="f_line" value="${esc(c.line_id)}"></div>
+   <div><label for="f_email">Email</label><input id="f_email" value="${esc(c.email)}"></div>
+  </div>
+  <h3>輔導計畫</h3><div class="grid">
+   <div><label for="f_start">開始日</label><input id="f_start" type="date" value="${esc(c.start_on)}"></div>
+   <div><label for="f_end">合約到期</label><input id="f_end" type="date" value="${esc(c.end_on)}"></div>
+   <div><label for="f_fee">月費（元）</label><input id="f_fee" type="number" min="0" value="${esc(c.monthly_fee)}"></div>
+   <div><label for="f_every">每幾天訪視一次</label><input id="f_every" type="number" min="1" value="${esc(c.visit_every_days)}"></div>
+   <div><label for="f_pl">損益中心客戶（自動帶 KPI）</label><select id="f_pl"><option value="">（沒有）</option>${pl.map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select></div>
+   ${c.id!=null?`<div><label for="f_brand2">BOM 品牌</label><select id="f_brand2"><option value="">（不連結）</option>${D.brands.map(b=>`<option value="${esc(b.id)}"${b.id===c.brand_id?' selected':''}>${esc(b.name)}</option>`).join('')}</select></div>`:''}
+  </div>
+  <h3>輔導目標</h3><p class="note">選指標、填目標值；空白列不會存。</p>
+  <div id="goals">${goals.map(goalRow).join('')}</div>
+  <div class="row" style="margin-top:4px"><button type="button" class="sm" data-addgoal>＋ 再加一個目標</button></div>
+  <label for="f_note">備註（內部）</label><textarea id="f_note">${esc(c.note)}</textarea>`;
+}
+function goalRow(g){return `<div class="gl"><select data-g="kpi" aria-label="指標"><option value="">（選指標）</option>${Object.entries(KPI).map(([k,m])=>`<option value="${k}"${k===g.kpi?' selected':''}>${m.l}（${m.u}）</option>`).join('')}</select>
+    <input data-g="target" type="number" step="any" placeholder="目標值" value="${esc(g.target)}" aria-label="目標值">
+    <select data-g="dir" aria-label="方向"><option value="">預設方向</option><option value="down"${g.dir==='down'?' selected':''}>越低越好</option><option value="up"${g.dir==='up'?' selected':''}>越高越好</option></select><span></span></div>`}
+function readClient(){
+  const v=id=>($('#'+id)||{}).value??'';
+  const name=v('f_name').trim(); if(!name){say('請填客戶名稱。',true);return null}
+  const pl=v('f_pl'); const [plc,plb]=pl?pl.split('｜'):['',''];
+  const goals=[...document.querySelectorAll('#goals .gl')].map(r=>({kpi:r.querySelector('[data-g=kpi]').value,target:num(r.querySelector('[data-g=target]').value),dir:r.querySelector('[data-g=dir]').value||(KPI[r.querySelector('[data-g=kpi]').value]||{}).dir}))
+    .filter(g=>g.kpi&&g.target!=null).map(g=>({...g,label:KPI[g.kpi].l}));
+  const o={name,stage:v('f_stage'),biz_type:v('f_biz')||null,stores:num(v('f_stores')),contact_name:v('f_contact')||null,phone:v('f_phone')||null,line_id:v('f_line')||null,email:v('f_email')||null,
+    start_on:v('f_start')||null,end_on:v('f_end')||null,monthly_fee:num(v('f_fee')),visit_every_days:num(v('f_every'))||14,pl_client:plc||null,pl_brand:plb||null,goals,note:v('f_note')||null};
+  if($('#n_brand')) o.brand_id=v('n_brand')||null; if($('#f_brand2')) o.brand_id=v('f_brand2')||null;
+  if($('#n_lead')) o.lead_id=num(v('n_lead'));
+  return o;
+}
+
+/* ---------- 客戶頁 ---------- */
+function vClient(c,tab){
+  const h=health(c),[cls,lab]=LV[h.lv];
+  const T=[['home','總覽'],['visits','訪視紀錄'],['actions','待辦'],['kpi','KPI'],['report','業主報告'],['edit','設定']];
+  const body={home:cHome,visits:cVisits,actions:cActions,kpi:cKpi,report:cReport,edit:cEdit}[tab]||cHome;
+  return `<div class="row noprint"><a class="btn" href="#">← 客戶清單</a></div>
+  <div class="top noprint" style="margin-top:10px"><div><h2 style="margin:0">${esc(c.name)} ${lab?`<span class="pill ${cls}">${lab}</span>`:`<span class="pill mute">${esc(c.stage)}</span>`}</h2>
+  <div class="note">${esc([c.biz_type,c.stores?c.stores+' 店':'',c.contact_name,c.phone,c.line_id?'LINE '+c.line_id:''].filter(Boolean).join('｜'))}</div></div></div>
+  <nav class="tabs">${T.map(([k,l])=>`<a href="#c=${c.id}&t=${k}" class="${k===tab?'on':''}">${l}</a>`).join('')}</nav>${body(c,h)}`;
+}
+function spark(vals){
+  const v=vals.filter(x=>x!=null); if(v.length<2) return '<svg aria-hidden="true"></svg>';
+  const mn=Math.min(...v),mx=Math.max(...v),rg=mx-mn||1; const pts=vals.map((x,i)=>x==null?null:`${(i/(vals.length-1)*104+3).toFixed(1)},${(27-(x-mn)/rg*24).toFixed(1)}`).filter(Boolean).join(' ');
+  return `<svg viewBox="0 0 110 30" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2"/></svg>`;
+}
+function goalsBlock(c){
+  const rows=kpiRows(c.id).slice(-6), lr=rows[rows.length-1];
+  if(!(c.goals||[]).length) return `<p class="sub">還沒設定目標，到「設定」加。</p>`;
+  return (c.goals||[]).map(g=>{const m=KPI[g.kpi]||{l:g.label,u:'',d:1}; const v=kval(c.id,lr,g.kpi), hit=goalHit(g,v);
+    return `<div class="goal"><div><b>${esc(m.l)}</b><div class="note" style="margin:0">目標 ${(g.dir||m.dir)==='down'?'≤':'≥'} ${fmt(g.target,m.d)}${esc(m.u)}</div></div>${spark(rows.map(r=>kval(c.id,r,g.kpi)))}
+    <div style="text-align:right"><b>${fmt(v,m.d)}${v==null?'':esc(m.u)}</b><div>${hit==null?'<span class="pill mute">無資料</span>':hit?'<span class="pill good">達標</span>':'<span class="pill bad">未達</span>'}</div></div></div>`}).join('')
+   +(lr?`<p class="note">最新月份：${esc(ym(lr.month))}</p>`:'');
+}
+function cHome(c,h){
+  const vs=D.visits.filter(v=>v.client_id===c.id).slice(0,3);
+  return `<div class="g2"><div class="card"><h2>目標達成</h2>${goalsBlock(c)}</div>
+  <div class="card"><h2>輔導計畫</h2><table>
+   <tr><th>期間</th><td>${esc(c.start_on||'—')} ～ ${esc(c.end_on||'未定')}${c.end_on&&daysBetween(today(),c.end_on)<=30&&daysBetween(today(),c.end_on)>=0?' <span class="pill warn">快到期</span>':''}</td></tr>
+   <tr><th>月費</th><td>${c.monthly_fee!=null?fmt(c.monthly_fee)+' 元':'—'}</td></tr>
+   <tr><th>訪視頻率</th><td>每 ${esc(c.visit_every_days||14)} 天；上次 ${esc(h.last||'—')}；下次 ${esc(h.next||'—')}</td></tr>
+   <tr><th>連結</th><td>${c.brand_id?`<a href="${BOM}" target="_blank" rel="noopener">BOM：${esc((D.brands.find(b=>b.id===c.brand_id)||{}).name||c.brand_id)}</a><br>`:''}${c.pl_client?`損益中心：${esc(c.pl_client)} ${esc(c.pl_brand||'')}<br>`:''}${c.lead_id?`<a href="${BOM}checkup/leads/?id=${c.lead_id}">健檢名單 #${c.lead_id}</a>`:''}${!c.brand_id&&!c.pl_client&&!c.lead_id?'—':''}</td></tr>
+  </table>${c.note?`<p class="pre note">${esc(c.note)}</p>`:''}</div></div>
+  <div class="card"><div class="row" style="margin:0;justify-content:space-between"><h2 style="margin:0">未完成待辦（${h.acts.length}）</h2><a class="btn sm" href="#c=${c.id}&t=actions">管理待辦</a></div>${h.acts.length?actTable(h.acts,false):'<p class="sub">沒有未完成的待辦。</p>'}</div>
+  <div class="card"><div class="row" style="margin:0;justify-content:space-between"><h2 style="margin:0">最近訪視</h2><a class="btn sm pri" href="#c=${c.id}&t=visits">＋ 記一筆訪視</a></div>${vs.length?vs.map(visitItem).join(''):'<p class="sub">還沒有訪視紀錄。</p>'}</div>`;
+}
+function visitItem(v){
+  const sc=[['Q',v.q_score],['S',v.s_score],['C',v.c_score]].filter(x=>x[1]!=null).map(x=>`${x[0]} ${x[1]}`).join('・');
+  const acts=D.actions.filter(a=>a.visit_id===v.id);
+  return `<div class="item"><div class="row" style="margin:0;justify-content:space-between"><b>${esc(v.visit_on)}｜${esc(v.kind)}${v.store?'｜'+esc(v.store):''}</b><span>${sc?`<span class="pill mute">${esc(sc)}</span> `:''}${v.share?'':'<span class="pill warn">不放進報告</span> '}<button class="sm ${armed==='v'+v.id?'armed':''}" data-delv="${v.id}">${armed==='v'+v.id?'再按一次刪除':'刪除'}</button></span></div>
+   ${v.attendees?`<div class="meta">參與：${esc(v.attendees)}</div>`:''}${v.summary?`<div class="pre">${esc(v.summary)}</div>`:''}${v.findings?`<div class="pre note">內部觀察：${esc(v.findings)}</div>`:''}
+   ${acts.length?`<div class="meta">開出待辦：${acts.map(a=>esc(a.title)+'（'+esc(a.status)+'）').join('、')}</div>`:''}</div>`;
+}
+function cVisits(c){
+  const vs=D.visits.filter(v=>v.client_id===c.id);
+  return `<div class="card noprint"><h2>記一筆訪視／會議</h2><div class="grid">
+   <div><label for="v_on">日期</label><input id="v_on" type="date" value="${today()}"></div>
+   <div><label for="v_kind">類型</label><select id="v_kind">${KINDS.map(k=>`<option>${k}</option>`).join('')}</select></div>
+   <div><label for="v_store">門市</label><input id="v_store" placeholder="例：公益店"></div>
+   <div><label for="v_att">參與人員</label><input id="v_att" placeholder="例：老闆、店長"></div></div>
+   <label for="v_sum">摘要與結論（會放進業主報告）</label><textarea id="v_sum" placeholder="這次看了什麼、談了什麼、決定了什麼"></textarea>
+   <label for="v_find">內部觀察（只有你看得到）</label><textarea id="v_find" placeholder="對老闆、店長、團隊的觀察；下次要注意的事"></textarea>
+   <div class="grid"><div><label for="v_q">Q 品質（0–100）</label><input id="v_q" type="number" min="0" max="100"></div>
+   <div><label for="v_s">S 服務（0–100）</label><input id="v_s" type="number" min="0" max="100"></div>
+   <div><label for="v_c">C 清潔（0–100）</label><input id="v_c" type="number" min="0" max="100"></div>
+   <div><label style="margin-top:34px"><input id="v_share" type="checkbox" checked> 放進業主報告</label></div></div>
+   <h3>這次開出的待辦</h3><div id="vacts">${actLine()}${actLine()}</div>
+   <div class="row" style="margin-top:4px"><button type="button" class="sm" data-addact>＋ 再加一項</button></div>
+   <div class="row"><button class="pri" data-save-visit="${c.id}">儲存訪視</button></div></div>
+  <div class="card"><h2>訪視紀錄（${vs.length}）</h2>${vs.length?vs.map(visitItem).join(''):'<p class="sub">還沒有紀錄。</p>'}</div>`;
+}
+function actLine(){return `<div class="al"><input data-a="title" placeholder="要做的事，例：冷藏庫溫度每天記錄兩次" aria-label="待辦內容"><select data-a="side" aria-label="負責方"><option>業主</option><option>顧問</option></select><input data-a="due" type="date" value="${addDays(today(),7)}" aria-label="期限"><span></span></div>`}
+function cActions(c){
+  const all=D.actions.filter(a=>a.client_id===c.id), open=all.filter(a=>a.status!=='已完成'), done=all.filter(a=>a.status==='已完成');
+  return `<div class="card noprint"><h2>新增待辦</h2><div class="grid">
+   <div style="grid-column:1/-1"><label for="a_title">要做的事</label><input id="a_title"></div>
+   <div><label for="a_side">負責方</label><select id="a_side"><option>業主</option><option>顧問</option></select></div>
+   <div><label for="a_who">負責人</label><input id="a_who" placeholder="例：王店長"></div>
+   <div><label for="a_due">期限</label><input id="a_due" type="date" value="${addDays(today(),7)}"></div>
+   <div><label for="a_pri">優先</label><select id="a_pri"><option>高</option><option selected>中</option><option>低</option></select></div></div>
+   <div class="row"><button class="pri" data-save-act="${c.id}">新增</button></div></div>
+  <div class="card"><h2>未完成（${open.length}）</h2>${open.length?actEdit(open):'<p class="sub">都完成了。</p>'}</div>
+  <div class="card"><h2>已完成（${done.length}）</h2>${done.length?actEdit(done):'<p class="sub">還沒有。</p>'}</div>`;
+}
+function actEdit(list){
+  const t=today();
+  return list.map(a=>{const late=a.status!=='已完成'&&a.due_on&&a.due_on<t;
+   return `<div class="item"><div class="row" style="margin:0;justify-content:space-between"><b>${esc(a.title)}${a.priority==='高'?' <span class="pill bad">高</span>':''}${late?' <span class="pill bad">逾期</span>':''}</b>
+   <span class="row" style="margin:0"><select data-astat="${a.id}" aria-label="狀態" style="width:auto">${ASTAT.map(s=>`<option${s===a.status?' selected':''}>${s}</option>`).join('')}</select><button class="sm ${armed==='a'+a.id?'armed':''}" data-dela="${a.id}">${armed==='a'+a.id?'再按一次刪除':'刪除'}</button></span></div>
+   <div class="meta">${esc(a.side)}${a.assignee?'・'+esc(a.assignee):''}｜期限 ${esc(a.due_on||'—')}${a.done_on?'｜完成 '+esc(a.done_on):''}${a.share?'':'｜不放進報告'}</div>
+   <div class="row" style="margin-top:6px"><input data-ares="${a.id}" value="${esc(a.result)}" placeholder="執行結果／卡在哪裡" style="flex:1;min-width:180px" aria-label="執行結果"><button class="sm" data-saveres="${a.id}">存結果</button>
+   <label style="margin:0;font-size:13px"><input type="checkbox" data-ashare="${a.id}"${a.share?' checked':''}> 放進報告</label></div></div>`}).join('');
+}
+function cKpi(c){
+  const rows=kpiRows(c.id).slice().reverse(); const ks=Object.keys(KPI);
+  const lastM=today().slice(0,7);
+  return `<div class="card noprint"><h2>填一個月的 KPI</h2>
+   ${c.pl_client?`<div class="row" style="margin-top:0"><button data-plsync="${c.id}">從損益中心帶入（營收、食材、人事、租金、淨利率）</button><span class="note">對應：${esc(c.pl_client)} ${esc(c.pl_brand||'')}</span></div>`:`<p class="note">到「設定」選損益中心客戶，就能自動帶入財務數字。</p>`}
+   <div class="grid"><div><label for="k_month">月份</label><input id="k_month" type="month" value="${lastM}"></div>
+   ${ks.map(k=>`<div><label for="k_${k}">${KPI[k].l}（${KPI[k].u}）</label><input id="k_${k}" type="number" step="any"></div>`).join('')}</div>
+   <label for="k_note">備註</label><input id="k_note">
+   <div class="row"><button class="pri" data-save-kpi="${c.id}">儲存這個月</button><span class="note">同月份再存一次會覆蓋；空白欄位不會蓋掉已有數字。</span></div></div>
+  <div class="card"><h2>每月 KPI</h2>${rows.length?`<div class="scroll"><table><tr><th>月份</th>${ks.map(k=>`<th class="n">${KPI[k].l}</th>`).join('')}<th>來源</th><th></th></tr>
+   ${rows.map(r=>`<tr><td>${esc(ym(r.month))}</td>${ks.map(k=>{const v=kval(c.id,r,k);return `<td class="n">${fmt(v,KPI[k].d)}</td>`}).join('')}<td>${esc(r.source)}</td><td><button class="sm" data-editkpi="${r.id}">編輯</button></td></tr>`).join('')}</table></div>`:'<p class="sub">還沒有 KPI。</p>'}
+   <p class="note">QSC 沒填時，會用當月訪視的 Q／S／C 平均。</p></div>`;
+}
+function cReport(c){
+  const months=[...new Set(kpiRows(c.id).map(r=>ym(r.month)).concat(D.visits.filter(v=>v.client_id===c.id).map(v=>ym(v.visit_on))).concat([today().slice(0,7)]))].sort().reverse();
+  const m=reportMonth&&months.includes(reportMonth)?reportMonth:months[0];
+  return `<div class="card noprint"><div class="row" style="margin:0"><label for="r_month" style="margin:0">報告月份</label><select id="r_month" style="width:auto">${months.map(x=>`<option${x===m?' selected':''}>${x}</option>`).join('')}</select>
+   <button class="pri" data-print>列印／存成 PDF</button><button data-copyrep="${c.id}">複製文字（貼 LINE）</button></div>
+   <p class="note">報告只放「摘要」與勾選「放進報告」的訪視和待辦；內部觀察、月費、備註不會出現。</p></div>
+   <div class="card report">${reportHtml(c,m)}</div>`;
+}
+let reportMonth=null;
+function reportData(c,m){
+  const rows=kpiRows(c.id), i=rows.findIndex(r=>ym(r.month)===m), cur=i>=0?rows[i]:null, prev=i>0?rows[i-1]:null;
+  const vs=D.visits.filter(v=>v.client_id===c.id&&v.share&&ym(v.visit_on)===m).sort((a,b)=>a.visit_on<b.visit_on?-1:1);
+  const acts=D.actions.filter(a=>a.client_id===c.id&&a.share);
+  const done=acts.filter(a=>a.status==='已完成'&&ym(a.done_on)===m), open=acts.filter(a=>a.status!=='已完成');
+  return {cur,prev,vs,done,open};
+}
+function reportHtml(c,m){
+  const {cur,prev,vs,done,open}=reportData(c,m); const t=today();
+  const goals=(c.goals||[]).map(g=>{const k=KPI[g.kpi]||{l:g.label,u:'',d:1};const v=kval(c.id,cur,g.kpi),p=kval(c.id,prev,g.kpi),hit=goalHit(g,v);
+    return `<tr><td>${esc(k.l)}</td><td class="n">${(g.dir||k.dir)==='down'?'≤':'≥'} ${fmt(g.target,k.d)}${esc(k.u)}</td><td class="n">${fmt(p,k.d)}</td><td class="n"><b>${fmt(v,k.d)}</b></td><td>${hit==null?'—':hit?'達標':'未達'}</td></tr>`}).join('');
+  return `<h2>${esc(c.name)}｜${esc(m)} 營運輔導進度報告</h2><p class="note" style="margin-top:0">品牌加辣餐飲顧問工作室｜產出日期 ${t}</p>
+  <h3>一、目標達成</h3>${goals?`<div class="scroll"><table><tr><th>指標</th><th class="n">目標</th><th class="n">上月</th><th class="n">本月</th><th>結果</th></tr>${goals}</table></div>`:'<p class="sub">尚未設定目標。</p>'}
+  <h3>二、本月訪視與會議</h3>${vs.length?vs.map(v=>`<p><b>${esc(v.visit_on)} ${esc(v.kind)}${v.store?'｜'+esc(v.store):''}</b>${[v.q_score,v.s_score,v.c_score].some(x=>x!=null)?`（Q ${v.q_score??'—'}／S ${v.s_score??'—'}／C ${v.c_score??'—'}）`:''}<br><span class="pre">${esc(v.summary||'')}</span></p>`).join(''):'<p class="sub">本月沒有訪視紀錄。</p>'}
+  <h3>三、本月完成的改善</h3>${done.length?`<ul>${done.map(a=>`<li>${esc(a.title)}${a.result?'：'+esc(a.result):''}</li>`).join('')}</ul>`:'<p class="sub">本月沒有完成項目。</p>'}
+  <h3>四、接下來要做的事</h3>${open.length?`<div class="scroll"><table><tr><th>項目</th><th>負責</th><th>期限</th><th>狀態</th></tr>${open.map(a=>`<tr><td>${esc(a.title)}</td><td>${esc(a.side)}${a.assignee?'・'+esc(a.assignee):''}</td><td>${esc(a.due_on||'—')}${a.due_on&&a.due_on<t?'（已逾期）':''}</td><td>${esc(a.status)}</td></tr>`).join('')}</table></div>`:'<p class="sub">目前沒有待辦。</p>'}`;
+}
+function reportText(c,m){
+  const {cur,prev,vs,done,open}=reportData(c,m); const L=[`【${c.name}｜${m} 營運輔導進度】`];
+  if((c.goals||[]).length){L.push('','■ 目標達成');(c.goals||[]).forEach(g=>{const k=KPI[g.kpi]||{l:g.label,u:'',d:1};const v=kval(c.id,cur,g.kpi),hit=goalHit(g,v);L.push(`・${k.l}：${fmt(v,k.d)}${v==null?'':k.u}（目標 ${(g.dir||k.dir)==='down'?'≤':'≥'}${fmt(g.target,k.d)}${k.u}）${hit==null?'':hit?' ✅':' ⚠️'}`)})}
+  if(vs.length){L.push('','■ 本月訪視');vs.forEach(v=>L.push(`・${v.visit_on} ${v.kind}${v.store?' '+v.store:''}：${(v.summary||'').replace(/\s+/g,' ')}`))}
+  if(done.length){L.push('','■ 本月完成');done.forEach(a=>L.push(`・${a.title}${a.result?'：'+a.result:''}`))}
+  if(open.length){L.push('','■ 接下來');open.forEach(a=>L.push(`・${a.title}（${a.side}${a.assignee?' '+a.assignee:''}，${a.due_on||'未定'}前）`))}
+  L.push('','品牌加辣餐飲顧問工作室'); return L.join('\n');
+}
+function cEdit(c){
+  return `<div class="card"><h2>客戶設定</h2>${clientForm(c)}<div class="row"><button class="pri" data-save-client="${c.id}">儲存</button></div></div>
+  <div class="card"><h2>刪除客戶</h2><p class="sub">會一起刪掉這位客戶的訪視、待辦與 KPI，無法復原。只是結束輔導的話，把階段改成「結案」就好。</p>
+  <button class="${armed==='c'+c.id?'armed':''}" data-delc="${c.id}">${armed==='c'+c.id?'再按一次確定刪除':'刪除這位客戶'}</button></div>`;
+}
+
+/* ---------- 動作 ---------- */
+const val=id=>($('#'+id)||{}).value??'';
+async function act(fn){ if(busy) return; busy=true; try{ await fn() }catch(e){ console.warn(e) } finally{ busy=false } }
+document.addEventListener('change',e=>{
+  const s=e.target.closest('[data-astat]');
+  if(s) return act(async()=>{const id=+s.dataset.astat, st=s.value; const o={status:st,updated_at:new Date().toISOString(),done_on:st==='已完成'?today():null};
+    await q(sbc.from('coach_actions').update(o).eq('id',id)); Object.assign(D.actions.find(a=>a.id===id),o); say(st==='已完成'?'已標記完成。':'已更新狀態。'); render()});
+  const sh=e.target.closest('[data-ashare]');
+  if(sh) return act(async()=>{const id=+sh.dataset.ashare; await q(sbc.from('coach_actions').update({share:sh.checked}).eq('id',id)); D.actions.find(a=>a.id===id).share=sh.checked; say(sh.checked?'這項會放進業主報告。':'這項不會放進業主報告。')});
+  if(e.target.id==='r_month'){reportMonth=e.target.value; render()}
+  if(e.target.id==='n_lead'){const l=D.leads.find(x=>x.id===+e.target.value); if(l){const set=(id,v)=>{const el=$('#'+id); if(el&&v!=null&&v!=='') el.value=v};
+    set('f_name',l.brand);set('f_biz',l.biz_type);set('f_stores',l.stores);set('f_contact',l.contact_name);set('f_phone',l.phone);set('f_line',l.line_id);set('f_email',l.email)}}
+  if(e.target.id==='n_brand'){const b=D.brands.find(x=>x.id===e.target.value); if(b&&!val('f_name').trim()) $('#f_name').value=b.name}
+});
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button,[data-out]'); if(!b) return;
+  const d=b.dataset;
+  if('out' in d){await sbc.auth.signOut(); location.href=PORTAL; return}
+  if('addgoal' in d){const w=document.createElement('div'); w.innerHTML=goalRow({kpi:'',target:''}); $('#goals').appendChild(w.firstElementChild); return}
+  if('addact' in d){const w=document.createElement('div'); w.innerHTML=actLine(); $('#vacts').appendChild(w.firstElementChild); return}
+  if('print' in d){window.print(); return}
+  if(d.copyrep){const c=D.clients.find(x=>x.id===+d.copyrep); const m=val('r_month'); const txt=reportText(c,m);
+    try{await navigator.clipboard.writeText(txt); say('已複製報告文字，可以直接貼到 LINE。')}catch(_){say('瀏覽器不讓複製，請改用「列印／存成 PDF」。',true)} return}
+  if(d.saveClient) return act(async()=>{const o=readClient(); if(!o) return; o.updated_at=new Date().toISOString();
+    if(d.saveClient==='new'){const r=await q(sbc.from('coach_clients').insert(o).select().single(),'建立'); D.clients.push(r); say('已建立客戶。下一步：記第一筆訪視或填 KPI。'); go('c='+r.id)}
+    else{const id=+d.saveClient; await q(sbc.from('coach_clients').update(o).eq('id',id)); Object.assign(D.clients.find(x=>x.id===id),o); say('已儲存設定。'); go('c='+id)}});
+  if(d.saveVisit) return act(async()=>{const cid=+d.saveVisit;
+    const o={client_id:cid,visit_on:val('v_on')||today(),kind:val('v_kind'),store:val('v_store')||null,attendees:val('v_att')||null,summary:val('v_sum')||null,findings:val('v_find')||null,
+      q_score:num(val('v_q')),s_score:num(val('v_s')),c_score:num(val('v_c')),share:$('#v_share').checked};
+    for(const k of ['q_score','s_score','c_score']) if(o[k]!=null&&(o[k]<0||o[k]>100)){say('QSC 分數請填 0 到 100。',true);return}
+    if(!o.summary&&!o.findings){say('請至少寫一點摘要或內部觀察。',true);return}
+    const lines=[...document.querySelectorAll('#vacts .al')].map(r=>({title:r.querySelector('[data-a=title]').value.trim(),side:r.querySelector('[data-a=side]').value,due_on:r.querySelector('[data-a=due]').value||null})).filter(a=>a.title);
+    const v=await q(sbc.from('coach_visits').insert(o).select().single()); D.visits.unshift(v);
+    if(lines.length){const rs=await q(sbc.from('coach_actions').insert(lines.map(a=>({...a,client_id:cid,visit_id:v.id}))).select()); D.actions.push(...rs)}
+    say(`已儲存訪視${lines.length?`，並開出 ${lines.length} 項待辦`:''}。`); render()});
+  if(d.saveAct) return act(async()=>{const cid=+d.saveAct, title=val('a_title').trim(); if(!title){say('請寫要做的事。',true);return}
+    const r=await q(sbc.from('coach_actions').insert({client_id:cid,title,side:val('a_side'),assignee:val('a_who')||null,due_on:val('a_due')||null,priority:val('a_pri')}).select().single());
+    D.actions.push(r); say('已新增待辦。'); render()});
+  if(d.saveres) return act(async()=>{const id=+d.saveres, v=document.querySelector(`[data-ares="${id}"]`).value.trim()||null;
+    await q(sbc.from('coach_actions').update({result:v,updated_at:new Date().toISOString()}).eq('id',id)); D.actions.find(a=>a.id===id).result=v; say('已存執行結果。'); render()});
+  if(d.saveKpi) return act(async()=>{const cid=+d.saveKpi, m=val('k_month'); if(!/^\d{4}-\d{2}$/.test(m)){say('請選月份。',true);return}
+    const o={client_id:cid,month:m+'-01',updated_at:new Date().toISOString()}; let n=0;
+    for(const k of Object.keys(KPI)){const v=num(val('k_'+k)); if(v!=null){o[k]=v;n++}}
+    if(val('k_note')){o.note=val('k_note');n++}
+    if(!n){say('請至少填一個數字。',true);return}
+    const r=await q(sbc.from('coach_kpis').upsert(o,{onConflict:'client_id,month'}).select().single());
+    D.kpis=D.kpis.filter(x=>x.id!==r.id).concat([r]); say(`已儲存 ${m} 的 KPI。`); render()});
+  if(d.editkpi){const r=D.kpis.find(x=>x.id===+d.editkpi); if(!r) return; $('#k_month').value=ym(r.month); for(const k of Object.keys(KPI)) $('#k_'+k).value=r[k]??''; $('#k_note').value=r.note||''; $('#k_month').scrollIntoView({block:'center'}); say(`已把 ${ym(r.month)} 帶到上方表單，改好按「儲存這個月」。`); return}
+  if(d.plsync) return act(async()=>{const c=D.clients.find(x=>x.id===+d.plsync);
+    const rows=await q(sbc.rpc('coach_pl_months',{p_client:c.pl_client,p_brand:c.pl_brand||''}),'讀取損益中心');
+    if(!rows||!rows.length){say('損益中心還沒有這位客戶的資料。',true);return}
+    const up=rows.map(r=>({client_id:c.id,month:r.month,revenue:r.revenue,food_pct:r.food_pct,labor_pct:r.labor_pct,rent_pct:r.rent_pct,net_pct:r.net_pct,source:'損益中心',updated_at:new Date().toISOString()}));
+    const rs=await q(sbc.from('coach_kpis').upsert(up,{onConflict:'client_id,month'}).select());
+    const ids=new Set(rs.map(x=>x.id)); D.kpis=D.kpis.filter(x=>!ids.has(x.id)).concat(rs); say(`已從損益中心帶入 ${rows.length} 個月。`); render()});
+  for(const [key,tb,pre,arr] of [['delv','coach_visits','v','visits'],['dela','coach_actions','a','actions'],['delc','coach_clients','c','clients']]) if(d[key]){
+    const id=+d[key]; if(armed!==pre+id){armed=pre+id; render(); setTimeout(()=>{if(armed===pre+id){armed=null;render()}},4000); return}
+    armed=null; return act(async()=>{await q(sbc.from(tb).delete().eq('id',id),'刪除'); D[arr]=D[arr].filter(x=>x.id!==id);
+      if(pre==='c'){D.visits=D.visits.filter(x=>x.client_id!==id);D.actions=D.actions.filter(x=>x.client_id!==id);D.kpis=D.kpis.filter(x=>x.client_id!==id); say('已刪除客戶。'); go('')}
+      else{ if(pre==='v') D.actions.forEach(a=>{if(a.visit_id===id)a.visit_id=null}); say('已刪除。'); render() }});
+  }
+});
+window.addEventListener('hashchange',()=>{armed=null; say(flash&&!flashBad?flash:''); flash=''; render(); scrollTo(0,0)});
+sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
+load();
+</script>
+</body>
+</html>
