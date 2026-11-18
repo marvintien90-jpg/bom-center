@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>總部組織診斷｜品牌加辣餐飲顧問工作室</title>
+<style>
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 2px}h2{font-size:18px;margin:0 0 8px}h3{font-size:16px;margin:14px 0 6px}
+.sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px;margin:6px 0 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 3px}
+input,select,textarea{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;color:inherit}
+textarea{min-height:70px;resize:vertical}
+input[type=checkbox]{width:auto;margin:0 6px 0 0}
+button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:7px 13px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button.sm{padding:3px 9px;font-size:13px}
+button.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.who{font-size:14px;color:var(--mute);text-align:right}
+.msg{padding:9px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.pill{display:inline-block;border-radius:999px;padding:0 9px;font-size:12px;white-space:nowrap;border:1px solid transparent}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mute{background:var(--field);color:var(--mute);border-color:var(--line)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:24px;line-height:1.2}.stat span{color:var(--mute);font-size:13px}
+.stat.bad b{color:var(--bad)}.stat.warn b{color:var(--warn)}.stat.good b{color:var(--good)}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.pl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;text-decoration:none;color:inherit;display:block}
+.pl h3{margin:0 0 4px}
+.tabs{display:flex;gap:2px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:12px 0}
+.tabs a{padding:7px 11px;text-decoration:none;color:var(--mute);border-bottom:3px solid transparent;font-size:14px}
+.tabs a.on{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 14px}
+@media (max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.scroll{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600;white-space:nowrap}
+td.c,th.c{text-align:center}
+.bar{height:8px;border-radius:4px;background:var(--field);border:1px solid var(--line);overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.gap3{color:var(--bad);font-weight:600}.gap2{color:var(--warn);font-weight:600}
+/* 組織圖：桌機橫向樹，手機改縮排清單 */
+.tree,.tree ul{list-style:none;margin:0;padding:0}
+.tree{display:flex;justify-content:center;width:max-content;min-width:100%;padding:6px 0 10px}
+.tree ul{display:flex;justify-content:center;padding-top:18px;position:relative}
+.tree li{position:relative;padding:18px 6px 0;text-align:center}
+.tree li::before,.tree li::after{content:"";position:absolute;top:0;right:50%;width:50%;height:18px;border-top:2px solid var(--line)}
+.tree li::after{right:auto;left:50%;border-left:2px solid var(--line)}
+.tree li:only-child::before,.tree li:only-child::after{display:none}.tree li:only-child{padding-top:0}
+.tree li:first-child::before,.tree li:last-child::after{border:0 none}
+.tree li:last-child::before{border-right:2px solid var(--line);border-radius:0 6px 0 0}
+.tree li:first-child::after{border-radius:6px 0 0 0}
+.tree ul ul::before,.tree>li>ul::before{content:"";position:absolute;top:0;left:50%;border-left:2px solid var(--line);height:18px}
+.tree>li{padding:0}.tree>li::before,.tree>li::after{display:none}
+.node{display:inline-block;min-width:110px;max-width:170px;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:8px;padding:6px 8px;font-size:13px;line-height:1.4;cursor:pointer;text-align:center;color:inherit;font-family:inherit}
+.node b{display:block;font-size:14px}.node .p{color:var(--mute)}.node .f{display:block;margin-top:3px;font-size:11px;color:var(--mute)}
+.node.root{border-top-color:var(--warn)}.node.store{border-top-color:var(--mute)}.node.flag{border-color:var(--bad);border-top-color:var(--bad)}
+@media (max-width:700px){
+  .tree{display:block;width:auto}.tree ul{display:block;padding:0 0 0 18px}
+  .tree li{padding:4px 0 0 0;text-align:left}.tree li::before{display:block;content:"";position:absolute;top:0;left:-10px;width:8px;height:22px;border:0;border-left:2px solid var(--line);border-bottom:2px solid var(--line);border-radius:0}
+  .tree li::after,.tree ul ul::before,.tree>li>ul::before{display:none}.tree li:only-child::before{display:block}
+  .tree>li::before{display:none}.node{max-width:none;width:100%;text-align:left}
+}
+.raci td.c{min-width:46px}.raci td:first-child,.rt td:first-child{min-width:150px}.rt td.c,.rt th.c{min-width:44px}.raci select{padding:3px 2px;min-width:44px;text-align:center}
+.raci th.pos{white-space:normal;min-width:70px;font-size:12px}
+.raci td.bad{background:var(--bad-bg)}
+.chk{display:flex;align-items:flex-start;gap:4px;font-size:14px;margin:3px 0;color:var(--fg)}
+.fl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:2px 10px}
+.kr{display:grid;grid-template-columns:2fr 1.2fr .8fr .7fr auto;gap:6px;margin:4px 0;align-items:center}
+@media (max-width:560px){.who{text-align:left}.kr{grid-template-columns:1fr 1fr}.kr [data-k=n]{grid-column:1/-1}}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);width:min(640px,94vw);max-height:90vh;padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+a{color:var(--accent)}
+.saved{font-size:12px;color:var(--mute)}
+ol.road li{margin:4px 0}
+.report h2{font-size:20px;margin-top:22px}.report .node{cursor:default}
+@media print{body{background:#fff;color:#000}.noprint,.tabs,.top,#flash{display:none!important}.card{border:0;padding:0;margin:0 0 10px}.wrap{padding:0;max-width:none}.report h2{break-after:avoid}table{break-inside:auto}tr{break-inside:avoid}.scroll{overflow:visible}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top noprint"><div><h1>總部組織與權責診斷</h1><p class="sub">組織圖、部門職責、RACI 分工、主管 KPI、依展店階段找缺口｜顧問專用，業主看不到</p></div><div class="who" id="who"></div></div>
+  <div id="flash"></div>
+  <div id="app"><p class="sub">讀取中…</p></div>
+</div>
+<dialog id="dlg"></dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+const BOM='https://marvintien90-jpg.github.io/bom-center/', PORTAL=BOM+'portal/', CONSULT=BOM+'consult/', COACH=CONSULT+'coach/';
+const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+
+/* ===== 知識庫：餐飲連鎖總部的職能、階段、權責、KPI（改這裡就會改整個系統的建議） ===== */
+const STAGES=[
+  {k:0,n:'1–3 店',t:'創業期',d:'老闆親力親為，重點是把門市做穩、帳算清楚、把做法寫下來。'},
+  {k:1,n:'4–10 店',t:'建制期',d:'老闆管不過來的階段：要有營運主管、督導、財會、人資，開始用制度和數字管理。'},
+  {k:2,n:'11–30 店',t:'擴張期',d:'總部要分部門專責：中央廚房、訓練、展店、資訊都要有人；老闆從管事轉為管人與目標。'},
+  {k:3,n:'31 店以上',t:'集團期',d:'要有獨立稽核、品保、法務與經營企劃；權責分層授權，總經理只管關鍵決策。'}];
+const stageOf=n=>n>=31?3:n>=11?2:n>=4?1:0;
+/* o：從哪個階段起要有明確負責人；d：從哪個階段起要專人／專責部門（9＝不需要）；fr：只有做加盟才需要 */
+const FUNCS=[
+ {k:'ops',n:'營運管理',a:'營運',o:0,d:1,du:['門市營運標準制定與落實','營業目標分配到各店並每週追蹤','店長管理、排班與人力核定','客訴處理與改善追蹤','新店開幕營運支援'],kp:[['營收目標達成率','≥100%','月'],['同店營收成長率','≥3%','月'],['門市人事費用率','≤28%','月'],['客訴件數／萬名來客','≤2 件','月'],['店長留任率','≥85%','年']]},
+ {k:'audit',n:'督導與稽核（QSC）',a:'營運',o:1,d:2,du:['定期巡店與 QSC 稽核','缺失改善追蹤到結案','神秘客與顧客體驗調查','門市食安自主檢查'],kp:[['QSC 平均分數','≥85 分','月'],['缺失改善完成率','≥90%','月'],['巡店計畫達成率','100%','月']]},
+ {k:'rd',n:'產品研發',a:'產品',o:0,d:2,du:['新品開發、試吃與上市','標準食譜與 BOM 建檔','菜單結構與四象限檢討','跨店口味一致性'],kp:[['新品上市數','依年度計畫','季'],['新品營收占比','≥10%','季'],['標準食譜建檔率','100%','季']]},
+ {k:'buy',n:'採購與供應商',a:'供應鏈',o:0,d:1,du:['供應商開發與評鑑','議價與採購合約','食材規格訂定','市場價格追蹤與替代方案'],kp:[['食材成本率','≤目標 ±1%','月'],['採購議價節省金額','依年度目標','季'],['供應商準時交貨率','≥98%','月']]},
+ {k:'scm',n:'倉儲物流／中央廚房',a:'供應鏈',o:1,d:2,du:['中央廚房生產計畫','配送排程與門市叫貨','庫存管理與定期盤點','損耗控管'],kp:[['配送準時率','≥98%','月'],['庫存週轉天數','≤7 天','月'],['中廚損耗率','≤2%','月']]},
+ {k:'qa',n:'品質與食安',a:'供應鏈',o:1,d:3,du:['食安法規遵循與文件','衛生檢查與檢驗','供應商驗廠','食安事件應變'],kp:[['食安稽核合格率','100%','季'],['食安事件數','0 件','年']]},
+ {k:'fin',n:'財務會計',a:'財務',o:0,d:1,du:['帳務處理與每月結帳','各店損益表','稅務申報','付款與現金流管理','年度預算編製與追蹤'],kp:[['月結完成日','每月 10 日前','月'],['預算達成率','≥95%','月'],['可動用現金月數','≥3 個月','月']]},
+ {k:'cost',n:'成本控管與經營分析',a:'財務',o:1,d:2,du:['BOM 理論成本計算','理論 vs 實際成本差異分析','門市損益比較與紅燈追蹤','經營會議數據準備'],kp:[['理論與實際成本差異','≤1.5%','月'],['經營報表準時率','100%','月']]},
+ {k:'hr',n:'人資招募與勞動法規',a:'人資',o:0,d:1,du:['門市與總部招募','勞健保、勞退與人事資料','勞動契約與工時法規','勞資爭議處理'],kp:[['職缺補足天數','≤21 天','月'],['員工月離職率','≤5%','月'],['勞檢違規件數','0 件','年']]},
+ {k:'train',n:'教育訓練與人才培育',a:'人資',o:1,d:2,du:['新人訓練與上線認證','店長儲備與養成','訓練教材與 SOP 維護','職級晉升制度'],kp:[['新人 30 天完訓率','≥95%','月'],['儲備店長人數','≥展店數 ×1.5','季'],['職級認證通過率','≥80%','季']]},
+ {k:'pay',n:'薪酬與績效考核',a:'人資',o:1,d:2,du:['薪資結構與職級薪帶','獎金與分紅制度','考核作業與結果運用'],kp:[['薪資發放正確率','100%','月'],['考核如期完成率','100%','季']]},
+ {k:'mkt',n:'行銷與品牌',a:'行銷',o:0,d:1,du:['年度行銷計畫與預算','檔期活動規劃與成效檢討','社群經營與口碑管理','品牌形象規範'],kp:[['活動投報率（ROI）','≥3 倍','月'],['新客數','依年度目標','月'],['評論平均星等','≥4.3','月']]},
+ {k:'crm',n:'會員與顧客經營',a:'行銷',o:1,d:2,du:['會員制度與分級','回購與喚醒活動','顧客資料分析'],kp:[['會員消費占比','≥30%','月'],['90 天回購率','≥35%','月']]},
+ {k:'dev',n:'展店開發',a:'展店',o:1,d:2,du:['年度展店計畫','商圈評估與選址','租約談判','新店投報追蹤'],kp:[['展店達成數','依年度計畫','季'],['新店回本月數','≤24 個月','年'],['新店 6 個月營收達成率','≥90%','季']]},
+ {k:'eng',n:'工程與設備',a:'展店',o:1,d:2,du:['裝修工程規劃與發包','設備採購規格','設備維修保養'],kp:[['開店工程準時率','100%','季'],['工程預算達成率','≤預算 105%','季'],['設備故障停機時數','依各店紀錄遞減','月']]},
+ {k:'it',n:'資訊系統',a:'展店',o:1,d:2,du:['POS 與點餐系統','數據報表與儀表板','帳號權限與資安'],kp:[['系統可用率','≥99.5%','月'],['報表自動化比例','≥80%','季']]},
+ {k:'fran',n:'加盟發展與管理',a:'加盟',o:1,d:1,fr:true,du:['加盟主招募與審核','加盟合約與權利金','加盟店開店輔導','加盟店督導與續約'],kp:[['新簽加盟店數','依年度計畫','季'],['加盟店存活率','≥90%','年'],['權利金收繳率','100%','月']]},
+ {k:'plan',n:'經營企劃與目標管理',a:'經營',o:1,d:3,du:['年度目標拆解到部門與門市','週會、月會議程與決議追蹤','跨部門專案管理','總部經營儀表板'],kp:[['年度目標達成率','≥100%','年'],['會議決議如期完成率','≥90%','月']]},
+ {k:'legal',n:'法務與合約',a:'經營',o:2,d:3,du:['合約審閱','商標與智慧財產','糾紛與訴訟'],kp:[['合約審閱時效','≤5 個工作天','月']]}];
+const FX=Object.fromEntries(FUNCS.map(f=>[f.k,f]));
+const HAVE=['無人負責','老闆自己兼','有人兼任','專人／專責'];
+const needOf=(f,s,fr)=>{ if(f.fr&&!fr) return 0; return s>=f.d?3:s>=f.o?(s===0?1:2):0 };
+
+const GOV=[
+ {k:'jd',s:0,q:'每個職位都有書面職務說明書，新人知道自己要做什麼'},
+ {k:'mtg',s:0,q:'有固定週會、月會，有會議紀錄並追蹤決議'},
+ {k:'pl',s:0,q:'每月 10 日前拿得到上個月各店損益表'},
+ {k:'sop',s:0,q:'門市 SOP 完整，新人照 SOP 訓練'},
+ {k:'doa',s:1,q:'有權責分工表：誰能核准什麼、金額上限多少'},
+ {k:'bud',s:1,q:'有年度預算，每月對照實際數字'},
+ {k:'kpi',s:1,q:'每位主管都有明確 KPI，每月檢視'},
+ {k:'away',s:1,q:'老闆兩週不在，門市與總部仍能正常運作'},
+ {k:'succ',s:1,q:'有儲備店長與職級晉升制度'},
+ {k:'qsc',s:1,q:'有定期 QSC 稽核，缺失會追蹤到改善'},
+ {k:'ic',s:1,q:'採購、驗收、付款由不同人負責（內控）'},
+ {k:'bonus',s:1,q:'獎金與考核結果連動'},
+ {k:'data',s:1,q:'系統能即時看到各店營收與成本'},
+ {k:'open',s:2,q:'有展店標準流程（選址評估表、開店檢核表）'}];
+const GOVV=['沒有','部分有','有'];
+
+/* RACI 工作清單：t＝決策或執行；m＝牽涉金錢（財務要給意見）；st＝影響門市（營運要知道） */
+const TASKS=[
+ {k:'t_goal',a:'經營',n:'年度營業目標與預算',f:'plan',t:'決策',m:1,st:1},
+ {k:'t_open',a:'營運',n:'新店開幕籌備',f:'ops',t:'執行',st:1},
+ {k:'t_shift',a:'營運',n:'門市排班與人力核定',f:'ops',t:'執行',m:1,st:1},
+ {k:'t_qsc',a:'營運',n:'QSC 稽核與缺失改善',f:'audit',t:'執行',st:1},
+ {k:'t_cs',a:'營運',n:'客訴處理',f:'ops',t:'執行',st:1},
+ {k:'t_new',a:'產品',n:'新品開發與上市',f:'rd',t:'決策',m:1,st:1},
+ {k:'t_price',a:'產品',n:'菜單售價調整',f:'cost',t:'決策',m:1,st:1},
+ {k:'t_bom',a:'產品',n:'標準食譜與 BOM 建檔',f:'rd',t:'執行'},
+ {k:'t_sup',a:'供應鏈',n:'供應商選定與議價',f:'buy',t:'決策',m:1},
+ {k:'t_inv',a:'供應鏈',n:'叫貨、庫存與盤點',f:'scm',t:'執行',st:1},
+ {k:'t_food',a:'供應鏈',n:'食安事件處理',f:'qa',t:'決策',st:1},
+ {k:'t_close',a:'財務',n:'每月結帳與損益表',f:'fin',t:'執行'},
+ {k:'t_pay',a:'財務',n:'付款核准',f:'fin',t:'決策',m:1},
+ {k:'t_mgr',a:'人資',n:'店長任用與晉升',f:'hr',t:'決策',st:1},
+ {k:'t_hire',a:'人資',n:'門市人員招募',f:'hr',t:'執行',st:1},
+ {k:'t_sal',a:'人資',n:'薪資計算與發放',f:'pay',t:'執行',m:1},
+ {k:'t_eval',a:'人資',n:'績效考核與獎金',f:'pay',t:'決策',m:1,st:1},
+ {k:'t_train',a:'人資',n:'新人訓練與認證',f:'train',t:'執行',st:1},
+ {k:'t_mplan',a:'行銷',n:'年度行銷計畫與預算',f:'mkt',t:'決策',m:1},
+ {k:'t_promo',a:'行銷',n:'檔期促銷活動',f:'mkt',t:'執行',m:1,st:1},
+ {k:'t_site',a:'展店',n:'選址評估與簽租約',f:'dev',t:'決策',m:1},
+ {k:'t_build',a:'展店',n:'裝修工程發包',f:'eng',t:'執行',m:1},
+ {k:'t_pos',a:'展店',n:'POS 與系統導入',f:'it',t:'執行',st:1},
+ {k:'t_fsign',a:'加盟',n:'加盟主審核與簽約',f:'fran',t:'決策',m:1,fr:1},
+ {k:'t_fsup',a:'加盟',n:'加盟店督導',f:'fran',t:'執行',st:1,fr:1}];
+const RACI=['','R','A','C','I'];
+const RACIN={R:'負責執行',A:'最後拍板（只能一人）',C:'事前要問',I:'事後通知'};
+const STORE_KPI=[['營收目標達成率','≥100%','月',30],['人事費用率','≤28%','月',20],['理論與實際食材成本差異','≤1.5%','月',15],['QSC 稽核分數','≥85 分','月',20],['員工留任率','≥85%','季',10],['客訴件數','≤2 件／萬客','月',5]];
+const TOP_KPI=[['年度營收目標達成率','≥100%','月',30],['稅前淨利率','≥10%','月',30],['展店計畫達成','依年度計畫','季',20],['關鍵主管留任率','≥90%','年',20]];
+
+/* 階段範本：建議組織。p＝上層（用 key），f＝負責職能，n＝人數，st＝門市職位 */
+function tpl(s,fr){
+  const P=[]; const add=(k,t,p,f,o={})=>P.push(Object.assign({id:k,title:t,person:'',parent:p,funcs:f,n:1,extra:'',kpis:[]},o));
+  if(s===0){
+    add('boss','老闆／負責人',null,['ops','plan']);
+    add('chef','主廚（兼研發採購）','boss',['rd','buy']);
+    add('admin','行政會計（兼人資）','boss',['fin','hr']);
+    add('mkt','行銷（兼任或外包）','boss',['mkt']);
+    add('store','店長（各店）','boss',[],{st:true,n:3});
+    if(fr) add('fran','加盟窗口（老闆特助）','boss',['fran']);
+  } else if(s===1){
+    add('gm','總經理',null,['plan']);
+    add('ops','營運經理','gm',['ops']);
+    add('sup','督導','ops',['audit']);
+    add('store','店長（各店）','ops',[],{st:true,n:8});
+    add('rd','研發採購主管','gm',['rd','buy','qa']);
+    add('ck','中央廚房／倉儲主管','rd',['scm']);
+    add('fin','財會主管','gm',['fin','cost']);
+    add('hr','人資行政主管','gm',['hr','train','pay']);
+    add('mkt','行銷主管','gm',['mkt','crm']);
+    add('dev','展店工程專員（兼資訊）','gm',['dev','eng','it']);
+    if(fr) add('fran','加盟發展主管','gm',['fran']);
+  } else {
+    add('gm','總經理',null,[]);
+    add('plan','經營企劃室',s===3?'gm':'gm',s===3?['plan']:['plan','legal']);
+    if(s===3){ add('audit','稽核室','gm',['audit']); add('legal','法務','gm',['legal']) }
+    add('ops','營運部經理','gm',['ops']);
+    add('area','區經理（各區）','ops',[],{n:s===3?5:3});
+    if(s<3) add('sup','督導','ops',['audit'],{n:2});
+    add('store','店長（各店）','area',[],{st:true,n:s===3?40:20});
+    add('rd','產品研發部經理','gm',s===3?['rd']:['rd','qa']);
+    if(s===3) add('qa','品保部經理','gm',['qa']);
+    add('scm','採購物流部經理','gm',['buy']);
+    add('ck','中央廚房廠長','scm',['scm']);
+    add('fin','財務部經理','gm',['fin']);
+    add('cost','成本分析專員','fin',['cost']);
+    add('hr','人資部經理','gm',['hr','pay']);
+    add('train','訓練經理','hr',['train']);
+    add('mkt','行銷部經理','gm',['mkt']);
+    add('crm','會員經營專員','mkt',['crm']);
+    add('dev','展店工程部經理','gm',['dev','eng']);
+    add('it','資訊專員','dev',['it']);
+    if(fr) add('fran','加盟事業部經理','gm',['fran']);
+  }
+  return P;
+}
+function blank(){ return {positions:[{id:'boss',title:'老闆／負責人',person:'',parent:null,funcs:[],n:1,extra:'',kpis:[]}]} }
+
+/* ===== 狀態 ===== */
+let me=null, ok=false, plans=[], clients=[], cur=null, armed=null, busy=false, saveT=null, saveState='', dirty=false, coachOk=true;
+function say(t,bad){$('#flash').innerHTML=t?`<div class="msg ${bad?'bad':''}">${esc(t)}</div>`:''}
+async function q(p,what){const r=await p; if(r.error){say((what||'存檔')+'失敗：'+r.error.message+'。請重新整理後再試一次，還是不行就把這段訊息傳給 Claude。',true); throw r.error} return r.data}
+
+async function load(){
+  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; ok=false;
+  if(me){ const p=await sbc.from('bom_profiles').select('role,status').eq('user_id',me.id).maybeSingle(); ok=!!(p.data&&p.data.role==='admin'&&p.data.status==='active') }
+  if(ok){
+    const r=await sbc.from('org_plans').select('*').order('updated_at',{ascending:false});
+    if(r.error){ plans=null; say('組織診斷的資料表還沒安裝，請 Claude 執行資料庫更新（'+r.error.message+'）。',true) } else plans=r.data||[];
+    const c=await sbc.from('coach_clients').select('id,name,stores,biz_type,stage').order('name');
+    if(c.error){ coachOk=false; clients=[] } else clients=c.data||[];
+  }
+  render();
+}
+function route(){const p=new URLSearchParams(location.hash.slice(1)); return {id:+p.get('p')||null,t:p.get('t')||'diag'}}
+function go(h){ if(location.hash==='#'+h) render(); else location.hash=h }
+window.addEventListener('hashchange',()=>render());
+
+function normalize(pl){ const d=pl.data||(pl.data={}); d.asis=d.asis||blank(); d.tobe=d.tobe||null; d.gov=d.gov||{}; d.override=d.override||{}; d.raci=d.raci||{}; d.notes=d.notes||{}; d.dutyOff=d.dutyOff||{}; return pl }
+const P=()=>cur.data;
+const clientName=pl=>{ const c=pl.client_id&&clients.find(x=>x.id===pl.client_id); return c?c.name:(pl.client_name||'未命名客戶') };
+
+/* ===== 分析 ===== */
+function kids(org,id){return org.positions.filter(p=>p.parent===id)}
+function root(org){return org.positions.find(p=>!p.parent||!org.positions.some(x=>x.id===p.parent))||org.positions[0]}
+function depth(org,p){let d=0,x=p,seen=new Set();while(x&&x.parent&&!seen.has(x.id)){seen.add(x.id);x=org.positions.find(y=>y.id===x.parent);d++}return d}
+function coverage(org,fk,ov){
+  if(ov&&ov[fk]!=null&&ov[fk]!=='') return {v:+ov[fk],who:[],manual:true};
+  const r=root(org), owners=org.positions.filter(p=>(p.funcs||[]).includes(fk));
+  if(!owners.length) return {v:0,who:[]};
+  const nonRoot=owners.filter(p=>p!==r);
+  if(!nonRoot.length) return {v:1,who:owners};
+  const ded=nonRoot.some(p=>(p.funcs||[]).length<=2&&!personDup(org,p));
+  return {v:ded?3:2,who:owners};
+}
+function personDup(org,p){const n=(p.person||'').trim(); return !!n&&org.positions.filter(x=>(x.person||'').trim()===n).length>1}
+function analyse(org,ov){
+  const d=P(), s=stageOf(+cur.stores||0), fr=!!cur.franchise;
+  const rows=FUNCS.map(f=>{const need=needOf(f,s,fr), c=coverage(org,f.k,ov); return {f,need,have:c.v,who:c.who,manual:c.manual,gap:Math.max(0,need-c.v)}}).filter(r=>r.need>0||r.have>0);
+  const needSum=rows.reduce((a,r)=>a+r.need,0), got=rows.reduce((a,r)=>a+Math.min(r.have,r.need),0);
+  const fScore=needSum?Math.round(got*100/needSum):100;
+  const gq=GOV.filter(g=>g.s<=s), gScore=gq.length?Math.round(gq.reduce((a,g)=>a+(+d.gov[g.k]||0),0)*50/gq.length):100;
+  const flags=[], r=root(org);
+  const span=kids(org,r.id).length; if(span>7) flags.push(['bad',`${r.title}直接管 ${span} 個職位，超過 7 個就會變成什麼都要找老闆。建議中間加一層主管。`]);
+  org.positions.forEach(p=>{const k=kids(org,p.id).filter(x=>!x.st).length; if(p!==r&&k>8) flags.push(['warn',`${p.title}直接管 ${k} 個職位，管理幅度過大。`])});
+  const names={}; org.positions.forEach(p=>{const n=(p.person||'').trim(); if(n&&!p.st)(names[n]=names[n]||[]).push(p.title)});
+  Object.entries(names).forEach(([n,t])=>{ if(t.length>1) flags.push(['warn',`${n} 一人身兼 ${t.length} 個職位（${t.join('、')}），容易兩頭落空，要訂優先順序或補人。`])});
+  org.positions.forEach(p=>{ if((p.funcs||[]).length>=4) flags.push(['warn',`${p.title}一個人負責 ${p.funcs.length} 項職能（${p.funcs.map(k=>FX[k]?FX[k].n:k).join('、')}），負荷過重。`])});
+  const rootF=(r.funcs||[]).filter(k=>FX[k]); if(s>=1&&rootF.length>=3) flags.push(['bad',`${r.title}自己還扛 ${rootF.length} 項日常職能，到 ${STAGES[s].n} 這個階段就是成長瓶頸。`]);
+  const maxD=Math.max(0,...org.positions.map(p=>depth(org,p))); if(s<=1&&maxD>4) flags.push(['warn',`組織有 ${maxD+1} 層，對 ${STAGES[s].n} 太多層，溝通會變慢。`]);
+  const orphans=org.positions.filter(p=>p.parent&&!org.positions.some(x=>x.id===p.parent)); if(orphans.length) flags.push(['warn',`有 ${orphans.length} 個職位沒有接到上層。`]);
+  return {s,fr,rows,fScore,gScore,score:Math.round(fScore*.6+gScore*.4),flags,gaps:rows.filter(r=>r.gap>0).sort((a,b)=>b.gap-a.gap||b.need-a.need)};
+}
+const lvl=v=>v>=80?'good':v>=60?'warn':'bad';
+
+/* ===== 畫面 ===== */
+function render(){
+  $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:4px"><a class="btn" href="${CONSULT}">顧問工作台</a><button type="button" data-out>登出</button></div>`:'';
+  if(!me){ $('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">和顧問工作台、業主入口用同一組帳號。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`; return }
+  if(!ok){ $('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><div class="row"><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`; return }
+  if(plans===null){ $('#app').innerHTML=''; return }
+  const r=route();
+  if(r.id){ const pl=plans.find(x=>x.id===r.id); if(!pl){ $('#app').innerHTML=`<div class="card"><h2>找不到這份診斷</h2><div class="row"><a class="btn pri" href="#">回清單</a></div></div>`; return }
+    cur=normalize(pl); $('#app').innerHTML=vPlan(r.t); return }
+  cur=null; $('#app').innerHTML=r.t==='new'?vNew():vHome();
+}
+function vHome(){
+  const list=plans.map(pl=>{normalize(pl); cur=pl; const a=analyse(P().asis,P().override), b=P().tobe?analyse(P().tobe,{}):null; cur=null;
+    return `<a class="pl" href="#p=${pl.id}"><div class="row" style="margin:0;justify-content:space-between"><h3>${esc(clientName(pl))}</h3><span class="pill ${lvl(a.score)}">現況 ${a.score} 分</span></div>
+    <div class="note">${esc(pl.title||'總部組織診斷')}｜${esc(STAGES[a.s].n)}（${esc(STAGES[a.s].t)}）${pl.franchise?'｜有加盟':''}</div>
+    <div class="note">缺口 ${a.gaps.length} 項${b?`｜建議組織 ${b.score} 分`:'｜尚未設計建議組織'}｜更新 ${esc(String(pl.updated_at||'').slice(0,10))}</div></a>`}).join('');
+  return `<div class="row noprint" style="justify-content:space-between"><div class="sub" style="margin:0">每位客戶一份：先畫現況、做階段缺口檢查，再設計建議組織、職責、RACI 與 KPI，最後一鍵出業主報告。</div><a class="btn pri" href="#t=new">＋ 新增診斷</a></div>
+  ${plans.length?`<div class="plans" style="margin-top:12px">${list}</div>`:`<div class="card"><h2>還沒有任何診斷</h2><p class="sub">按「新增診斷」，選一位輔導客戶或直接輸入公司名稱就能開始。</p></div>`}`;
+}
+function vNew(){
+  return `<div class="card" style="max-width:640px"><h2>新增總部組織診斷</h2>
+  <label for="n_client">輔導客戶（從營運輔導帶入）</label><select id="n_client"><option value="">（不連結，直接輸入名稱）</option>${clients.map(c=>`<option value="${c.id}">${esc(c.name)}${c.stores?`（${c.stores} 店）`:''}</option>`).join('')}</select>
+  ${coachOk?'':'<p class="note">營運輔導的客戶資料還讀不到，可以先直接輸入名稱，之後再連結。</p>'}
+  <label for="n_name">公司／品牌名稱（沒選輔導客戶時必填）</label><input id="n_name" placeholder="例：阿明牛肉麵">
+  <div class="g3"><div><label for="n_stores">目前門市數</label><input id="n_stores" type="number" min="1" value="3"></div>
+  <div><label for="n_target">三年內目標店數</label><input id="n_target" type="number" min="1" placeholder="例：15"></div>
+  <div><label for="n_fr">有做加盟嗎</label><select id="n_fr"><option value="0">沒有／還沒</option><option value="1">有或準備開放</option></select></div></div>
+  <label for="n_biz">業態</label><input id="n_biz" placeholder="例：麵食、火鍋、手搖飲">
+  <div class="row"><button class="pri" data-create>建立並開始畫現況組織</button><a class="btn" href="#">取消</a></div></div>`;
+}
+const TABS=[['diag','① 階段診斷'],['asis','② 現況組織'],['tobe','③ 建議組織'],['duty','④ 部門職責'],['raci','⑤ RACI 分工'],['kpi','⑥ 主管 KPI'],['rep','⑦ 業主報告'],['set','設定']];
+function vPlan(t){
+  const head=`<div class="row noprint" style="justify-content:space-between;margin:0"><div><a href="#">← 全部客戶</a>　<b style="font-size:18px">${esc(clientName(cur))}</b> <span class="note">${esc(STAGES[stageOf(+cur.stores||0)].n)}・目前 ${+cur.stores||0} 店${cur.target_stores?`・目標 ${+cur.target_stores} 店`:''}${cur.franchise?'・有加盟':''}</span>${cur.client_id?` <a class="note" href="${COACH}#c=${cur.client_id}">營運輔導 →</a>`:''}</div><span class="saved" id="saved">${esc(saveState)}</span></div>
+  <div class="tabs noprint">${TABS.map(([k,l])=>`<a href="#p=${cur.id}&t=${k}" class="${k===t?'on':''}">${l}</a>`).join('')}</div>`;
+  const V={diag:tDiag,asis:()=>tOrg('asis'),tobe:()=>tOrg('tobe'),duty:tDuty,raci:tRaci,kpi:tKpi,rep:tRep,set:tSet}[t]||tDiag;
+  return head+V();
+}
+function scoreCards(a,label){
+  return `<div class="stats"><div class="stat ${lvl(a.score)}"><b>${a.score}</b><span>${label}總分（100）</span></div><div class="stat ${lvl(a.fScore)}"><b>${a.fScore}</b><span>職能到位度</span></div><div class="stat ${lvl(a.gScore)}"><b>${a.gScore}</b><span>管理制度成熟度</span></div><div class="stat ${a.gaps.length?'bad':'good'}"><b>${a.gaps.length}</b><span>職能缺口</span></div></div>`;
+}
+function tDiag(){
+  const a=analyse(P().asis,P().override), s=a.s, d=P();
+  const nxt=cur.target_stores&&stageOf(+cur.target_stores)>s?stageOf(+cur.target_stores):null;
+  const fx=a.rows.map(r=>`<tr><td>${esc(r.f.n)}<div class="note">${esc(r.who.map(p=>p.title+(p.person?'・'+p.person:'')).join('、'))}</div></td>
+    <td><select data-ov="${r.f.k}" aria-label="${esc(r.f.n)}現況"><option value="">自動：${HAVE[coverage(P().asis,r.f.k,{}).v]}</option>${HAVE.map((h,i)=>`<option value="${i}"${r.manual&&r.have===i?' selected':''}>${h}</option>`).join('')}</select></td>
+    <td>${HAVE[r.need]}</td><td class="c">${r.gap?`<span class="gap${r.gap>=2?3:2}">缺 ${r.gap}</span>`:'<span class="pill good">到位</span>'}</td></tr>`).join('');
+  const gq=GOV.filter(g=>g.s<=s).map(g=>`<tr><td>${esc(g.q)}</td><td><select data-gov="${g.k}" aria-label="${esc(g.q)}"><option value="">（未答）</option>${GOVV.map((v,i)=>`<option value="${i}"${d.gov[g.k]!=null&&d.gov[g.k]!==''&&+d.gov[g.k]===i?' selected':''}>${v}</option>`).join('')}</select></td></tr>`).join('');
+  return `<div class="card"><h2>${esc(STAGES[s].n)}・${esc(STAGES[s].t)}</h2><p class="sub" style="margin:0">${esc(STAGES[s].d)}</p>${nxt!=null?`<p class="note">目標 ${+cur.target_stores} 店會進入「${esc(STAGES[nxt].t)}」，建議組織要提前照下一階段設計。</p>`:''}</div>
+  ${scoreCards(a,'現況')}
+  ${a.flags.length?`<div class="card"><h2>組織結構警訊</h2>${a.flags.map(f=>`<div class="chk"><span class="pill ${f[0]}">${f[0]==='bad'?'嚴重':'注意'}</span> ${esc(f[1])}</div>`).join('')}</div>`:''}
+  <div class="card"><h2>職能缺口檢查</h2><p class="note">「現況」會依你在②畫的組織自動判斷，也可以手動改。「這階段需要」是 ${esc(STAGES[s].n)} 該有的水準。</p>
+  <div class="scroll"><table><thead><tr><th>總部職能</th><th>現況</th><th>這階段需要</th><th class="c">落差</th></tr></thead><tbody>${fx}</tbody></table></div></div>
+  <div class="card"><h2>管理制度檢查</h2><p class="note">跟業主或總部主管一題一題問，答「部分有」代表有在做但沒有書面或沒有固定。</p><div class="scroll"><table><tbody>${gq}</tbody></table></div></div>
+  <div class="card"><h2>顧問觀察</h2><label for="note_diag">訪談重點、業主說法、你的判斷（會放進業主報告）</label><textarea id="note_diag" data-note="diag">${esc(d.notes.diag||'')}</textarea></div>`;
+}
+function nodeHtml(org,p,a,edit){
+  const fl=a&&a.flagIds&&a.flagIds.has(p.id);
+  const fn=(p.funcs||[]).map(k=>FX[k]?FX[k].n.replace(/（.*?）/,''):'').filter(Boolean).join('・');
+  const inner=`<b>${esc(p.title)}${p.n>1?` ×${+p.n}`:''}</b>${p.person?`<span class="p">${esc(p.person)}</span>`:''}${fn?`<span class="f">${esc(fn)}</span>`:''}`;
+  const cls=`node ${!p.parent?'root':''} ${p.st?'store':''} ${fl?'flag':''}`;
+  const el=edit?`<button type="button" class="${cls}" data-edit="${esc(p.id)}">${inner}</button>`:`<div class="${cls}">${inner}</div>`;
+  const ch=kids(org,p.id);
+  return `<li>${el}${ch.length?`<ul>${ch.map(c=>nodeHtml(org,c,a,edit)).join('')}</ul>`:''}</li>`;
+}
+function treeHtml(org,edit){
+  const r=root(org), seen=new Set();
+  const flagIds=new Set(); const names={}; org.positions.forEach(p=>{const n=(p.person||'').trim(); if(n&&!p.st)(names[n]=names[n]||[]).push(p.id); if((p.funcs||[]).length>=4) flagIds.add(p.id)}); Object.values(names).forEach(ids=>{if(ids.length>1) ids.forEach(i=>flagIds.add(i))});
+  const orphans=org.positions.filter(p=>p!==r&&(!p.parent||!org.positions.some(x=>x.id===p.parent)));
+  return `<div class="scroll"><ul class="tree">${nodeHtml(org,r,{flagIds},edit)}</ul></div>${orphans.length?`<p class="note">沒接上層的職位：${orphans.map(p=>edit?`<button type="button" class="sm" data-edit="${esc(p.id)}">${esc(p.title)}</button>`:esc(p.title)).join(' ')}</p>`:''}`;
+}
+function tOrg(which){
+  const d=P(), org=d[which];
+  if(which==='tobe'&&!org){
+    const s=stageOf(+cur.stores||0), ts=cur.target_stores?Math.max(s,stageOf(+cur.target_stores)):s;
+    return `<div class="card"><h2>設計建議組織</h2><p class="sub">選一個起點，之後每個職位都可以改。</p><div class="row">
+    ${STAGES.map(x=>`<button ${x.k===ts?'class="pri"':''} data-tpl="${x.k}">套用「${esc(x.n)}」範本${x.k===ts?'（建議）':''}</button>`).join('')}<button data-copyasis>從現況組織複製來改</button></div></div>`;
+  }
+  const a=analyse(org,which==='asis'?d.override:{});
+  return `<div class="card"><div class="row" style="margin:0;justify-content:space-between"><h2 style="margin:0">${which==='asis'?'現況組織圖':'建議組織圖'}</h2><span class="pill ${lvl(which==='asis'?a.score:a.fScore)}">${which==='asis'?`現況總分 ${a.score}`:`職能到位度 ${a.fScore}`}</span></div>
+  <p class="note">點任何一格就能改職稱、人名、上層、負責職能。紅框＝一人身兼多職或負荷過重。${which==='asis'?'先照業主口述畫出「實際上」誰管誰、誰做什麼，不是名片上的職稱。':''}</p>
+  ${treeHtml(org,true)}
+  <div class="row noprint"><button class="pri" data-addpos="${which}">＋ 加職位</button>${which==='tobe'?`<button data-reset-tobe class="${armed==='tobe'?'armed':''}">${armed==='tobe'?'再按一次：清掉重選範本':'重新選範本'}</button>`:''}</div></div>
+  ${which==='tobe'?compareHtml():''}
+  ${a.flags.length?`<div class="card"><h2>結構警訊</h2>${a.flags.map(f=>`<div class="chk"><span class="pill ${f[0]}">${f[0]==='bad'?'嚴重':'注意'}</span> ${esc(f[1])}</div>`).join('')}</div>`:''}
+  <div class="card"><h2>職位清單</h2><div class="scroll"><table><thead><tr><th>職位</th><th>人</th><th>上層</th><th>負責職能</th></tr></thead><tbody>${org.positions.map(p=>`<tr><td><button type="button" class="sm" data-edit="${esc(p.id)}">${esc(p.title)}</button>${p.n>1?` ×${+p.n}`:''}</td><td>${esc(p.person||'—')}</td><td>${esc((org.positions.find(x=>x.id===p.parent)||{}).title||'—')}</td><td>${esc((p.funcs||[]).map(k=>FX[k]?FX[k].n:k).join('、')||(p.st?'門市營運':'—'))}</td></tr>`).join('')}</tbody></table></div>
+  <div class="row"><label style="margin:0;flex:1 1 100%" for="note_${which}">${which==='asis'?'現況說明（會放進報告）':'設計理由（會放進報告）'}</label><textarea id="note_${which}" data-note="${which}">${esc(d.notes[which]||'')}</textarea></div></div>`;
+}
+function compareHtml(){
+  const a=analyse(P().asis,P().override), b=analyse(P().tobe,{});
+  const rows=a.rows.map(r=>{const t=b.rows.find(x=>x.f.k===r.f.k)||{have:0}; return `<tr><td>${esc(r.f.n)}</td><td>${HAVE[r.have]}</td><td>${HAVE[t.have]}</td><td>${HAVE[r.need]}</td><td class="c">${t.have>=r.need?'<span class="pill good">補齊</span>':`<span class="pill warn">仍缺</span>`}</td></tr>`}).join('');
+  return `<div class="card"><h2>現況 → 建議：職能補齊對照</h2><div class="row" style="margin:0 0 6px"><span class="pill ${lvl(a.fScore)}">現況職能 ${a.fScore}</span>→<span class="pill ${lvl(b.fScore)}">建議 ${b.fScore}</span></div><div class="scroll"><table><thead><tr><th>職能</th><th>現況</th><th>建議組織</th><th>需要</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function posDialog(which,id){
+  const org=P()[which], p=org.positions.find(x=>x.id===id)||{id:null,title:'',person:'',parent:root(org).id,funcs:[],n:1,extra:''};
+  const areas=[...new Set(FUNCS.map(f=>f.a))];
+  const opts=org.positions.filter(x=>x.id!==p.id).map(x=>`<option value="${esc(x.id)}"${x.id===p.parent?' selected':''}>${esc(x.title)}</option>`).join('');
+  $('#dlg').innerHTML=`<h2>${p.id?'編輯職位':'新增職位'}</h2>
+  <div class="g2"><div><label for="d_title">職稱</label><input id="d_title" value="${esc(p.title)}" placeholder="例：營運經理"></div><div><label for="d_person">目前由誰擔任（可空白）</label><input id="d_person" value="${esc(p.person)}" placeholder="例：王小明"></div></div>
+  <div class="g2"><div><label for="d_parent">向誰報告</label><select id="d_parent"><option value="">（最上層）</option>${opts}</select></div><div><label for="d_n">人數</label><input id="d_n" type="number" min="1" value="${+p.n||1}"></div></div>
+  <label class="chk"><input type="checkbox" id="d_st"${p.st?' checked':''}>這是門市職位（店長、副店長等）</label>
+  <label>負責的總部職能（實際在做的才勾）</label>${areas.map(ar=>`<div class="note" style="margin-top:6px">${esc(ar)}</div><div class="fl">${FUNCS.filter(f=>f.a===ar).map(f=>`<label class="chk"><input type="checkbox" data-df="${f.k}"${(p.funcs||[]).includes(f.k)?' checked':''}>${esc(f.n)}</label>`).join('')}</div>`).join('')}
+  <label for="d_extra">其他職責（一行一項，會加進部門職責）</label><textarea id="d_extra">${esc(p.extra||'')}</textarea>
+  <div class="row"><button class="pri" data-savepos="${which}|${esc(p.id||'')}">完成</button><button data-close>取消</button>${p.id&&p.parent?`<button data-delpos="${which}|${esc(p.id)}" class="${armed==='del'+p.id?'armed':''}">${armed==='del'+p.id?'再按一次刪除':'刪除這個職位'}</button>`:''}</div>`;
+  if(!$('#dlg').open) $('#dlg').showModal();
+}
+function tDuty(){
+  const org=P().tobe||P().asis, src=P().tobe?'建議組織':'現況組織（還沒設計建議組織）';
+  const list=org.positions.filter(p=>!p.st);
+  return `<div class="card"><h2>部門職責表</h2><p class="note">依${esc(src)}產生：每個職位負責的職能會自動帶出標準職責，取消勾選就不放進報告；「其他職責」在組織圖點職位補。</p></div>
+  ${list.map(p=>{const fs=(p.funcs||[]).filter(k=>FX[k]); const ex=(p.extra||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    return `<div class="card"><div class="row" style="margin:0;justify-content:space-between"><h3 style="margin:0">${esc(p.title)}${p.person?`<span class="note">・${esc(p.person)}</span>`:''}</h3><span class="note">向 ${esc((org.positions.find(x=>x.id===p.parent)||{}).title||'—')} 報告・管 ${kids(org,p.id).length} 個職位</span></div>
+    ${fs.length||ex.length?fs.map(k=>`<div class="note" style="margin-top:6px">${esc(FX[k].n)}</div>${FX[k].du.map((t,i)=>{const key=p.id+'|'+k+'|'+i; return `<label class="chk"><input type="checkbox" data-duty="${esc(key)}"${P().dutyOff[key]?'':' checked'}>${esc(t)}</label>`}).join('')}`).join('')+(ex.length?`<div class="note" style="margin-top:6px">其他</div>${ex.map(t=>`<div class="chk">・${esc(t)}</div>`).join('')}`:''):`<p class="note">還沒指定負責職能。<button type="button" class="sm" data-goedit="${esc(p.id)}">去指定</button></p>`}</div>`}).join('')}`;
+}
+function raciOrg(){return P().tobe||P().asis}
+function autoRaci(){
+  const org=raciOrg(), r=root(org), M={};
+  const own=fk=>org.positions.find(p=>p!==r&&(p.funcs||[]).includes(fk))||org.positions.find(p=>(p.funcs||[]).includes(fk))||r;
+  const store=org.positions.find(p=>p.st), opsP=own('ops'), finP=own('fin');
+  TASKS.filter(t=>!t.fr||cur.franchise).forEach(t=>{const m={}, o=own(t.f);
+    if(t.t==='決策'){ m[r.id]='A'; if(o!==r) m[o.id]='R' }
+    else { m[o.id]='R'; const par=org.positions.find(x=>x.id===o.parent); if(par&&par!==o) m[par.id]=m[par.id]||'A'; else m[o.id]='A'; if(o===r) m[r.id]='A' }
+    if(t.m&&finP&&!m[finP.id]) m[finP.id]='C';
+    if(t.st&&opsP&&!m[opsP.id]) m[opsP.id]=t.t==='決策'?'C':'I';
+    if(t.st&&store&&!m[store.id]) m[store.id]=t.k==='t_shift'||t.k==='t_cs'||t.k==='t_inv'?'R':'I';
+    M[t.k]=m });
+  P().raci=M;
+}
+function raciCheck(){
+  const org=raciOrg(), M=P().raci, tasks=TASKS.filter(t=>!t.fr||cur.franchise), ids=new Set(org.positions.map(p=>p.id));
+  const prob={}; let aCount={};
+  tasks.forEach(t=>{const m=M[t.k]||{}; const v=Object.entries(m).filter(([id])=>ids.has(id));
+    const A=v.filter(x=>x[1]==='A').length, R=v.filter(x=>x[1]==='R').length;
+    v.forEach(([id,x])=>{if(x==='A') aCount[id]=(aCount[id]||0)+1});
+    const p=[]; if(A===0) p.push('沒人拍板'); if(A>1) p.push(`${A} 人拍板`); if(R===0&&!(A===1)) p.push('沒人執行');
+    if(p.length) prob[t.k]=p });
+  const r=root(org), total=tasks.length, rootA=aCount[r.id]||0;
+  return {prob,aCount,rootA,total,rootPct:total?Math.round(rootA*100/total):0};
+}
+function tRaci(){
+  const org=raciOrg(); if(!Object.keys(P().raci).length) autoRaci();
+  const cols=org.positions, tasks=TASKS.filter(t=>!t.fr||cur.franchise), M=P().raci, ck=raciCheck();
+  let area='';
+  const body=tasks.map(t=>{const m=M[t.k]||{}; const hd=t.a!==area?`<tr><th colspan="${cols.length+2}" style="padding-top:12px">${esc(area=t.a)}</th></tr>`:'';
+    return hd+`<tr><td>${esc(t.n)}<div class="note">${t.t}${ck.prob[t.k]?`・<span class="gap3">${esc(ck.prob[t.k].join('、'))}</span>`:''}</div></td>${cols.map(p=>`<td class="c ${ck.prob[t.k]?'bad':''}"><select data-raci="${t.k}|${esc(p.id)}" aria-label="${esc(t.n+' '+p.title)}">${RACI.map(x=>`<option${(m[p.id]||'')===x?' selected':''}>${x}</option>`).join('')}</select></td>`).join('')}</tr>`}).join('');
+  const nProb=Object.keys(ck.prob).length;
+  return `<div class="card"><h2>RACI 權責分工</h2><p class="note">${Object.entries(RACIN).map(([k,v])=>`<b>${k}</b>＝${v}`).join('　')}。依${P().tobe?'建議組織':'現況組織'}自動建議，可逐格修改；每件事只能有一個 A。</p>
+  <div class="stats"><div class="stat ${nProb?'bad':'good'}"><b>${nProb}</b><span>件事權責不清</span></div><div class="stat ${ck.rootPct>40?'bad':ck.rootPct>25?'warn':'good'}"><b>${ck.rootPct}%</b><span>由${esc(root(org).title)}拍板</span></div></div>
+  ${ck.rootPct>40?`<div class="msg bad">超過四成的事要等最上層拍板，總部會卡在老闆。建議把執行類工作的 A 下放給部門主管，並訂核決權限表。</div>`:''}
+  <div class="scroll raci"><table><thead><tr><th>工作</th>${cols.map(p=>`<th class="c pos">${esc(p.title)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>
+  <div class="row noprint"><button data-autoraci class="${armed==='raci'?'armed':''}">${armed==='raci'?'再按一次：照組織重新建議（會蓋掉手動修改）':'照組織重新建議'}</button></div></div>`;
+}
+function suggestKpi(p,org){
+  if(p.st) return STORE_KPI.map(x=>({n:x[0],t:x[1],f:x[2],w:x[3]}));
+  if(p===root(org)) return TOP_KPI.map(x=>({n:x[0],t:x[1],f:x[2],w:x[3]}));
+  const all=[]; (p.funcs||[]).forEach(k=>FX[k]&&FX[k].kp.forEach((x,i)=>all.push({n:x[0],t:x[1],f:x[2],i})));
+  all.sort((a,b)=>a.i-b.i); const pick=all.slice(0,5); if(!pick.length) return [];
+  const w=Math.floor(100/pick.length); pick.forEach((x,i)=>{x.w=i===0?100-w*(pick.length-1):w; delete x.i}); return pick;
+}
+function tKpi(){
+  const org=P().tobe||P().asis;
+  return `<div class="card"><h2>主管 KPI 設計</h2><p class="note">原則：每人 3～6 項、權重合計 100%、一定要能從現有報表算出來。按「帶入建議」會依負責職能挑指標，再依客戶狀況改目標值。</p></div>
+  ${org.positions.filter(p=>p.st||(p.funcs||[]).length||p===root(org)).map(p=>{const k=p.kpis||[]; const sum=k.reduce((a,x)=>a+(+x.w||0),0);
+    return `<div class="card"><div class="row" style="margin:0;justify-content:space-between"><h3 style="margin:0">${esc(p.title)}${p.person?`<span class="note">・${esc(p.person)}</span>`:''}</h3>
+    ${k.length?`<span class="pill ${sum===100&&k.length>=3&&k.length<=6?'good':'warn'}">${k.length} 項・權重 ${sum}%</span>`:''}</div>
+    ${k.length?`<div class="kr note"><span>指標</span><span>目標</span><span>頻率</span><span>權重%</span><span></span></div>`+k.map((x,i)=>`<div class="kr"><input data-k="n" data-kpi="${esc(p.id)}|${i}|n" value="${esc(x.n)}" aria-label="指標"><input data-kpi="${esc(p.id)}|${i}|t" value="${esc(x.t)}" aria-label="目標"><select data-kpi="${esc(p.id)}|${i}|f" aria-label="頻率">${['月','季','年'].map(f=>`<option${x.f===f?' selected':''}>${f}</option>`).join('')}</select><input type="number" data-kpi="${esc(p.id)}|${i}|w" value="${+x.w||0}" aria-label="權重"><button class="sm" data-kdel="${esc(p.id)}|${i}" aria-label="刪除">✕</button></div>`).join(''):'<p class="note">還沒設定。</p>'}
+    ${k.length&&(sum!==100||k.length<3||k.length>6)?`<p class="note gap2">${sum!==100?`權重合計 ${sum}%，要調成 100%。`:''}${k.length<3?'少於 3 項，考核會太單一。':''}${k.length>6?'超過 6 項，主管會失焦。':''}</p>`:''}
+    <div class="row"><button class="sm" data-kadd="${esc(p.id)}">＋ 加一項</button><button class="sm" data-ksug="${esc(p.id)}">${k.length?'重新帶入建議':'帶入建議'}</button></div></div>`}).join('')}`;
+}
+function roadmap(a){
+  const g=a.gaps, top=g.slice(0,3).map(r=>r.f.n).join('、');
+  const steps=[
+    ['第 1 個月：定權責',[`公布新組織圖與職務說明書`,`照 RACI 表訂「核決權限表」，老闆先放手執行類工作`,`建立固定週會（營運）＋月會（經營）與決議追蹤表`]],
+    ['第 2 個月：補關鍵人',[top?`優先補齊：${top}`:'確認每項職能都有負責人',`兼任者訂出時間分配與交接期限`,`主管 KPI 試行一個月，只看不考核`]],
+    ['第 3 個月：上軌道',[`KPI 正式納入考核與獎金`,`月會用損益表與 KPI 儀表板開會`,`檢討組織運作，調整人力與下一階段（展店）準備`]]];
+  return steps;
+}
+function tRep(){
+  const d=P(), a=analyse(d.asis,d.override), b=d.tobe?analyse(d.tobe,{}):null, org=d.tobe||d.asis, ck=Object.keys(d.raci).length?raciCheck():null;
+  const tasks=TASKS.filter(t=>!t.fr||cur.franchise), cols=org.positions.filter(p=>tasks.some(t=>(d.raci[t.k]||{})[p.id]));
+  return `<div class="row noprint"><button class="pri" data-print>列印／存成 PDF</button><button data-copyrep>複製文字版（LINE／Email）</button><span class="note">手機也能用：按列印後選「儲存為 PDF」。</span></div>
+  <div class="card report">
+  <h1 style="font-size:22px">${esc(clientName(cur))}｜總部組織與權責規劃</h1><p class="sub">品牌加辣餐飲顧問工作室・${today()}・目前 ${+cur.stores||0} 店（${esc(STAGES[a.s].t)}）${cur.target_stores?`・三年目標 ${+cur.target_stores} 店`:''}</p>
+  <h2>一、診斷摘要</h2>${scoreCards(a,'現況')}${b?`<p>依建議組織調整後，職能到位度可由 <b>${a.fScore}</b> 提升到 <b>${b.fScore}</b>。</p>`:''}
+  ${d.notes.diag?`<p class="pre" style="white-space:pre-wrap">${esc(d.notes.diag)}</p>`:''}
+  ${a.flags.length?`<h3>主要問題</h3><ol>${a.flags.map(f=>`<li>${esc(f[1])}</li>`).join('')}</ol>`:''}
+  ${a.gaps.length?`<h3>職能缺口（依急迫排序）</h3><table><thead><tr><th>職能</th><th>現況</th><th>這階段需要</th></tr></thead><tbody>${a.gaps.map(r=>`<tr><td>${esc(r.f.n)}</td><td>${HAVE[r.have]}</td><td>${HAVE[r.need]}</td></tr>`).join('')}</tbody></table>`:''}
+  <h2>二、現況組織</h2>${treeHtml(d.asis,false)}${d.notes.asis?`<p style="white-space:pre-wrap">${esc(d.notes.asis)}</p>`:''}
+  ${d.tobe?`<h2>三、建議組織</h2>${treeHtml(d.tobe,false)}${d.notes.tobe?`<p style="white-space:pre-wrap">${esc(d.notes.tobe)}</p>`:''}`:''}
+  <h2>${d.tobe?'四':'三'}、部門職責</h2><table><thead><tr><th>職位</th><th>職責</th></tr></thead><tbody>${org.positions.filter(p=>!p.st&&((p.funcs||[]).length||p.extra)).map(p=>`<tr><td>${esc(p.title)}</td><td>${(p.funcs||[]).filter(k=>FX[k]).flatMap(k=>FX[k].du.filter((t,i)=>!d.dutyOff[p.id+'|'+k+'|'+i])).concat((p.extra||'').split('\n').map(s=>s.trim()).filter(Boolean)).map(esc).join('、')}</td></tr>`).join('')}</tbody></table>
+  ${ck?`<h2>${d.tobe?'五':'四'}、權責分工（RACI）</h2><p class="note">${Object.entries(RACIN).map(([k,v])=>`${k}＝${v}`).join('；')}</p><div class="scroll"><table class="rt"><thead><tr><th>工作</th>${cols.map(p=>`<th class="c">${esc(p.title)}</th>`).join('')}</tr></thead><tbody>${tasks.map(t=>`<tr><td>${esc(t.n)}</td>${cols.map(p=>`<td class="c">${esc((d.raci[t.k]||{})[p.id]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:''}
+  <h2>${d.tobe?'六':'五'}、主管 KPI</h2>${org.positions.filter(p=>(p.kpis||[]).length).map(p=>`<h3>${esc(p.title)}</h3><table><thead><tr><th>指標</th><th>目標</th><th>頻率</th><th>權重</th></tr></thead><tbody>${p.kpis.map(x=>`<tr><td>${esc(x.n)}</td><td>${esc(x.t)}</td><td>${esc(x.f)}</td><td>${+x.w||0}%</td></tr>`).join('')}</tbody></table>`).join('')||'<p class="note">（尚未設定）</p>'}
+  <h2>${d.tobe?'七':'六'}、90 天導入步驟</h2>${roadmap(a).map(([h,l])=>`<h3>${esc(h)}</h3><ol class="road">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`).join('')}
+  <p class="note" style="margin-top:20px">有任何問題歡迎 LINE：@084ayepb</p></div>`;
+}
+function repText(){
+  const d=P(), a=analyse(d.asis,d.override), b=d.tobe?analyse(d.tobe,{}):null, org=d.tobe||d.asis;
+  const L=[`【${clientName(cur)}｜總部組織與權責診斷】${today()}`,`目前 ${+cur.stores||0} 店・${STAGES[a.s].t}`,`現況總分 ${a.score}（職能 ${a.fScore}／制度 ${a.gScore}）${b?`，照建議組織調整後職能可到 ${b.fScore}`:''}`,''];
+  if(a.flags.length){L.push('■ 主要問題'); a.flags.forEach((f,i)=>L.push(`${i+1}. ${f[1]}`)); L.push('')}
+  if(a.gaps.length){L.push('■ 要補的職能'); a.gaps.forEach(r=>L.push(`・${r.f.n}：現在「${HAVE[r.have]}」，要做到「${HAVE[r.need]}」`)); L.push('')}
+  if(d.tobe){L.push('■ 建議組織'); d.tobe.positions.forEach(p=>L.push(`${'　'.repeat(depth(d.tobe,p))}${p.title}${p.n>1?' ×'+p.n:''}${p.person?'（'+p.person+'）':''}`)); L.push('')}
+  const kp=org.positions.filter(p=>(p.kpis||[]).length); if(kp.length){L.push('■ 主管 KPI'); kp.forEach(p=>L.push(`${p.title}：${p.kpis.map(x=>`${x.n} ${x.t}（${+x.w||0}%）`).join('、')}`)); L.push('')}
+  L.push('■ 90 天導入'); roadmap(a).forEach(([h,l])=>{L.push(h); l.forEach(x=>L.push('・'+x))});
+  return L.join('\n');
+}
+function tSet(){
+  return `<div class="card" style="max-width:640px"><h2>客戶設定</h2>
+  <label for="s_client">連結輔導客戶</label><select id="s_client"><option value="">（不連結）</option>${clients.map(c=>`<option value="${c.id}"${c.id===cur.client_id?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
+  <label for="s_name">名稱（沒連結時顯示）</label><input id="s_name" value="${esc(cur.client_name||'')}">
+  <label for="s_title">這份規劃的標題</label><input id="s_title" value="${esc(cur.title||'')}" placeholder="總部組織診斷">
+  <div class="g3"><div><label for="s_stores">目前門市數</label><input id="s_stores" type="number" min="1" value="${+cur.stores||1}"></div><div><label for="s_target">三年目標店數</label><input id="s_target" type="number" min="1" value="${cur.target_stores??''}"></div>
+  <div><label for="s_fr">加盟</label><select id="s_fr"><option value="0">沒有</option><option value="1"${cur.franchise?' selected':''}>有／準備開放</option></select></div></div>
+  <label for="s_biz">業態</label><input id="s_biz" value="${esc(cur.biz_type||'')}">
+  <div class="row"><button class="pri" data-saveset>儲存設定</button><button data-delplan class="${armed==='plan'?'armed':''}">${armed==='plan'?'再按一次：刪除整份診斷':'刪除這份診斷'}</button></div></div>`;
+}
+
+/* ===== 存檔（樂觀鎖：rev 對不上就提醒，不蓋掉別的視窗的修改） ===== */
+function touch(rerender){ dirty=true; saveState='尚未存檔…'; const s=$('#saved'); if(s) s.textContent=saveState; clearTimeout(saveT); saveT=setTimeout(saveNow,800); if(rerender){ const y=scrollY; render(); scrollTo(0,y) } }
+async function saveNow(){
+  if(!cur||!dirty) return; dirty=false; const pl=cur;
+  const r=await sbc.from('org_plans').update({data:pl.data,rev:(pl.rev||1)+1,updated_at:new Date().toISOString()}).eq('id',pl.id).eq('rev',pl.rev||1).select();
+  if(r.error){ dirty=true; saveState='存檔失敗'; say('存檔失敗：'+r.error.message+'。網路恢復後再改任何一格就會重存。',true) }
+  else if(!r.data||!r.data.length){ saveState='有衝突'; try{localStorage.setItem('org_conflict_'+pl.id,JSON.stringify(pl.data))}catch(e){} say('這份診斷剛剛在另一個視窗被改過，為了不蓋掉，這次沒存。請重新整理；你這次的修改已暫存在這台電腦。',true) }
+  else { pl.rev=r.data[0].rev; pl.updated_at=r.data[0].updated_at; saveState='已存檔 '+new Date().toTimeString().slice(0,5) }
+  const s=$('#saved'); if(s) s.textContent=saveState;
+}
+window.addEventListener('beforeunload',e=>{ if(dirty){ saveNow(); e.preventDefault() } });
+async function act(fn){ if(busy) return; busy=true; try{ await fn() }catch(e){ console.warn(e) } finally{ busy=false } }
+const val=id=>{const e=document.getElementById(id); return e?e.value.trim():''};
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button,[data-out]'); if(!b) return; const d=b.dataset;
+  if(d.out!==undefined) return act(async()=>{await sbc.auth.signOut(); location.href=PORTAL});
+  if(d.create!==undefined) return act(async()=>{
+    const cid=+val('n_client')||null, c=clients.find(x=>x.id===cid), name=val('n_name');
+    if(!cid&&!name) return say('請選輔導客戶或輸入公司名稱。',true);
+    const stores=+val('n_stores')||(c&&c.stores)||1;
+    const o={client_id:cid,client_name:name||(c&&c.name)||null,stores,target_stores:+val('n_target')||null,franchise:val('n_fr')==='1',biz_type:val('n_biz')||(c&&c.biz_type)||null,title:'總部組織診斷',rev:1,data:{asis:blank(),gov:{},override:{},raci:{},notes:{},dutyOff:{}}};
+    const r=await q(sbc.from('org_plans').insert(o).select().single(),'建立'); plans.unshift(r); say('已建立。先在「現況組織」照業主口述畫出實際的管理關係。'); go('p='+r.id+'&t=asis')});
+  if(!cur) return;
+  const D=P();
+  if(d.edit) return posDialog(route().t==='tobe'?'tobe':route().t==='asis'?'asis':(D.tobe?'tobe':'asis'),d.edit);
+  if(d.goedit){ location.hash='p='+cur.id+'&t='+(D.tobe?'tobe':'asis'); setTimeout(()=>posDialog(D.tobe?'tobe':'asis',d.goedit),50); return }
+  if(d.addpos) return posDialog(d.addpos,null);
+  if(d.close!==undefined){ armed=null; return $('#dlg').close() }
+  if(d.savepos){ const [w,id]=d.savepos.split('|'), org=D[w]; const title=val('d_title'); if(!title){ $('#d_title').focus(); return }
+    let p=org.positions.find(x=>x.id===id); if(!p){ p={id:uid(),kpis:[]}; org.positions.push(p) }
+    let parent=val('d_parent')||null; let x=parent, guard=0; while(x&&guard++<99){ if(x===p.id){ parent=p.parent||null; say('不能把職位接到自己底下，已保留原本的上層。',true); break } x=(org.positions.find(y=>y.id===x)||{}).parent }
+    if(!parent&&org.positions.some(y=>y!==p&&!y.parent)){ parent=root(org)!==p?root(org).id:null }
+    Object.assign(p,{title,person:val('d_person'),parent,n:Math.max(1,+val('d_n')||1),st:$('#d_st').checked,extra:$('#d_extra').value,funcs:[...document.querySelectorAll('[data-df]:checked')].map(c=>c.dataset.df)});
+    armed=null; $('#dlg').close(); touch(true); return }
+  if(d.delpos){ const [w,id]=d.delpos.split('|'); if(armed!=='del'+id){ armed='del'+id; return posDialog(w,id) }
+    const org=D[w], p=org.positions.find(x=>x.id===id); org.positions.forEach(x=>{ if(x.parent===id) x.parent=p.parent }); org.positions=org.positions.filter(x=>x.id!==id); armed=null; $('#dlg').close(); touch(true); return }
+  if(d.tpl!=null){ D.tobe={positions:tpl(+d.tpl,!!cur.franchise)}; D.tobe.positions.forEach(p=>p.kpis=suggestKpi(p,D.tobe)); D.raci={}; autoRaci(); say('已套用範本，並自動帶入 RACI 和 KPI 建議。點職位填上人名或調整。'); return touch(true) }
+  if(d.copyasis!==undefined){ D.tobe=JSON.parse(JSON.stringify(D.asis)); D.raci={}; return touch(true) }
+  if(d.resetTobe!==undefined){ if(armed!=='tobe'){ armed='tobe'; return render() } armed=null; D.tobe=null; D.raci={}; return touch(true) }
+  if(d.autoraci!==undefined){ if(armed!=='raci'){ armed='raci'; return render() } armed=null; autoRaci(); return touch(true) }
+  if(d.kadd){ const p=(D.tobe||D.asis).positions.find(x=>x.id===d.kadd); (p.kpis=p.kpis||[]).push({n:'',t:'',f:'月',w:0}); return touch(true) }
+  if(d.kdel){ const [id,i]=d.kdel.split('|'); const p=(D.tobe||D.asis).positions.find(x=>x.id===id); p.kpis.splice(+i,1); return touch(true) }
+  if(d.ksug){ const org=D.tobe||D.asis, p=org.positions.find(x=>x.id===d.ksug); p.kpis=suggestKpi(p,org); if(!p.kpis.length) say('這個職位還沒指定負責職能，先到組織圖勾選職能再帶入。',true); return touch(true) }
+  if(d.print!==undefined) return window.print();
+  if(d.copyrep!==undefined){ const t=repText(); (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>say('已複製，可以直接貼到 LINE 或 Email。'),()=>{ $('#dlg').innerHTML=`<h2>複製這段文字</h2><textarea style="min-height:50vh">${esc(t)}</textarea><div class="row"><button data-close>關閉</button></div>`; $('#dlg').showModal() }); return }
+  if(d.saveset!==undefined) return act(async()=>{ const o={client_id:+val('s_client')||null,client_name:val('s_name')||null,title:val('s_title')||null,stores:Math.max(1,+val('s_stores')||1),target_stores:+val('s_target')||null,franchise:val('s_fr')==='1',biz_type:val('s_biz')||null,updated_at:new Date().toISOString()};
+    if(!o.client_id&&!o.client_name) return say('請選輔導客戶或輸入名稱。',true);
+    await q(sbc.from('org_plans').update(o).eq('id',cur.id)); Object.assign(cur,o); say('已儲存設定，階段與缺口已重新計算。'); render() });
+  if(d.delplan!==undefined){ if(armed!=='plan'){ armed='plan'; return render() } return act(async()=>{ await q(sbc.from('org_plans').delete().eq('id',cur.id),'刪除'); plans=plans.filter(x=>x.id!==cur.id); armed=null; say('已刪除。'); go('') }) }
+});
+document.addEventListener('change',e=>{
+  const t=e.target, d=t.dataset; if(!cur) return; const D=P();
+  if(d.ov){ if(t.value==='') delete D.override[d.ov]; else D.override[d.ov]=+t.value; return touch(true) }
+  if(d.gov){ if(t.value==='') delete D.gov[d.gov]; else D.gov[d.gov]=+t.value; return touch(true) }
+  if(d.raci){ const [k,id]=d.raci.split('|'); const m=D.raci[k]=D.raci[k]||{}; if(t.value) m[id]=t.value; else delete m[id]; return touch(true) }
+  if(d.duty){ if(t.checked) delete D.dutyOff[d.duty]; else D.dutyOff[d.duty]=1; return touch(false) }
+  if(d.kpi){ const [id,i,f]=d.kpi.split('|'); const p=(D.tobe||D.asis).positions.find(x=>x.id===id); p.kpis[+i][f]=f==='w'?(+t.value||0):t.value; return touch(f==='w') }
+});
+document.addEventListener('input',e=>{ const d=e.target.dataset; if(cur&&d.note){ P().notes[d.note]=e.target.value; touch(false) } });
+$('#dlg').addEventListener('close',()=>{ if(armed&&String(armed).startsWith('del')) armed=null });
+sbc.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'||ev==='SIGNED_IN') load() });
+load();
+</script>
+</body>
+</html>
