@@ -32,7 +32,7 @@ const canWrite=b=>isAdmin()||(canRead(b)&&prof().access==='edit');
 const INV=['bom_suppliers','bom_receipts','bom_counts','bom_count_lines','bom_waste','bom_sales','bom_pos'];
 let seq=1; const err=m=>({data:null,error:{message:m}});
 function exec(q){ window.__q++; const T=db[q.t]||(db[q.t]=[]); let rows=T.filter(r=>q.f.every(f=>f(r)));
-  if(INV.includes(q.t)) rows=rows.filter(r=>canRead(r.brand_id));
+  if(INV.includes(q.t)||q.t==='qsc_audits') rows=rows.filter(r=>canRead(r.brand_id));
   if(q.t==='bom_brands') rows=rows.filter(r=>canRead(r.id));
   if(window.__fail&&window.__fail.t===q.t&&window.__fail.op===q.op) return err(window.__fail.msg);
   const em=me&&me.email;
@@ -42,6 +42,7 @@ function exec(q){ window.__q++; const T=db[q.t]||(db[q.t]=[]); let rows=T.filter
       if(INV.includes(q.t)&&!canWrite(v.brand_id)) return err('new row violates row-level security policy'); if(q.t==='bom_pl_link'&&!isAdmin()) return err('new row violates row-level security policy'); if(q.t==='bom_pl_link'){ const ex=T.find(r=>r.brand_id===v.brand_id); if(ex){ Object.assign(ex,v); out.push(ex); continue } }
       if(q.t==='bom_count_lines'){ const c=db.bom_counts.find(x=>x.id===v.count_id); if(!c) return err('count not found'); if(c.status!=='open') return err('BOM_COUNT_CLOSED: 這張盤點單已完成，不能再修改'); v.brand_id=c.brand_id; v.counted_by_email=em;
         const ex=T.find(r=>r.count_id===v.count_id&&r.item_key===v.item_key); if(ex){ if(q.op!=='upsert') return err('duplicate'); Object.assign(ex,v); out.push(ex); continue } }
+      if(q.t==='qsc_audits'){ if(!canWrite(v.brand_id)) return err('new row violates row-level security policy'); const ex=T.find(r=>r.audit_id===v.audit_id); if(ex){ Object.assign(ex,v); out.push(ex); continue } T.push(v); out.push(v); continue }
       if(q.t==='bom_counts'){ v.status='open'; v.created_by_email=em }
       if(q.t==='bom_receipts'||q.t==='bom_waste'||q.t==='bom_sales'||q.t==='bom_pos'){ v.created_by_email=em; if(q.t==='bom_pos'&&!v.status) v.status='draft' }
       if(q.t!=='bom_count_lines'&&!v.id) v.id='x'+(seq++); if(q.t==='bom_suppliers'&&v.active===undefined) v.active=true;
@@ -52,7 +53,7 @@ function exec(q){ window.__q++; const T=db[q.t]||(db[q.t]=[]); let rows=T.filter
       if(q.t==='bom_counts'&&q.v.status==='closed') q.v.closed_by_email=em;
       if(q.t==='bom_brands'){ if(r.rev!==q.v.rev-1) return err('BOM_CONFLICT') }
       Object.assign(r,q.v) } return {data:JSON.parse(JSON.stringify(rows)),error:null} }
-  if(q.op==='delete'){ for(const r of rows){ if(INV.includes(q.t)&&!canWrite(r.brand_id)) return err('permission denied');
+  if(q.op==='delete'){ for(const r of rows){ if((INV.includes(q.t)||q.t==='qsc_audits')&&!canWrite(r.brand_id)) return err('permission denied');
       if(q.t==='bom_counts'&&r.status==='closed'&&!isAdmin()) return err('BOM_COUNT_CLOSED: 已完成的盤點只有顧問可以刪除');
       if(q.t==='bom_count_lines'){ const c=db.bom_counts.find(x=>x.id===r.count_id); if(c&&c.status!=='open'&&!isAdmin()) return err('BOM_COUNT_CLOSED: 這張盤點單已完成，不能再修改') } }
     db[q.t]=T.filter(r=>!rows.includes(r)); if(q.t==='bom_counts') db.bom_count_lines=db.bom_count_lines.filter(l=>!rows.some(r=>r.id===l.count_id));
@@ -72,6 +73,7 @@ async function rpc(n,a){ await new Promise(r=>setTimeout(r,5));
   return {data:null,error:null} }
 window.supabase={createClient(){ return {from:B, rpc,
   auth:{getSession:async()=>({data:{session:me?{user:me}:null}}),onAuthStateChange(){ return {data:{subscription:{unsubscribe(){}}}} },signOut:async()=>({}),signInWithPassword:async()=>({error:{message:'x'}})},
-  storage:{from:()=>({upload:async()=>({error:null}),createSignedUrl:async()=>({data:{signedUrl:'#'}})})},
+  storage:{from:(bk)=>({upload:async(p,f)=>{ (window.__up=window.__up||[]).push({bk,p,type:f&&f.type,size:f&&f.size}); return {error:null} },createSignedUrl:async()=>({data:{signedUrl:'#'}}),
+    createSignedUrls:async(ps)=>({data:ps.map(p=>({path:p,signedUrl:'data:image/gif;base64,R0lGODlhAQABAAAAACw='})),error:null}),remove:async(ps)=>{ (window.__rm=window.__rm||[]).push(...ps); return {error:null} }})},
   channel:()=>({on(){ return this },subscribe(){ return this }}),removeChannel(){} } }};
 })();

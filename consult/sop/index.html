@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOP 手冊與督導稽核｜品牌加辣餐飲顧問工作室</title>
+<style>
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 2px}h2{font-size:18px;margin:0 0 8px}h3{font-size:16px;margin:14px 0 6px}
+.sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px;margin:6px 0 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 3px}
+input,select,textarea{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;color:inherit}
+textarea{min-height:76px;resize:vertical}
+input[type=checkbox]{width:auto}
+button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:7px 13px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button.sm{padding:3px 9px;font-size:13px}
+button.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+button:disabled{opacity:.6;cursor:wait}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.who{font-size:14px;color:var(--mute);text-align:right}
+.msg{padding:9px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.pill{display:inline-block;border-radius:999px;padding:0 9px;font-size:12px;white-space:nowrap;border:1px solid transparent}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mute{background:var(--field);color:var(--mute);border-color:var(--line)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:24px;line-height:1.2}.stat span{color:var(--mute);font-size:13px}
+.stat.alert b{color:var(--bad)}
+.clients{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.cl{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;text-decoration:none;color:inherit;display:block}
+.cl.red{border-left-color:var(--bad)}.cl.yellow{border-left-color:var(--warn)}.cl.green{border-left-color:var(--good)}
+.cl h3{margin:0 0 4px}.cl ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--mute)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:12px 0}
+.tabs a{padding:7px 12px;text-decoration:none;color:var(--mute);border-bottom:3px solid transparent}
+.tabs a.on{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0 12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}@media (max-width:640px){.g2{grid-template-columns:1fr}}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+.item{border-top:1px solid var(--line);padding:10px 0}.item:first-child{border-top:0}
+.item .meta{font-size:13px;color:var(--mute)}
+.goal{display:grid;grid-template-columns:1fr 110px 90px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.goal:first-child{border-top:0}
+.goal svg{width:110px;height:30px}
+.gl{display:grid;grid-template-columns:1.4fr 1fr .8fr auto;gap:6px;margin:4px 0}
+.al{display:grid;grid-template-columns:2fr .8fr 1fr auto;gap:6px;margin:4px 0}
+@media (max-width:560px){.who{text-align:left}.gl,.al{grid-template-columns:1fr 1fr}.al [data-a=title],.gl [data-g=kpi]{grid-column:1/-1}.goal{grid-template-columns:1fr 90px}.goal svg{display:none}}
+a{color:var(--accent)}
+.pre{white-space:pre-wrap}
+.report h2{font-size:20px}.report table{margin:6px 0 10px}
+@media print{body{background:#fff;color:#000}.noprint,.tabs,.top,#flash{display:none!important}.card{border:0;padding:0}.wrap{padding:0}}
+.sec{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin:12px 0}
+.sec>header{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.sec>header input{flex:1;min-width:160px;font-weight:600}
+.sec>header .when{flex:0 1 180px;min-width:120px;font-weight:400}
+.sec>header select{width:auto}
+.st{display:grid;grid-template-columns:28px 1.6fr 1.3fr 96px 70px auto;gap:6px;align-items:start;padding:8px 12px;border-top:1px solid var(--line)}
+.st:first-of-type{border-top:0}
+.st .no{color:var(--mute);padding-top:8px;text-align:right}
+.st textarea{min-height:40px}
+.st .aud{display:flex;gap:4px;align-items:center;font-size:13px;color:var(--mute);padding-top:8px;margin:0}
+.st .ops{display:flex;gap:4px;flex-wrap:wrap}
+.sticky{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
+.types{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.types label{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel);color:var(--fg);font-size:14px;margin:0;cursor:pointer}
+.types input{width:auto;margin-top:4px}
+.types label.on{border-color:var(--accent);background:var(--accent-soft)}
+.doc h1{font-size:26px}.doc h2{font-size:19px;margin-top:22px;border-bottom:2px solid var(--accent);padding-bottom:4px}
+.doc table td{white-space:normal}.doc .cover{text-align:center;padding:40px 0 30px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.spark{width:110px;height:30px}
+@media (max-width:640px){.sticky{position:static}.st{grid-template-columns:24px 1fr 1fr}.st textarea[data-f=text],.st .std{grid-column:2/-1}.st .role{grid-column:2}.st .aud{grid-column:3}.st .ops{grid-column:1/-1;justify-content:flex-end}}
+@media print{.doc h2{break-after:avoid}.doc tr{break-inside:avoid}.doc .cover{break-after:page;padding-top:120px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top noprint"><div><h1>SOP 手冊與督導稽核</h1><p class="sub">依業態產出門市 SOP、交付到門市，並追蹤各店稽核分數｜顧問專用</p></div><div class="who" id="who"></div></div>
+  <div id="flash" class="noprint"></div>
+  <div id="app"><p class="sub">讀取中…</p></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+const BOM='https://marvintien90-jpg.github.io/bom-center/', PORTAL=BOM+'portal/', CONSULT=BOM+'consult/';
+const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const addDays=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*864e5).toISOString().slice(0,10);
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+/* ---------- SOP 範本：通用章節＋各業態加的步驟 ---------- */
+const ROLES=['店長','副店長','廚房','外場','收銀','吧台','全員'];
+const CATS=['品質','服務','清潔','管理','其他'];
+const BASE=[
+ ['open','開店準備','開店前 60 分鐘','管理',[
+  ['到店解除保全，開燈、開空調與排風','開店前 60 分鐘到店','店長',0],
+  ['檢查冷藏冷凍溫度並記錄','冷藏 0–7°C、冷凍 −18°C 以下；超標立刻通報店長','店長',1],
+  ['員工報到、服裝儀容檢查','制服乾淨、戴帽子口罩、指甲剪短、不戴飾品','店長',1],
+  ['開店前 10 分鐘晨會','宣達今日重點、促銷、人力分配與昨天的缺失','店長',0],
+  ['補齊備品（餐具、紙巾、調味料、外帶包材）','依備品點檢表，每樣達到安全量','外場',0],
+  ['巡檢用餐區：桌椅、地面、廁所','桌面無水漬、地面無垃圾、廁所有衛生紙與洗手乳','外場',1],
+  ['開機：POS、刷卡機、外送平台','發票紙捲足夠、網路正常；外送平台準時上線','收銀',0],
+  ['開店檢核表簽名','每項打勾後由店長簽名存查','店長',1]]],
+ ['prep','備料與食材管理','開店前、營業中補料','品質',[
+  ['依備料表準備當日份量','用前一週同一天的銷量 ×1.1 備料，不憑感覺','廚房',0],
+  ['食材驗收：數量、品質、溫度、效期','冷藏品到貨 ≤7°C、冷凍品 ≤−15°C；不合格當場退貨','廚房',1],
+  ['拆封食材貼標籤','標示品名、開封日、到期日','廚房',1],
+  ['先進先出擺放','舊貨在前、新貨在後；過期品不得留在冰箱','廚房',1],
+  ['生熟食分開存放','熟食在上、生食在下；生熟刀具砧板分色','廚房',1],
+  ['半成品照標準配方製作','照配方卡秤重，不目測','廚房',0]]],
+ ['serve','出餐品質標準','營業中','品質',[
+  ['照食譜卡出餐','份量、擺盤與標準照一致','廚房',1],
+  ['出餐溫度','熱食 ≥60°C、冷食 ≤7°C','廚房',1],
+  ['出餐時間','點餐後 12 分鐘內出餐（依品牌標準調整）','廚房',1],
+  ['出餐前品管','出餐口由專人檢查份量、擺盤、有沒有異物','廚房',0],
+  ['退菜與重做登記','記錄原因，每週檢討一次','廚房',0]]],
+ ['front','外場服務流程','營業中','服務',[
+  ['迎賓','客人進門 10 秒內招呼、1 分鐘內帶位','外場',1],
+  ['點餐與推薦','介紹招牌與當月主推，複誦確認餐點與忌口','外場',0],
+  ['巡桌','每 10 分鐘巡一次，主動加水、收空盤','外場',1],
+  ['上菜','報菜名，確認餐點都到齊','外場',0],
+  ['送客與翻桌','道謝送客，3 分鐘內清桌重置','外場',0],
+  ['外帶外送包裝','封口、附餐具、核對單據、貼封條','外場',1]]],
+ ['cash','收銀與現金管理','營業中、交班','服務',[
+  ['開店點收零用金','固定金額，雙人確認後簽名','收銀',1],
+  ['結帳','唱收唱付，發票或收據全數開立','收銀',1],
+  ['折扣與作廢','需店長授權並登記原因','店長',1],
+  ['交班點帳','現金、刷卡、外送分開點；差額超過 100 元要寫說明','收銀',1],
+  ['營業款存放','當天營收放保險箱或隔天存銀行，不放收銀台過夜','店長',0]]],
+ ['clean','清潔與衛生','每日、每週','清潔',[
+  ['營業中隨手清','桌面、地面髒污 5 分鐘內處理','全員',0],
+  ['廁所巡檢','每 1 小時巡檢並簽名','外場',1],
+  ['廚房地面與排水溝','每天收店刷洗，沒有油污積水','廚房',1],
+  ['抽油煙機與濾網','濾網每週清洗，油煙罩每月請專業清洗','廚房',1],
+  ['垃圾與廚餘','分類、加蓋，每天清運','全員',1],
+  ['病媒防治','每月專業消毒；平時檢查有沒有蟑螂、老鼠痕跡','店長',1],
+  ['洗手','上工前、如廁後、處理生食後照標準洗手','全員',1]]],
+ ['safety','食品安全與溫度管理','全天','品質',[
+  ['冷藏冷凍溫度記錄','每天開店、午班、收店各記一次','廚房',1],
+  ['過敏原標示','菜單標示主要過敏原，點餐時主動詢問','外場',0],
+  ['員工健康','發燒、腹瀉、手部有傷口不得接觸食材','店長',1],
+  ['化學品存放','清潔劑與食材分開存放並標示','廚房',1],
+  ['進貨單據與供應商資料','依法規保存，方便追溯','店長',0]]],
+ ['close','收店與交接班','打烊後','管理',[
+  ['最後點餐','打烊前 30 分鐘最後點餐（依品牌調整）','店長',0],
+  ['剩餘食材處理','可留用的封存標示，不能留的登記耗損','廚房',1],
+  ['設備關機','瓦斯、爐具、電源依序關閉，冷藏冷凍保持運轉','廚房',1],
+  ['全區清潔','依清潔檢核表完成並拍照回報','全員',0],
+  ['日結與營收報表','列印日結單，現金裝袋封存','收銀',0],
+  ['交班紀錄','記下今天的異常、待補貨、明天注意事項','店長',1],
+  ['收店檢核表','門窗上鎖、保全設定，店長簽名','店長',1]]],
+ ['issue','異常與客訴處理','發生時','服務',[
+  ['客訴當場處理','先道歉、聽完、提出補救（重做或招待），5 分鐘內回報店長','外場',1],
+  ['客訴登記','記錄日期、桌號、問題、處理方式，追到結案','店長',1],
+  ['疑似食物中毒或異物','保留餐點樣本、留客人聯絡方式，立刻通報總部','店長',0],
+  ['設備故障','先停用並掛牌，通報維修，記錄停用時間','店長',0],
+  ['員工受傷','先處理傷口或送醫，填寫事故紀錄','店長',0],
+  ['停電停水','暫停點餐、冷藏冷凍門保持關閉，通報總部','店長',0]]]
+];
+const TYPES={
+ '通用':{d:'所有餐飲都適用的基本章節'},
+ '火鍋':{d:'湯底、肉片規格、爐具安全',add:{
+  prep:[['湯底照配方熬煮並記錄時間','湯底比例與熬煮時間照配方卡','廚房',1],['肉片切片厚度一致','依規格 1.5–2 mm，每盤克數照標準','廚房',1]],
+  front:[['主動加湯與調整火力','湯量低於一半主動加湯','外場',0]],
+  serve:[['鍋具與卡式爐檢查','瓦斯罐存量足夠、爐具沒有漏氣','外場',1]],
+  clean:[['鍋具與卡式爐清潔','每桌用後清洗，收店檢查瓦斯接頭','廚房',0]]}},
+ '麵食／拉麵':{d:'湯頭濃度、煮麵時間、湯溫',add:{
+  prep:[['湯頭熬煮與濃度確認','照配方時間熬煮，用比重計或糖度計確認濃度','廚房',1],['麵條保存','依包裝溫度冷藏，開封當天用完','廚房',0]],
+  serve:[['煮麵計時','依麵種計時（例：細麵 60 秒），不憑感覺','廚房',1],['湯麵出餐溫度','湯溫 ≥85°C','廚房',1]]}},
+ '早午餐':{d:'蛋品、麵包效期、餐飲同步出',add:{
+  prep:[['蛋品處理','蛋殼洗淨後使用，生蛋與即食食材分開','廚房',1],['麵包吐司效期','當天烘焙或開封當天用完','廚房',0]],
+  serve:[['飲品與餐點同步出','套餐飲品與主餐 3 分鐘內一起上','外場',0]],
+  safety:[['半熟蛋告知','半熟蛋品要在菜單註明','外場',0]]}},
+ '手搖飲':{d:'茶湯時效、配料、甜度冰塊、器具清潔',add:{
+  prep:[['茶湯沖泡','依茶種水溫與時間沖泡，計時器提醒；茶湯保存不超過 4 小時','吧台',1],['配料煮製','珍珠等配料照時間煮，標示製作時間，超時報廢','吧台',1]],
+  serve:[['甜度冰塊標準','用標準量杯，封膜前核對貼紙','吧台',1],['出杯時間','接單後 3 分鐘內出杯','吧台',0]],
+  clean:[['雪克杯與量具','每 2 小時清洗；收店全部浸泡消毒','吧台',1],['製冰機清潔','每週清洗、每月除垢','吧台',1]]}},
+ '咖啡廳':{d:'萃取校正、牛奶保存、咖啡機清潔',add:{
+  prep:[['磨豆機與咖啡機校正','開店前萃取測試，粉量與萃取時間照標準','吧台',1],['牛奶保存','冷藏 ≤7°C，開封標示時間、24 小時內用完','吧台',1]],
+  serve:[['奶泡與溫度','奶溫 60–65°C，拉花照標準照','吧台',0]],
+  clean:[['咖啡機沖洗','每天收店逆洗沖頭、清蒸汽管','吧台',1]]}},
+ '便當／自助餐':{d:'菜檯保溫時效、防護、秤重',add:{
+  prep:[['菜色上架時間','每道菜標示上架時間；熱食保溫 ≥60°C，超過 4 小時下架','廚房',1]],
+  serve:[['菜檯防護','菜檯有防護罩，每道菜公夾分開','外場',1]],
+  cash:[['磅秤校正','磅秤每天開店歸零校正','收銀',1]],
+  safety:[['烹調中心溫度','肉類中心溫度 ≥75°C，每天抽查記錄','廚房',1]]}},
+ '燒肉／燒烤':{d:'肉品醃漬、換網服務、排煙',add:{
+  prep:[['肉品分切與醃漬','醃漬時間與比例照配方，標示醃製日期','廚房',1]],
+  front:[['換網與烤肉服務','網面焦黑主動更換，提醒客人生熟夾分開','外場',1]],
+  serve:[['排煙設備','開店前確認每桌排煙正常','外場',1]],
+  clean:[['烤網與炭爐','烤網每天刷洗，炭灰冷卻後清運','廚房',1]]}},
+ '小吃／夜市型':{d:'攤位分區、炸油、收錢與拿食物分開',add:{
+  prep:[['備料台整理','生熟食分區，備料加蓋','廚房',1]],
+  serve:[['炸油管理','油溫照標準，炸油每天檢測酸價','廚房',1]],
+  cash:[['收錢與拿食物分開','收錢的人不直接碰食物，或戴手套','收銀',1]],
+  clean:[['用水與排水','備足乾淨用水，污水不得直接排進水溝','全員',0]]}}
+};
+function build(type,keys){
+  const T=TYPES[type]||TYPES['通用'], add=T.add||{};
+  return BASE.filter(s=>keys.includes(s[0])).map(([key,name,when,cat,steps])=>({id:uid(),key,name,when,cat,
+    steps:steps.concat(add[key]||[]).map(([text,std,role,a])=>({id:uid(),text,std,role,audit:!!a}))}));
+}
+
+/* ---------- 狀態 ---------- */
+let me=null, ok=false, D={manuals:[],brands:[],audits:[]}, M=null, dirty=false, flash='', flashBad=false, armed=null, busy=false, nf={type:'通用',keys:BASE.map(s=>s[0])};
+function say(t,bad){flash=t;flashBad=!!bad;$('#flash').innerHTML=t?`<div class="msg ${bad?'bad':''}">${esc(t)}</div>`:''}
+async function q(p,what){const r=await p; if(r.error){say((what||'存檔')+'失敗：'+r.error.message+'。請重新整理後再試一次，還是不行就把這段訊息傳給 Claude。',true); throw r.error} return r.data}
+const route=()=>{const h=location.hash.slice(1), o={}; h.split('&').forEach(p=>{const [k,v]=p.split('='); if(k) o[k]=v===undefined?true:decodeURIComponent(v)}); return o};
+const go=h=>{ if(location.hash==='#'+h||(!h&&!location.hash)) render(); else location.hash=h };
+const brandName=id=>{const b=D.brands.find(x=>x.id===id); return b?b.name:''};
+const nAudit=m=>(m.sections||[]).reduce((s,x)=>s+(x.steps||[]).filter(t=>t.audit).length,0);
+const nSteps=m=>(m.sections||[]).reduce((s,x)=>s+(x.steps||[]).length,0);
+
+async function load(){
+  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; ok=false;
+  if(me){ const p=await sbc.from('bom_profiles').select('role,status').eq('user_id',me.id).maybeSingle(); ok=!!(p.data&&p.data.role==='admin'&&p.data.status==='active') }
+  if(ok) await loadData();
+  render();
+}
+async function loadData(){
+  const r=await Promise.all([
+    sbc.from('sop_manuals').select('*').order('updated_at',{ascending:false}),
+    sbc.from('bom_brands').select('id,name').order('name'),
+    sbc.from('qsc_audits').select('*').order('audit_date',{ascending:false})
+  ]);
+  D.missing=!!r[0].error; D.manuals=r[0].data||[]; D.brands=r[1].data||[]; D.audits=r[2].error?[]:(r[2].data||[]);
+}
+
+/* ---------- 畫面 ---------- */
+function render(){
+  $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:4px"><a class="btn" href="${CONSULT}">顧問工作台</a><button type="button" data-out>登出</button></div>`:'';
+  if(!me){$('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">和業主入口、顧問工作台同一組帳號。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`;return}
+  if(!ok){$('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><div class="row"><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`;return}
+  if(D.missing){$('#app').innerHTML=`<div class="card"><h2>資料表還沒建立</h2><p class="sub">SOP 手冊的資料表尚未安裝到資料庫，請 Claude 幫你執行安裝。</p></div>`;return}
+  const r=route(); let h;
+  if(r.new) h=vNew();
+  else if(r.audit) h=vAudit();
+  else if(r.m){ const m=D.manuals.find(x=>x.id===+r.m); if(!m) h=`<div class="card"><h2>找不到這本手冊</h2><div class="row"><a class="btn" href="#">回手冊清單</a></div></div>`;
+    else { if(!M||M.id!==m.id){ M=JSON.parse(JSON.stringify(m)); dirty=false } h=r.v==='doc'?vDoc(M):vEdit(M) } }
+  else h=vHome();
+  $('#app').innerHTML=tabs(r)+h;
+}
+function tabs(r){ const on=k=>k?'on':''; return `<nav class="tabs noprint" aria-label="分頁"><a href="#" class="${on(!r.new&&!r.audit&&!r.m)}">SOP 手冊</a><a href="#audit" class="${on(r.audit)}">督導總覽</a><a href="#new" class="${on(r.new)}">＋ 新增手冊</a></nav>` }
+
+function vHome(){
+  const ms=D.manuals, dl=ms.filter(m=>m.status==='已交付').length;
+  const st=(n,l)=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`;
+  let h=`<div class="stats">${st(ms.length,'本手冊')}${st(dl,'已交付門市')}${st(ms.filter(m=>m.status!=='已交付').length,'草稿')}${st(ms.reduce((s,m)=>s+nAudit(m),0),'稽核點（全部手冊）')}</div>`;
+  if(!ms.length) return h+`<div class="card"><h2>還沒有 SOP 手冊</h2><p class="sub">選業態，系統會產出開店、備料、出餐、外場、收銀、清潔、食安、收店、客訴九大章節，之後可以逐條修改。</p><div class="row"><a class="btn pri" href="#new">＋ 新增第一本手冊</a></div></div>`;
+  return h+`<div class="card"><div class="scroll"><table><thead><tr><th>手冊</th><th>業態</th><th>客戶／品牌</th><th class="n">步驟</th><th class="n">稽核點</th><th>狀態</th><th>更新</th><th></th></tr></thead><tbody>${ms.map(m=>`<tr><td><a href="#m=${m.id}">${esc(m.title)}</a></td><td>${esc(m.biz_type)}</td><td>${esc(m.client_name||'')}${m.brand_id?`<div class="note">BOM 品牌：${esc(brandName(m.brand_id)||m.brand_id)}</div>`:''}</td><td class="n">${nSteps(m)}</td><td class="n">${nAudit(m)}</td><td><span class="pill ${m.status==='已交付'?'good':'mute'}">${esc(m.status)}${m.status==='已交付'?' v'+m.version:''}</span></td><td>${esc(String(m.updated_at||'').slice(0,10))}</td><td><a class="btn" href="#m=${m.id}">編輯</a></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+
+function vNew(){
+  const T=nf.type;
+  return `<div class="card"><h2>新增 SOP 手冊</h2><p class="sub">選業態後會帶入該業態的重點步驟；建好後每一條都可以改。</p>
+  <h3>1. 業態</h3><div class="types">${Object.keys(TYPES).map(k=>`<label class="${k===T?'on':''}"><input type="radio" name="nt" value="${esc(k)}" ${k===T?'checked':''} data-nt><span><b>${esc(k)}</b><br><span class="note">${esc(TYPES[k].d)}</span></span></label>`).join('')}</div>
+  <h3>2. 客戶</h3><div class="g2"><div><label for="n_client">客戶名稱</label><input id="n_client" placeholder="例：阿明麵館" value="${esc(nf.client||'')}"></div>
+  <div><label for="n_brand">對應 BOM 品牌（交付到門市用，可以之後再選）</label><select id="n_brand"><option value="">先不選</option>${D.brands.map(b=>`<option value="${esc(b.id)}" ${nf.brand===b.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div></div>
+  <label for="n_title">手冊名稱</label><input id="n_title" placeholder="留白會用「客戶名稱 門市 SOP 手冊」" value="${esc(nf.title||'')}">
+  <h3>3. 章節</h3><div class="types">${BASE.map(s=>`<label class="${nf.keys.includes(s[0])?'on':''}"><input type="checkbox" value="${s[0]}" ${nf.keys.includes(s[0])?'checked':''} data-nk><span>${esc(s[1])}<br><span class="note">${esc(s[2])}</span></span></label>`).join('')}</div>
+  <div class="row"><button class="pri" data-create ${busy?'disabled':''}>建立手冊</button><a class="btn" href="#">取消</a></div>
+  ${D.manuals.length?`<p class="note">也可以打開既有手冊，按「複製一份」給新客戶改用。</p>`:''}</div>`;
+}
+
+function stepRow(s,si,ti,n){
+  return `<div class="st" data-si="${si}" data-ti="${ti}"><span class="no">${ti+1}</span>
+   <textarea data-f="text" aria-label="步驟" placeholder="要做什麼">${esc(s.text)}</textarea>
+   <textarea data-f="std" class="std" aria-label="標準" placeholder="做到什麼程度（標準、數字）">${esc(s.std)}</textarea>
+   <select data-f="role" class="role" aria-label="負責">${ROLES.concat(ROLES.includes(s.role)||!s.role?[]:[s.role]).map(r=>`<option ${r===s.role?'selected':''}>${esc(r)}</option>`).join('')}</select>
+   <label class="aud"><input type="checkbox" data-f="audit" ${s.audit?'checked':''}> 稽核</label>
+   <span class="ops"><button class="sm" data-mv="${si}|${ti}|-1" ${ti?'':'disabled'} aria-label="上移">↑</button><button class="sm" data-mv="${si}|${ti}|1" ${ti<n-1?'':'disabled'} aria-label="下移">↓</button><button class="sm ${armed==='t'+si+'|'+ti?'armed':''}" data-dt="${si}|${ti}">${armed==='t'+si+'|'+ti?'確定刪除':'刪除'}</button></span></div>`;
+}
+function vEdit(m){
+  const secs=m.sections||[], bn=brandName(m.brand_id), aud=nAudit(m);
+  return `<div class="sticky noprint"><div class="row" style="margin:0;justify-content:space-between"><div><b>${esc(m.title)}</b> <span class="pill ${m.status==='已交付'?'good':'mute'}">${esc(m.status)}${m.status==='已交付'?' v'+m.version:''}</span> ${dirty?'<span class="pill warn">有修改還沒存</span>':''}</div>
+   <div class="row" style="margin:0"><button class="pri" data-save ${busy?'disabled':''}>儲存</button><a class="btn" href="#m=${m.id}&v=doc">預覽／列印</a><button data-word>下載 Word</button><button data-copytxt>複製文字</button></div></div></div>
+  <div class="card"><div class="g2"><div><label for="e_title">手冊名稱</label><input id="e_title" data-m="title" value="${esc(m.title)}"></div><div><label for="e_client">客戶名稱</label><input id="e_client" data-m="client_name" value="${esc(m.client_name||'')}"></div>
+   <div><label for="e_biz">業態</label><select id="e_biz" data-m="biz_type">${Object.keys(TYPES).concat(TYPES[m.biz_type]?[]:[m.biz_type]).map(k=>`<option ${k===m.biz_type?'selected':''}>${esc(k)}</option>`).join('')}</select></div>
+   <div><label for="e_brand">對應 BOM 品牌</label><select id="e_brand" data-m="brand_id"><option value="">還沒對應</option>${D.brands.map(b=>`<option value="${esc(b.id)}" ${m.brand_id===b.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div></div>
+   <label for="e_note">內部備註（不會交付）</label><input id="e_note" data-m="note" value="${esc(m.note||'')}"></div>
+  <div class="card"><h2>交付到門市</h2>
+   <p class="sub">交付後，業主在 BOM 中心的「SOP 手冊」頁看得到這本手冊；勾「稽核」的 ${aud} 個步驟會加進該品牌的「門市稽核」項目，門市自檢和你巡店都用同一份。</p>
+   ${m.brand_id?`<div class="row"><button class="pri ${armed==='pub'?'armed':''}" data-pub ${busy?'disabled':''}>${armed==='pub'?'再按一次確認交付到「'+esc(bn||m.brand_id)+'」':'交付到「'+esc(bn||m.brand_id)+'」'}</button><a class="btn" href="${BOM}#sop&b=${encodeURIComponent(m.brand_id)}" target="_blank" rel="noopener">看門市畫面</a><a class="btn" href="${BOM}#qsc&b=${encodeURIComponent(m.brand_id)}" target="_blank" rel="noopener">去巡店稽核</a></div>${m.published_at?`<p class="note">上次交付：${esc(String(m.published_at).slice(0,16).replace('T',' '))}（第 ${m.version} 版）。改完再交付一次，門市就會看到新版。</p>`:''}`
+     :`<p class="msg">先在上面「對應 BOM 品牌」選這位客戶的品牌，才能交付。還沒有品牌的話，到 <a href="${BOM}#brands" target="_blank" rel="noopener">BOM 中心品牌管理</a> 建一個。</p>`}
+  </div>
+  ${secs.map((sec,si)=>`<section class="sec" data-si="${si}"><header><span class="pill mute">${si+1}</span><input data-sf="name" value="${esc(sec.name)}" aria-label="章節名稱"><input class="when" data-sf="when" value="${esc(sec.when||'')}" placeholder="時機" aria-label="時機"><label style="margin:0">稽核分類 <select data-sf="cat" aria-label="稽核分類">${CATS.map(c=>`<option ${c===sec.cat?'selected':''}>${c}</option>`).join('')}</select></label>
+     <span class="row" style="margin:0"><button class="sm" data-smv="${si}|-1" ${si?'':'disabled'} aria-label="章節上移">↑</button><button class="sm" data-smv="${si}|1" ${si<secs.length-1?'':'disabled'} aria-label="章節下移">↓</button><button class="sm ${armed==='s'+si?'armed':''}" data-ds="${si}">${armed==='s'+si?'確定刪除整章':'刪除章節'}</button></span></header>
+     ${(sec.steps||[]).map((s,ti)=>stepRow(s,si,ti,sec.steps.length)).join('')}
+     <div style="padding:8px 12px"><button class="sm" data-addt="${si}">＋ 加一個步驟</button></div></section>`).join('')}
+  <div class="row noprint"><button data-adds>＋ 加一個章節</button><button data-dup>複製一份（給別的客戶用）</button><button class="${armed==='m'?'armed':''}" data-delm>${armed==='m'?'確定刪除這本手冊':'刪除手冊'}</button></div>`;
+}
+
+function docHtml(m,forWord){
+  const secs=m.sections||[], d=today();
+  const tb=forWord?' border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%"':'';
+  return `<div class="cover"><p class="note">品牌加辣餐飲顧問工作室</p><h1>${esc(m.title)}</h1><p>${esc(m.client_name||'')}　${esc(m.biz_type)}</p><p class="note">第 ${m.version||1} 版｜${d}</p></div>
+  <h2>目錄</h2><ol>${secs.map(s=>`<li>${esc(s.name)}${s.when?`（${esc(s.when)}）`:''}</li>`).join('')}</ol>
+  <p class="note">★ 為門市稽核重點，督導巡店與門市自檢都會檢查。</p>
+  ${secs.map((s,i)=>`<h2>${i+1}. ${esc(s.name)}</h2>${s.when?`<p class="note">時機：${esc(s.when)}</p>`:''}<table${tb}><thead><tr><th>#</th><th>步驟</th><th>標準</th><th>負責</th></tr></thead><tbody>${(s.steps||[]).map((t,j)=>`<tr><td>${j+1}</td><td>${t.audit?'★ ':''}${esc(t.text)}</td><td>${esc(t.std)}</td><td>${esc(t.role)}</td></tr>`).join('')}</tbody></table>`).join('')}`;
+}
+function vDoc(m){ return `<div class="row noprint" style="margin-bottom:10px"><a class="btn" href="#m=${m.id}">← 回編輯</a><button class="pri" data-print>列印／存成 PDF</button><button data-word>下載 Word</button>${dirty?'<span class="pill warn">有修改還沒存</span>':''}</div><div class="card doc">${docHtml(m)}</div>` }
+function docText(m){ return `${m.title}\n${m.client_name||''} ${m.biz_type}｜第 ${m.version||1} 版\n★ = 稽核重點\n\n`+(m.sections||[]).map((s,i)=>`【${i+1}. ${s.name}】${s.when?'（'+s.when+'）':''}\n`+(s.steps||[]).map((t,j)=>`${j+1}. ${t.audit?'★':''}${t.text}${t.std?'｜標準：'+t.std:''}${t.role?'｜'+t.role:''}`).join('\n')).join('\n\n') }
+
+/* ---------- 督導總覽 ---------- */
+function spark(v){ if(v.length<2) return ''; const W=110,H=30, X=i=>4+i*(W-8)/(v.length-1), Y=s=>H-3-(Math.max(40,Math.min(100,s))-40)/60*(H-6);
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="分數趨勢 ${v.join('、')}"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${v.map((s,i)=>X(i)+','+Y(s)).join(' ')}"/>${v.map((s,i)=>`<circle cx="${X(i)}" cy="${Y(s)}" r="2.5" fill="var(--accent)"/>`).join('')}</svg>` }
+const lvl=s=>s==null?'mute':s>=85?'good':s>=70?'warn':'bad';
+function vAudit(){
+  const t=today(), d30=addDays(t,-30), by={};
+  D.audits.forEach(a=>{ (by[a.brand_id]=by[a.brand_id]||[]).push(a) });
+  const rows=D.brands.map(b=>{ const as=(by[b.id]||[]).slice().sort((x,y)=>x.audit_date<y.audit_date?1:-1);
+    const open=as.reduce((s,a)=>s+(a.open_count||0),0), over=as.reduce((s,a)=>s+(a.overdue_count||0),0);
+    const last=as[0], prev=as[1], sup=as.filter(a=>a.kind==='supervisor'&&a.audit_date>=d30).length, self=as.filter(a=>a.kind!=='supervisor'&&a.audit_date>=d30).length;
+    const lastSup=as.find(a=>a.kind==='supervisor');
+    return {b,as,last,prev,open,over,sup,self,lastSup,stale:!lastSup||lastSup.audit_date<d30} }).filter(r=>r.as.length||D.manuals.some(m=>m.brand_id===r.b.id));
+  rows.sort((x,y)=>(y.over-x.over)||((x.last?x.last.score:101)-(y.last?y.last.score:101)));
+  const sc=rows.filter(r=>r.last&&r.last.score!=null).map(r=>r.last.score), avg=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length):null;
+  const st=(n,l,a)=>`<div class="stat ${a&&n?'alert':''}"><b>${n??'—'}</b><span>${l}</span></div>`;
+  let h=`<div class="stats">${st(rows.length,'追蹤中的品牌')}${st(avg,'最近一次平均分')}${st(rows.reduce((s,r)=>s+r.open,0),'待改善項目')}${st(rows.reduce((s,r)=>s+r.over,0),'已逾期',1)}${st(rows.filter(r=>r.stale).length,'30 天沒督導巡店',1)}</div>`;
+  if(!rows.length) return h+`<div class="card"><h2>還沒有稽核紀錄</h2><p class="sub">在 BOM 中心的「門市稽核」完成一次稽核（督導巡店或門市自檢），這裡就會出現各品牌的分數、待改善與趨勢。</p><div class="row"><a class="btn pri" href="${BOM}#qsc">去 BOM 中心稽核</a></div></div>`;
+  return h+`<div class="card"><div class="scroll"><table><thead><tr><th>品牌</th><th>最近一次</th><th class="n">分數</th><th class="n">比上次</th><th>趨勢</th><th class="n">待改善</th><th class="n">逾期</th><th>近 30 天</th><th></th></tr></thead><tbody>${rows.map(r=>{const L=r.last, df=L&&r.prev&&L.score!=null&&r.prev.score!=null?L.score-r.prev.score:null;
+    return `<tr><td><b>${esc(r.b.name)}</b>${r.stale?'<div><span class="pill warn">30 天沒督導</span></div>':''}</td><td>${L?esc(L.audit_date)+'<div class="note">'+(L.kind==='supervisor'?'督導巡店':'門市自檢')+(L.store?'・'+esc(L.store):'')+'</div>':'<span class="note">還沒稽核</span>'}</td>
+     <td class="n">${L&&L.score!=null?`<span class="pill ${lvl(L.score)}">${L.score}</span>`:'—'}</td><td class="n">${df==null?'—':(df>0?'+':'')+df}</td><td>${spark(r.as.slice(0,8).reverse().map(a=>a.score).filter(s=>s!=null))}</td>
+     <td class="n">${r.open}</td><td class="n">${r.over?`<span class="pill bad">${r.over}</span>`:'0'}</td><td>督導 ${r.sup}・自檢 ${r.self}</td><td><a class="btn" href="${BOM}#qsc&b=${encodeURIComponent(r.b.id)}" target="_blank" rel="noopener">巡店／看缺失</a></td></tr>`}).join('')}</tbody></table></div>
+   <p class="note">分數 85 以上綠、70–84 黃、70 以下紅。資料來自 BOM 中心「門市稽核」，督導和門市自檢完成時自動同步。</p></div>`;
+}
+
+/* ---------- 互動 ---------- */
+function readStep(el){ const r=el.closest('.st'); if(!r) return; const s=M.sections[+r.dataset.si].steps[+r.dataset.ti], f=el.dataset.f; s[f]=f==='audit'?el.checked:el.value; markDirty() }
+function markDirty(){ if(!dirty){ dirty=true; const t=document.querySelector('.sticky b'); if(t&&!document.querySelector('.sticky .pill.warn')) t.insertAdjacentHTML('afterend',' <span class="pill warn">有修改還沒存</span>') } }
+document.addEventListener('input',e=>{ const el=e.target; if(!M) return;
+  if(el.dataset.f){ readStep(el); return }
+  if(el.dataset.sf){ const s=M.sections[+el.closest('.sec').dataset.si]; s[el.dataset.sf]=el.value; markDirty(); return }
+  if(el.dataset.m){ M[el.dataset.m]=el.value||(el.dataset.m==='brand_id'?null:''); markDirty() } });
+document.addEventListener('change',e=>{ const el=e.target;
+  if('nt' in el.dataset){ keepNew(); nf.type=el.value; render(); return }
+  if('nk' in el.dataset){ keepNew(); nf.keys=[...document.querySelectorAll('[data-nk]:checked')].map(x=>x.value); render(); return }
+  if(!M) return;
+  if(el.dataset.f){ readStep(el); return }
+  if(el.dataset.sf){ M.sections[+el.closest('.sec').dataset.si][el.dataset.sf]=el.value; markDirty(); return }
+  if(el.dataset.m){ M[el.dataset.m]=el.value||(el.dataset.m==='brand_id'?null:''); markDirty(); if(el.dataset.m==='brand_id') render() } });
+function keepNew(){ nf.client=($('#n_client')||{}).value||''; nf.brand=($('#n_brand')||{}).value||''; nf.title=($('#n_title')||{}).value||'' }
+function arm(k){ armed=k; render(); setTimeout(()=>{ if(armed===k){ armed=null; render() } },4000) }
+async function act(f){ if(busy) return; busy=true; render(); try{ await f() }catch(x){} busy=false; render() }
+async function saveM(){
+  const row={title:M.title.trim()||'未命名手冊',biz_type:M.biz_type,client_name:M.client_name||null,brand_id:M.brand_id||null,sections:M.sections,note:M.note||null,updated_at:new Date().toISOString(),updated_by:me.email};
+  const r=await q(sbc.from('sop_manuals').update(row).eq('id',M.id).eq('updated_at',D.manuals.find(x=>x.id===M.id).updated_at).select(),'儲存');
+  if(!r||!r.length){ say('這本手冊剛剛在別的視窗被改過，沒有覆蓋。請複製你的修改後重新整理。',true); throw new Error('conflict') }
+  const i=D.manuals.findIndex(x=>x.id===M.id); D.manuals[i]=r[0]; M=JSON.parse(JSON.stringify(r[0])); dirty=false }
+function dlWord(m){
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(m.title)}</title><style>body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;font-size:11pt}h1{font-size:20pt}h2{font-size:14pt;color:#0f6b5c;margin-top:18pt}th{background:#dcefea;text-align:left}td,th{vertical-align:top}.note{color:#5d6a65}.cover{text-align:center;page-break-after:always}</style></head><body>${docHtml(m,true)}</body></html>`;
+  const u=URL.createObjectURL(new Blob(['﻿',html],{type:'application/msword'})), a=document.createElement('a'); a.href=u; a.download=(m.title||'SOP手冊').replace(/[\\/:*?"<>|]/g,'_')+'_v'+(m.version||1)+'.doc'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
+  say('已下載 Word 檔，可以直接用 Word 打開修改後給客戶。') }
+async function publish(){
+  if(dirty) await saveM();
+  const items=[]; M.sections.forEach(s=>(s.steps||[]).forEach(t=>{ if(t.audit&&String(t.text||'').trim()) items.push({id:'sop-'+t.id,cat:s.cat||'其他',text:t.text.trim(),std:t.std||'',sop:s.name}) }));
+  const ver=(M.status==='已交付'?(M.version||1)+1:(M.version||1)), at=new Date().toISOString();
+  let mode='';
+  for(let tries=0;tries<2;tries++){
+    const b=await q(sbc.from('bom_brands').select('id,name,data,rev').eq('id',M.brand_id).maybeSingle(),'讀取品牌');
+    if(!b){ say('找不到這個 BOM 品牌，請重新選擇對應品牌。',true); return }
+    const data=b.data||{}; data.sop={id:M.id,title:M.title,biz:M.biz_type,ver,at,sections:M.sections.map(s=>({name:s.name,when:s.when||'',steps:(s.steps||[]).map(t=>({text:t.text,std:t.std||'',role:t.role||'',audit:!!t.audit}))}))};
+    const hasDone=(data.audits||[]).some(a=>a.done);
+    if(!data.qscItems||!hasDone){ data.qscItems=items; mode='replace' }
+    else { const cur=data.qscItems; items.forEach(it=>{ const x=cur.find(c=>c.id===it.id); if(x) Object.assign(x,it); else cur.push(it) }); mode='merge' }
+    const r=await q(sbc.from('bom_brands').update({data,rev:b.rev+1,edited_on_site:true}).eq('id',b.id).eq('rev',b.rev).select('id,rev'),'交付');
+    if(r&&r.length){
+      const u=await q(sbc.from('sop_manuals').update({status:'已交付',version:ver,published_at:at,updated_at:at,updated_by:me.email}).eq('id',M.id).select(),'更新手冊狀態');
+      const i=D.manuals.findIndex(x=>x.id===M.id); D.manuals[i]=u[0]; M=JSON.parse(JSON.stringify(u[0])); dirty=false;
+      say(`已交付第 ${ver} 版到「${b.name}」。門市在 BOM 中心「SOP 手冊」就看得到；`+(mode==='replace'?`門市稽核項目已換成手冊的 ${items.length} 個稽核點。`:`手冊的 ${items.length} 個稽核點已加進門市稽核（原本的項目和紀錄都保留）。`)); return }
+  }
+  say('品牌資料剛好有人在修改，交付沒有完成。請等幾秒再按一次。',true);
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button,[data-out]'); if(!b) return; const d=b.dataset;
+  if('out' in d){await sbc.auth.signOut(); location.href=PORTAL; return}
+  if('create' in d){ keepNew(); if(!nf.keys.length){ say('至少要選一個章節。',true); return }
+    const title=nf.title.trim()||((nf.client.trim()?nf.client.trim()+' ':'')+'門市 SOP 手冊');
+    return act(async()=>{ const r=await q(sbc.from('sop_manuals').insert({title,biz_type:nf.type,client_name:nf.client.trim()||null,brand_id:nf.brand||null,sections:build(nf.type,nf.keys),updated_by:me.email}).select().single(),'建立手冊');
+      D.manuals.unshift(r); nf={type:'通用',keys:BASE.map(s=>s[0])}; M=null; say(`已建立「${title}」，共 ${nSteps(r)} 個步驟、${nAudit(r)} 個稽核點。逐條看過、改成客戶的做法後按「儲存」。`); location.hash='m='+r.id }) }
+  if(!M) return;
+  if('save' in d) return act(async()=>{ await saveM(); say('已儲存。') });
+  if('print' in d){ window.print(); return }
+  if('word' in d){ dlWord(M); return }
+  if('copytxt' in d){ try{ await navigator.clipboard.writeText(docText(M)); say('已複製全文，可以貼到 LINE 或文件。') }catch(x){ say('瀏覽器不讓複製，請改用「下載 Word」。',true) } return }
+  if('pub' in d){ if(armed!=='pub') return arm('pub'); armed=null; return act(publish) }
+  if('addt' in d){ M.sections[+d.addt].steps.push({id:uid(),text:'',std:'',role:'全員',audit:false}); markDirty(); render(); const r=document.querySelectorAll(`.sec[data-si="${d.addt}"] .st textarea[data-f=text]`); r.length&&r[r.length-1].focus(); return }
+  if('mv' in d){ const [si,ti,k]=d.mv.split('|').map(Number), a=M.sections[si].steps; [a[ti],a[ti+k]]=[a[ti+k],a[ti]]; markDirty(); render(); return }
+  if('dt' in d){ if(armed!=='t'+d.dt) return arm('t'+d.dt); armed=null; const [si,ti]=d.dt.split('|').map(Number); M.sections[si].steps.splice(ti,1); markDirty(); render(); return }
+  if('smv' in d){ const [si,k]=d.smv.split('|').map(Number), a=M.sections; [a[si],a[si+k]]=[a[si+k],a[si]]; markDirty(); render(); return }
+  if('ds' in d){ if(armed!=='s'+d.ds) return arm('s'+d.ds); armed=null; M.sections.splice(+d.ds,1); markDirty(); render(); return }
+  if('adds' in d){ M.sections.push({id:uid(),key:'custom',name:'新章節',when:'',cat:'其他',steps:[{id:uid(),text:'',std:'',role:'全員',audit:false}]}); markDirty(); render(); return }
+  if('dup' in d) return act(async()=>{ const r=await q(sbc.from('sop_manuals').insert({title:M.title+'（複本）',biz_type:M.biz_type,client_name:null,brand_id:null,sections:JSON.parse(JSON.stringify(M.sections).replace(/"id":"[a-z0-9]+"/g,()=>'"id":"'+uid()+'"')),updated_by:me.email}).select().single(),'複製');
+    D.manuals.unshift(r); M=null; dirty=false; say('已複製一份。改客戶名稱、對應品牌後就能交付。'); location.hash='m='+r.id });
+  if('delm' in d){ if(armed!=='m') return arm('m'); armed=null; return act(async()=>{ await q(sbc.from('sop_manuals').delete().eq('id',M.id),'刪除'); D.manuals=D.manuals.filter(x=>x.id!==M.id); M=null; dirty=false; say('已刪除手冊（已交付到門市的內容不受影響）。'); location.hash='' }) }
+});
+window.addEventListener('hashchange',()=>{ const r=route(); if(M&&dirty&&String(r.m)!==String(M.id)){ say('上一本手冊有修改沒有存，已放棄那些修改。',true); M=null; dirty=false } else { say(flash&&!flashBad?flash:''); flash='' } armed=null; render(); scrollTo(0,0) });
+window.addEventListener('beforeunload',e=>{ if(dirty){ e.preventDefault(); e.returnValue='' } });
+sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
+load();
+</script>
+</body>
+</html>
