@@ -578,5 +578,7 @@ $('#dlg').addEventListener('close',()=>{ if(armed&&String(armed).startsWith('del
 sbc.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'||ev==='SIGNED_IN') load() });
 load();
 </script>
+<script src="../kit/kit.js"></script>
+<script>window.Kit&&Kit.init({tool:'org',sb:sbc})</script>
 </body>
 </html>

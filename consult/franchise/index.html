@@ -583,5 +583,7 @@ window.addEventListener('hashchange',()=>{armed=null; say(flash&&!flashBad?flash
 sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
 load();
 </script>
+<script src="../kit/kit.js"></script>
+<script>window.Kit&&Kit.init({tool:'franchise',sb:sbc})</script>
 </body>
 </html>

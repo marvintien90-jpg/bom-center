@@ -396,7 +396,7 @@ document.addEventListener('click',async e=>{
   if('out' in d){await sbc.auth.signOut(); location.href=PORTAL; return}
   if('create' in d){ keepNew(); if(!nf.keys.length){ say('至少要選一個章節。',true); return }
     const title=nf.title.trim()||((nf.client.trim()?nf.client.trim()+' ':'')+'門市 SOP 手冊');
-    return act(async()=>{ const r=await q(sbc.from('sop_manuals').insert({title,biz_type:nf.type,client_name:nf.client.trim()||null,brand_id:nf.brand||null,sections:build(nf.type,nf.keys),updated_by:me.email}).select().single(),'建立手冊');
+    return act(async()=>{ const r=await q(sbc.from('sop_manuals').insert({title,biz_type:nf.type,client_name:nf.client.trim()||null,brand_id:nf.brand||null,coach_client_id:+route().client||null,sections:build(nf.type,nf.keys),updated_by:me.email}).select().single(),'建立手冊');
       D.manuals.unshift(r); nf={type:'通用',keys:BASE.map(s=>s[0])}; M=null; say(`已建立「${title}」，共 ${nSteps(r)} 個步驟、${nAudit(r)} 個稽核點。逐條看過、改成客戶的做法後按「儲存」。`); location.hash='m='+r.id }) }
   if(!M) return;
   if('save' in d) return act(async()=>{ await saveM(); say('已儲存。') });
@@ -419,5 +419,7 @@ window.addEventListener('beforeunload',e=>{ if(dirty){ e.preventDefault(); e.ret
 sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
 load();
 </script>
+<script src="../kit/kit.js"></script>
+<script>window.Kit&&Kit.init({tool:'sop',sb:sbc})</script>
 </body>
 </html>
