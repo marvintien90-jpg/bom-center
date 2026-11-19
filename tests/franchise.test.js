@@ -54,7 +54,7 @@ const bad = t => /NaN|undefined|\[object/.test(t);
   // 新增方案（從營運輔導帶入）
   await pg.click('text=＋ 新增加盟方案'); await pg.selectOption('#f_coach', '5');
   check('輔導客戶帶入', await pg.inputValue('#f_name') === '阿明麵館' && await pg.inputValue('#f_brand') === 'aming' && await pg.inputValue('#f_pl') === '阿明麵館｜阿明');
-  await pg.click('[data-saveplan="new"]'); await pg.waitForTimeout(200);
+  await pg.click('[data-saveplan="new"]'); await pg.waitForTimeout(200); await pg.click('nav.tabs >> text=① 準備度'); await pg.waitForTimeout(100);
   const P = () => pg.evaluate(() => window.__S.tables.fr_plans.find(p => p.name === '阿明麵館'));
   let p = await P(); check('建立方案', p && p.coach_client_id === 5 && p.pl_client === '阿明麵館' && p.pl_brand === '阿明', JSON.stringify(p));
   // 準備度：全部做到，但商標(關鍵)沒有
@@ -89,7 +89,7 @@ const bad = t => /NaN|undefined|\[object/.test(t);
   check('合約清單', p.data.contract.d0.st === '已完成' && p.data.contract.d1.note === '第 5 條' && t.includes('完成 1／24'), JSON.stringify(p.data.contract));
   check('揭露書帶入', t.includes('加盟期間 7 年') && t.includes('半徑 800 公尺') && t.includes('加盟金：$150,000') && t.includes('營業額的 4%') && t.includes('10 天前'), '');
   // 門市
-  await pg.click('nav.tabs >> text=⑤ 加盟店督導'); await pg.waitForTimeout(100);
+  await pg.click('nav.tabs >> text=⑥ 加盟店督導'); await pg.waitForTimeout(100);
   check('預設類型跟模式', await pg.inputValue('#n_kind') === '委託加盟');
   await pg.fill('#n_name', '逢甲店'); await pg.fill('#n_owner', '小王'); await pg.fill('#n_open', d(-100)); await pg.click('[data-addstore]'); await pg.waitForTimeout(200);
   const S = () => pg.evaluate(() => window.__S.tables.fr_stores.find(s => s.name === '逢甲店'));
@@ -113,6 +113,52 @@ const bad = t => /NaN|undefined|\[object/.test(t);
   // 刪除門市（兩次確認）
   await pg.click('[data-dels]'); check('刪除需確認', (await txt(pg)).includes('再按一次確定刪除'));
   await pg.click('[data-dels]'); await pg.waitForTimeout(300); check('刪除門市', !(await S()));
+  // ===== v2：現況與目標 =====
+  { const pid0 = (await P()).id; await pg.goto(`https://fr.test/#p=${pid0}&t=now`); await pg.waitForTimeout(250); }
+  await pg.selectOption('#x_now_fmt', '手搖飲'); await pg.waitForTimeout(150);
+  await pg.fill('#x_now_direct', '3'); await pg.fill('#x_now_target3', '30'); await pg.press('#x_now_target3', 'Tab'); await pg.waitForTimeout(200);
+  t = await txt(pg); check('階段判斷', t.includes('驗證期') && t.includes('體系期') && t.includes('手搖飲 常見範圍'), t.slice(0, 900));
+  await pg.fill('#x_now_avgRev', '450000'); await pg.press('#x_now_avgRev', 'Tab'); await pg.waitForTimeout(150);
+  await pg.click('[data-applyfmt]'); await pg.waitForTimeout(800);
+  p = await P(); check('套用業態', p.data.calc.royMode === 'fixed' && p.data.calc.royFix === 8000 && p.data.calc.rev === 450000 && p.data.calc.supplyShare === 85 && p.data.calc.y2 === 6 && p.data.types.length === 2 && p.data.types[0].name === '外帶小店' && p.data.types[0].rev === 320000, JSON.stringify(p.data.calc) + JSON.stringify(p.data.types));
+  await pg.click('nav.tabs >> text=③ 費用與回本'); await pg.waitForTimeout(200); t = await txt(pg);
+  check('店型比較', t.includes('店型比較') && t.includes('外帶小店') && t.includes('商場櫃位'), '');
+  check('業態範圍', t.includes('和「手搖飲」常見範圍比') && t.includes('常見 28–36%'), '');
+  check('總部打平店數', /要 \d+ 家加盟店總部才打平/.test(t), t.slice(-1500));
+  await pg.fill('#x_calc_food', '50'); await pg.waitForTimeout(700); t = await txt(pg);
+  check('超出範圍警示', t.includes('偏高') && t.includes('超出「手搖飲」常見範圍'));
+  await pg.fill('#x_calc_food', '32'); await pg.fill('#x_types_0_rev', '300000'); await pg.waitForTimeout(800);
+  p = await P(); check('店型可編輯', p.data.types[0].rev === 300000 && p.data.calc.food === 32);
+  check('v2 試算無 NaN', !bad(await txt(pg)) && !pg.errs.length, pg.errs.join(';'));
+  // ===== v2：招募 =====
+  await pg.click('nav.tabs >> text=⑤ 招募'); await pg.waitForTimeout(150);
+  await pg.fill('#r_name', '陳先生'); await pg.fill('#r_city', '台中'); await pg.click('[data-padd]'); await pg.waitForTimeout(200);
+  await pg.selectOption('[data-pp="0.stage"]', '已簽約'); await pg.waitForTimeout(150);
+  t = await txt(pg); check('沒揭露日警示', t.includes('沒有紀錄揭露書交付日'), t.slice(0, 600));
+  await pg.fill('[data-pp="0.disclosed_on"]', d(-15)); await pg.press('[data-pp="0.disclosed_on"]', 'Tab');
+  await pg.fill('[data-pp="0.contract_on"]', d(-12)); await pg.press('[data-pp="0.contract_on"]', 'Tab');
+  await pg.fill('[data-pp="0.signed_on"]', d(-10)); await pg.press('[data-pp="0.signed_on"]', 'Tab'); await pg.waitForTimeout(200);
+  t = await txt(pg); check('揭露不足 10 天', t.includes('揭露書只提前 5 天') && t.includes('合約審閱只有 2 天') && t.includes('前交付'), t.slice(0, 900));
+  await pg.fill('[data-pp="0.disclosed_on"]', d(-40)); await pg.press('[data-pp="0.disclosed_on"]', 'Tab');
+  await pg.fill('[data-pp="0.contract_on"]', d(-30)); await pg.press('[data-pp="0.contract_on"]', 'Tab');
+  await pg.fill('[data-pp="0.delivered_on"]', d(-5)); await pg.press('[data-pp="0.delivered_on"]', 'Tab'); await pg.waitForTimeout(200);
+  t = await txt(pg); check('合規通過', !t.includes('揭露書只提前') && !t.includes('審閱只有') && (await pg.$$eval('.stat b', b => b.map(x => x.textContent)))[8] === '0', t.slice(0, 600));
+  for (const [k, v] of [['cap', '5'], ['exp', '4'], ['self', '5'], ['fit', '4'], ['loc', '3']]) { await pg.selectOption(`[data-pp="0.sc.${k}"]`, v); await pg.waitForTimeout(60) }
+  t = await txt(pg); check('甄選評分', t.includes('甄選 21/25'));
+  await pg.click('[data-pstore="0"]'); await pg.waitForTimeout(300);
+  const ns = await pg.evaluate(() => window.__S.tables.fr_stores.find(s => s.owner_name === '陳先生'));
+  p = await P(); check('申請人轉門市', ns && ns.status === '籌備中' && ns.royalty_mode === 'fixed' && p.data.prospects[0].store_id === ns.id && (await txt(pg)).includes('看門市'), JSON.stringify(ns));
+  await pg.waitForTimeout(700);
+  // ===== v2：報告 =====
+  await pg.click('nav.tabs >> text=⑦ 路線圖與報告'); await pg.waitForTimeout(200); t = await txt(pg);
+  check('顧問報告', t.includes('加盟體系規劃報告') && t.includes('驗證期') && t.includes('七、執行路線圖') && t.includes('6–12 個月｜試點') && t.includes('外帶小店') && t.includes('督導') && !bad(t), t.slice(0, 1500));
+  await pg.click('[data-rview="fr"]'); await pg.waitForTimeout(150);
+  await pg.fill('#x_now_pitch', '三代傳承的手搖茶'); await pg.waitForTimeout(700); await pg.click('[data-rview="owner"]'); await pg.click('[data-rview="fr"]'); await pg.waitForTimeout(150);
+  t = await txt(pg); check('招商說明', t.includes('加盟招商說明') && t.includes('三代傳承的手搖茶') && t.includes('不代表保證獲利') && t.includes('至少 10 天') && !t.includes('總部分走') && !t.includes('供貨毛利'), t.slice(0, 1500));
+  await pg.screenshot({ path: path.join(__dirname, 'franchise-prospectus.png'), fullPage: true });
+  await pg.click('[data-rview="owner"]'); await pg.waitForTimeout(150);
+  await pg.screenshot({ path: path.join(__dirname, 'franchise-report.png'), fullPage: true });
+  check('報告頁無錯', !pg.errs.length, pg.errs.join(';'));
   // 截圖桌面
   const pid = (await P()).id;
   await pg.goto(`https://fr.test/#p=${pid}&t=calc`); await pg.waitForTimeout(300);
@@ -125,7 +171,7 @@ const bad = t => /NaN|undefined|\[object/.test(t);
   check('刪除方案', !(await P()) && (await txt(pg)).includes('已刪除加盟方案'));
   await pg.close();
   // 手機
-  for (const h of ['', '#p=1&t=ready', '#p=1&t=model', '#p=1&t=calc', '#p=1&t=contract', '#p=1&t=stores', '#s=10']) {
+  for (const h of ['', '#p=1&t=ready', '#p=1&t=model', '#p=1&t=calc', '#p=1&t=contract', '#p=1&t=stores', '#p=1&t=now', '#p=1&t=recruit', '#p=1&t=report', '#s=10']) {
     const m = await open(br, base(A, 'admin'), { width: 375, height: 800 }, h);
     const w = await m.evaluate(() => document.documentElement.scrollWidth); const tt = await txt(m);
     check('手機 ' + (h || '首頁'), w <= 376 && !bad(tt) && !m.errs.length, `w=${w} ${m.errs.join(';')}`);
