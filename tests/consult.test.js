@@ -80,9 +80,20 @@ const toastText = pg => pg.$$eval('.kit-toast', e => e.map(x => x.textContent).j
     log(t.includes('加盟體系') && !t.includes('經營健檢'), 'tool filter', W);
     await pg.click('[data-filt="all"]');
     // 複製連結 → 跳出訊息
-    await pg.evaluate(() => { navigator.clipboard.writeText = async () => {} });
-    await pg.click('.hero [data-copy]'); await pg.waitForTimeout(150);
-    log((await toastText(pg)).includes('已複製健檢連結'), 'copy shows toast', W);
+    await pg.evaluate(() => { navigator.clipboard.writeText = async (u) => { window.__copied = u } });
+    log(await pg.isVisible('.tabbar') === (W < 500), 'mobile tab bar only on phone', W);
+    await pg.click('[data-sheet="add"] >> visible=true'); await pg.waitForTimeout(350);
+    t = await pg.innerText('#sheet'); log(t.includes('要新增什麼') && t.includes('輔導客戶') && t.includes('SOP 手冊'), 'add sheet opens', W);
+    await pg.click('#sheet [data-sheet="share"]'); await pg.waitForTimeout(150);
+    await pg.click('#sheet [data-src="s01_ig"]'); await pg.waitForTimeout(100);
+    log((await pg.$eval('#shareUrl', e => e.value)).endsWith('checkup/?src=s01_ig') && (await pg.$eval('#lineShare', e => e.href)).includes('s01_ig'), 'share sheet source link', W);
+    await clean(pg, 'share sheet ' + W);
+    if (W < 500) await pg.screenshot({ path: path.join(__dirname, 'consult-sheet-mobile.png') });
+    await pg.click('#sheet [data-copy-share]'); await pg.waitForTimeout(300);
+    log((await toastText(pg)).includes('已複製健檢連結') && (await pg.evaluate(() => window.__copied)).endsWith('src=s01_ig') && !(await pg.$('#sheet')), 'copy shows toast + closes sheet', W);
+    if (W > 500) { await pg.click('.side [data-sheet="out"]'); } else { await pg.click('.hero .avatar'); await pg.waitForTimeout(300); await pg.click('#sheet [data-sheet="out"]'); }
+    await pg.waitForTimeout(300); t = await pg.innerText('#sheet'); log(t.includes('確定要登出嗎'), 'logout asks first', W);
+    await pg.keyboard.press('Escape'); await pg.waitForTimeout(300); log(!(await pg.$('#sheet')), 'sheet closes with Esc', W);
     // 客戶檔案
     await pg.click('[data-open="c=7"]'); await pg.waitForTimeout(450);
     t = await clean(pg, 'client drawer ' + W);
@@ -90,7 +101,8 @@ const toastText = pg => pg.$$eval('.kit-toast', e => e.map(x => x.textContent).j
     const hrefs = await pg.$$eval('.drawer a', a => a.map(x => x.getAttribute('href')));
     log(hrefs.some(h => h.endsWith('org/#p=21')) && hrefs.some(h => h.endsWith('franchise/#new&client=7')) && hrefs.some(h => h.endsWith('sop/#m=31')) && hrefs.some(h => h.includes('#mrep&b=b1')), 'client 360 deep links', W);
     if (W > 500) await pg.screenshot({ path: path.join(__dirname, 'consult-client-desktop.png') });
-    await pg.keyboard.press('Escape'); await pg.waitForTimeout(150); log(!(await pg.$('#drawer')), 'drawer closes with Esc', W);
+    if (W < 500) await pg.screenshot({ path: path.join(__dirname, 'consult-client-mobile.png') });
+    await pg.keyboard.press('Escape'); await pg.waitForTimeout(400); log(!(await pg.$('#drawer')), 'drawer closes with Esc', W);
     await pg.click('[data-open="l=1"]'); await pg.waitForTimeout(300); t = await pg.innerText('#drawer');
     log(t.includes('老王滷味') && t.includes('轉成輔導客戶'), 'lead drawer', W);
     const conv = await pg.$eval('#drawer a.pri', a => a.getAttribute('href')); log(conv.endsWith('coach/#new&lead=1'), 'lead convert link', conv, W);
