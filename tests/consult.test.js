@@ -67,7 +67,7 @@ const toastText = pg => pg.$$eval('.kit-toast', e => e.map(x => x.textContent).j
     pg = await open(br, { user: A, tables: data() }, vw, 'consult/');
     await pg.waitForTimeout(700);
     t = await clean(pg, 'workbench ' + W);
-    const want = ['今日要做', '客戶旅程', '工具箱', '經營健檢', '名單管理＋顧問作業包', '餐飲立地評估', 'BOM 運算中心（顧問工具）', '菜單四象限', '損益分析中心', '營運輔導', '品牌案件工作台', '文件與簡報管理', '招募考核範本包', '總部組織與權責診斷', '加盟體系', 'SOP 手冊與督導稽核', '業主入口（總覽）', '訂閱與會員管理', '人資與勞基法中心', '2 筆新名單', '新名單待聯絡', '該追蹤（逾期）', '累計成交', '聯絡健檢名單：老王滷味', '追蹤：陳家火鍋', '冷藏庫溫度紀錄', '該訪視了：阿明牛肉麵', '稽核改善逾期：阿明牛肉麵', '好食便當'];
+    const want = ['今日要做', '客戶旅程', '工具箱', '經營健檢', '名單管理＋顧問作業包', '餐飲立地評估', 'BOM 運算中心（顧問工具）', '菜單四象限', '損益分析中心', '營運輔導', '品牌案件工作台', '文件中心', '招募考核範本包', '總部組織與權責診斷', '加盟體系', 'SOP 手冊與督導稽核', '業主入口（總覽）', '訂閱與會員管理', '人資與勞基法中心', '2 筆新名單', '新名單待聯絡', '該追蹤（逾期）', '累計成交', '聯絡健檢名單：老王滷味', '追蹤：陳家火鍋', '冷藏庫溫度紀錄', '該訪視了：阿明牛肉麵', '稽核改善逾期：阿明牛肉麵', '好食便當'];
     const miss = want.filter(w => !t.includes(w)); log(!miss.length, 'workbench content', W, miss.join());
     const m0 = new Date(new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 7) + '-01T00:00:00+08:00'), exp = data().checkup_leads.filter(l => new Date(l.created_at) >= m0).length;
     const s = await pg.$$eval('.stat b', b => b.map(x => x.dataset.count + '=' + x.textContent));
