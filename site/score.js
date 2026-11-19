@@ -308,7 +308,7 @@
     return {
       format: opt.format, keyword: opt.keyword || '', custom: !!(opt.weights || opt.radius || opt.keyword), daypart, label: F.label, radius: R, total, grade, dims, weights: F.w,
       profile: profile(pop5, national(ctx.villages), { office: g.office }),
-      numbers: { a10: pop5.a10, sub: subR.length, bizNear: ctx.biz ? ctx.biz.near || null : null, bizLane: ctx.biz ? ctx.biz.lane || null : null, bizNearLabel: ctx.biz ? ctx.biz.nearLabel || '' : '', pop5: pop5.pop, pop10: pop10.pop, hh5: pop5.hh, age5: pop5.age, inc: popR.inc, home: pop5.home,
+      numbers: { popR: popR.pop, a10: pop5.a10, sub: subR.length, bizNear: ctx.biz ? ctx.biz.near || null : null, bizLane: ctx.biz ? ctx.biz.lane || null : null, bizNearLabel: ctx.biz ? ctx.biz.nearLabel || '' : '', pop5: pop5.pop, pop10: pop10.pop, hh5: pop5.hh, age5: pop5.age, inc: popR.inc, home: pop5.home,
         stations: stations5.slice(0, 3).map(p => ({ name: p.name, sub: p.sub, d: Math.round(p.d) })), ...g, parking,
         roadCls, roadName, flowRaw: Math.round(flowRaw), same: sameR.length, same3, perK: +perK.toFixed(2), foodR, chains, bizRoad, bizTown, market },
       competitors: sameR.slice(0, 60).map(p => ({ name: p.name || '(未命名)', d: Math.round(p.d), lat: p.lat, lon: p.lon, sub: p.sub || '', brand: p.brand || '', chain: isChain(p) })),
@@ -331,6 +331,30 @@
       beRev: beRev && Math.round(beRev), beDaily, payback: invest && mid > 0 ? +(invest / mid).toFixed(1) : null, defaults: d };
   }
 
-  const api = { RENT_GOOD, RENT_RED, SEGS, FORMATS, evaluate, dist, overlapFrac, population, scale, pnl, isChain };
+  // 反向找點：某半徑內每天可支撐的來客 =（居民＋活動人口）× 業態每日消費頻率 ÷（1 + 直接競爭 + 0.3 × 替代競爭）
+  function capacity(site, ctx, opt, radius) {
+    const r = evaluate(site, ctx, { ...opt, radius });
+    const F = FORMATS[opt.format] || FORMATS.noodle;
+    // 活動人口（上班、上學、過路）依面積放大，最多 4 倍；單店市占 2%–20%
+    const people = r.numbers.popR + r.numbers.flowRaw * 100 * Math.min(4, (radius / 500) ** 2);
+    const share = Math.max(0.02, Math.min(0.2, 1 / (1 + r.numbers.same + SUB_W * r.numbers.sub)));
+    return { radius, daily: Math.round(people * F.freq * share), people: Math.round(people), share, same: r.numbers.same, sub: r.numbers.sub, res: r };
+  }
+  // 找出能支撐每日 need 位來客的最小半徑（200–1500m）
+  function suggestRadius(site, ctx, opt, need) {
+    let last = null;
+    for (let R = 200; R <= 1500; R += 100) { const c = capacity(site, ctx, opt, R); last = c; if (c.daily >= need) return { ...c, ok: true }; }
+    return { ...last, ok: false };
+  }
+  // 目標客群契合度：選定客群的指數平均，100 = 全台平均
+  function segFit(profile, keys) {
+    if (!keys || !keys.length) return null;
+    const idx = {}; (profile.segs || []).forEach(s => idx[s.k] = s.index); Object.assign(idx, profile.sig || {});
+    const v = keys.map(k => idx[k]).filter(x => x != null); if (!v.length) return null;
+    const avg = v.reduce((a, b) => a + Math.min(b, 170), 0) / v.length;
+    return { avg: Math.round(avg), score: clamp(50 + (avg - 100) * 1.0) };
+  }
+
+  const api = { capacity, suggestRadius, segFit, RENT_GOOD, RENT_RED, SEGS, FORMATS, evaluate, dist, overlapFrac, population, scale, pnl, isChain };
   if (typeof module !== 'undefined') module.exports = api; else root.SiteScore = api;
 })(this);
