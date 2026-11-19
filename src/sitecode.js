@@ -955,6 +955,10 @@ document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t
   const base={traffic:'',price:'',food:'',cat:'',catPct:'',labor:'',rent:'',n:fcS.n};
   fcS=k==='slow'?{...base,traffic:'-10'}:k==='up'?{...base,price:'5',traffic:'-3'}:k==='meat'?{...base,cat:Object.entries(fcCatShare(b,ctx(b))).sort((x,y)=>y[1]-x[1])[0]?.[0]||'',catPct:'15'}:k==='wage'?{...base,labor:'4'}:base; render() });
 let wantBrand=null;
+/* 上一頁／下一頁、共用功能選單的連結（#ing 這類網址）都能切換分頁 */
+function siteHashNav(){ if(G!=='app') return; const h=location.hash.slice(1).split('&')[0]||'home'; if(h===tab||!LAB[h]) return;
+  if(h!=='home'&&!document.querySelector('#nav [data-tab="'+h+'"]')) return; tab=h; armed=null; render(); window.scrollTo(0,0) }
+window.addEventListener('popstate',siteHashNav); window.addEventListener('hashchange',siteHashNav);
 async function siteBoot(){ const h0=location.hash.slice(1), hm=h0.match(/^(\w+)&b=(.+)$/), h=hm?hm[1]:h0; if(hm) wantBrand=decodeURIComponent(hm[2]); tab=LAB[h]?h:'home'; wantAdmin=h==='admin';
   if(/error_code=|error=access_denied/.test(h)){ authMsg='這個連結已經過期或已經用過。請在下面重新操作一次（忘記密碼或重寄驗證信），再點最新那封信裡的連結。'; try{history.replaceState(null,'',location.pathname)}catch(x){} }
   if(!window.supabase){ G='error'; authMsg='無法載入登入元件，請檢查網路後重新整理。'; return render() }

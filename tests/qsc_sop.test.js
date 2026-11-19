@@ -31,7 +31,9 @@ const withSop=`db=>{ db.bom_brands[0].data.sop=${JSON.stringify(SOP)}; db.bom_br
     ok(await pg.evaluate(()=>B().audits[0].res.s1.ph.length===1),'照片路徑存進稽核紀錄');
     ok(await pg.evaluate(()=>!!document.querySelector('img[alt="缺失照片 1"]')),'顯示照片縮圖');
     await click(pg,'[data-qsphdel]'); ok((await main(pg)).includes('再按一次刪除'),'刪照片要按兩次');
-    await click(pg,'[data-qsphdel]'); ok(await pg.evaluate(()=>B().audits[0].res.s1.ph.length===0&&(window.__rm||[]).length===1),'照片刪除');
+    await click(pg,'[data-qsphdel]'); ok(await pg.isVisible('.kit-dlg'),'刪除前要輸入密碼');
+    await pg.fill('.kit-dlg .kg-p','wrong'); await pg.click('.kit-dlg .kg-ok'); await sleep(200); ok((await pg.textContent('.kit-dlg .kg-e')).includes('密碼不對')&&await pg.evaluate(()=>B().audits[0].res.s1.ph.length===1),'密碼錯不會刪');
+    await pg.fill('.kit-dlg .kg-p','pass1234'); await pg.click('.kit-dlg .kg-ok'); await sleep(300); ok(await pg.evaluate(()=>B().audits[0].res.s1.ph.length===0&&(window.__rm||[]).length===1),'照片刪除');
     await pg.$('input[data-qsph$="|s1"]').then(x=>x.setInputFiles({name:'b.png',mimeType:'image/png',buffer:png})); await sleep(600);
     await click(pg,'[data-qsdone]'); await sleep(500); t=await main(pg);
     ok(t.includes('督導巡店')&&t.includes('50'),'紀錄表有類型與分數');

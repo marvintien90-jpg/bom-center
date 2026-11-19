@@ -480,5 +480,7 @@ drawCmp(); drawHist(); gateNote(); base();
   if(q.get('lat')&&q.get('lon')){ if(q.get('f')&&SiteScore.FORMATS[q.get('f')]) $('#fmt').value=q.get('f'); for(const k of ['ticket','rent','ping']) if(q.get(k)) $('#'+k).value=q.get(k);
     $('#addr').value=q.get('a')||''; site={lat:+q.get('lat'),lon:+q.get('lon'),label:$('#addr').value.trim()}; run()} })();
 </script>
+<script src="../consult/kit/kit.js"></script>
+<script>window.Kit&&Kit.init({tool:'site',bar:false})</script>
 </body>
 </html>
