@@ -4,7 +4,7 @@
    - 按鈕按下的波紋、懸浮、讀取中轉圈；上方讀取進度條；換頁淡入
    - 客戶切換列：同一位客戶在「營運輔導、組織診斷、加盟體系、SOP、BOM」之間一鍵切換，新增時自動帶入客戶
    用法：在頁面自己的 <script> 之後載入本檔，然後 Kit.init({tool:'org', sb:sbc})。
-   tool：home（工作台）、coach、org、franchise、sop、leads、site。 */
+   tool：home（工作台）、coach、org、franchise、sop、docs、leads、site。 */
 (function(){
   const me=document.currentScript&&document.currentScript.src||location.href;
   const CONSULT=new URL('../',me).href, BOM=new URL('../../',me).href;
@@ -88,6 +88,7 @@
     ['org','組織診斷',c=>{const p=K.D.org.find(x=>x.client_id===c.id); return p?{u:CONSULT+'org/#p='+p.id,has:true}:{u:CONSULT+'org/#t=new&client='+c.id}}],
     ['franchise','加盟體系',c=>{const p=K.D.fr.find(x=>x.coach_client_id===c.id); return p?{u:CONSULT+'franchise/#p='+p.id,has:true}:{u:CONSULT+'franchise/#new&client='+c.id}}],
     ['sop','SOP 手冊',c=>{const p=K.D.sop.find(x=>x.coach_client_id===c.id)||(c.brand_id&&K.D.sop.find(x=>x.brand_id===c.brand_id)); return p?{u:CONSULT+'sop/#m='+p.id,has:true}:{u:CONSULT+'sop/#new&client='+c.id}}],
+    ['docs','文件中心',c=>({u:CONSULT+'docs/#client='+c.id,has:true})],
     ['bom','BOM 中心',c=>c.brand_id?{u:BOM+'#home&b='+encodeURIComponent(c.brand_id),has:true}:null]];
   function detect(){
     const p=hp(), D=K.D, n=k=>+p.get(k)||null;
