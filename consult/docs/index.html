@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文件中心｜品牌加辣餐飲顧問工作室</title>
+<style>
+:root{
+  --bg:#f3f5f4; --panel:#ffffff; --line:#d9dfdc; --fg:#18211e; --mute:#5d6a65;
+  --accent:#0f6b5c; --accent-soft:#dcefea; --on-accent:#ffffff;
+  --good:#1d7a46; --good-bg:#dff3e6; --warn:#8a5a00; --warn-bg:#fbeecb; --bad:#b3261e; --bad-bg:#fbe1de;
+  --field:#f7f9f8; --paper:#ffffff; --ink:#1b1b1b;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1a2320; --line:#2e3a36; --fg:#e7eeeb; --mute:#98a7a1;
+  --accent:#4fc3ad; --accent-soft:#1d3a34; --on-accent:#08201b;
+  --good:#6fd396; --good-bg:#173524; --warn:#f0c15a; --warn-bg:#3a2e10; --bad:#ff8f86; --bad-bg:#40201d;
+  --field:#141c19; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans)}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 2px}h2{font-size:18px;margin:0 0 8px}h3{font-size:16px;margin:14px 0 6px}
+.sub{color:var(--mute);margin:0 0 12px}.note{color:var(--mute);font-size:13px;margin:6px 0 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 3px}
+input,select,textarea{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;color:inherit}
+textarea{min-height:76px;resize:vertical}
+button,a.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:6px;padding:7px 13px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.pri,a.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button.sm,a.btn.sm{padding:3px 9px;font-size:13px}
+button.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+button:disabled{opacity:.6;cursor:wait}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.who{font-size:14px;color:var(--mute);text-align:right}
+.msg{padding:9px 12px;border-radius:8px;background:var(--accent-soft);margin:10px 0}.msg.bad{background:var(--bad-bg);color:var(--bad)}
+.pill{display:inline-block;border-radius:999px;padding:0 9px;font-size:12px;white-space:nowrap;border:1px solid transparent}
+.pill.good{background:var(--good-bg);color:var(--good)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mute{background:var(--field);color:var(--mute);border-color:var(--line)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-decoration:none;color:inherit}
+.stat b{display:block;font-size:24px;line-height:1.2}.stat span{color:var(--mute);font-size:13px}
+.stat.alert b{color:var(--bad)}
+.depts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.dept{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.dept h3{margin:0}.dept .ds{color:var(--mute);font-size:13px;margin:0 0 6px}
+.ev{font-size:12px;color:var(--mute);margin:10px 0 2px;font-weight:600;letter-spacing:.02em}
+.doc{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px dashed var(--line)}
+.doc:first-of-type{border-top:0}
+.doc .nm{min-width:0}.doc .nm a,.doc .nm span.t{display:block}
+.doc .k{font-size:12px;color:var(--mute)}
+.doc .acts{display:flex;gap:4px;flex-shrink:0;align-items:center}
+.doc.off .t{color:var(--mute)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);border-radius:999px;padding:2px 11px;font-size:13px;background:var(--panel);cursor:pointer}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.edit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;align-items:start}
+@media (max-width:860px){.edit{grid-template-columns:1fr}}
+.paper{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:28px 30px;box-shadow:0 1px 3px rgba(0,0,0,.06);color-scheme:light}
+.paper .hd{text-align:center;border-bottom:2px solid #222;padding-bottom:8px;margin-bottom:12px}
+.paper .hd b{display:block;font-size:20px}.paper .hd span{font-size:13px;color:#555}
+.paper .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px 12px;font-size:13px;color:#333;margin-bottom:12px}
+.paper .bd{white-space:pre-wrap;font-size:15px;line-height:1.85;overflow-wrap:anywhere}
+.paper .ft{margin-top:18px;font-size:12px;color:#777;border-top:1px solid #ddd;padding-top:6px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+@media (max-width:560px){.paper{padding:18px 16px}.who{text-align:left}}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600;white-space:nowrap}
+a{color:var(--accent)}
+.vlist .item{border-top:1px solid var(--line);padding:8px 0}.vlist .item:first-child{border-top:0}
+.diff{font-size:13px;white-space:pre-wrap;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:8px;max-height:280px;overflow:auto}
+.diff .add{background:var(--good-bg);color:var(--good)}.diff .del{background:var(--bad-bg);color:var(--bad);text-decoration:line-through}
+@media print{body{background:#fff}.noprint,#flash,.kit-bar,.kit-toasts{display:none!important}.wrap{padding:0;max-width:none}.edit{display:block}.paper{border:0;box-shadow:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top noprint"><div><h1>文件中心</h1><p class="sub">依客戶的部門與事件產出總部內部文件，每次修改都留版本，定期提醒重新檢視｜顧問專用</p></div><div class="who" id="who"></div></div>
+  <div id="flash"></div>
+  <div id="app"><p class="sub">讀取中…</p></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="library.js"></script>
+<script>
+const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
+const BOM='https://marvintien90-jpg.github.io/bom-center/', PORTAL=BOM+'portal/', CONSULT=BOM+'consult/';
+const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const addDays=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*864e5).toISOString().slice(0,10);
+const {DEPTS,KINDS,T}=window.DOC_LIB;
+const TPL=Object.fromEntries(T.map(t=>[t.id,t]));
+const DEPT=Object.fromEntries(DEPTS.map(d=>[d[0],{name:d[1],desc:d[2]}]));
+const STAGES=[[1,'單店'],[3,'3 店以上'],[6,'6 店以上'],[20,'20 店以上']];
+const STATUS=['草稿','定稿','已發布','停用'];
+
+let me=null, ok=false, D={clients:[],docs:[],actions:[],fr:[]}, armed=null, busy=false, draft=null, verView=null, filt='rec';
+
+function say(t,bad){$('#flash').innerHTML=t?`<div class="msg ${bad?'bad':''}">${esc(t)}</div>`:''}
+async function q(p,what){const r=await p; if(r.error){say((what||'存檔')+'失敗：'+r.error.message+'。請重新整理後再試一次，還是不行就把這段訊息傳給 Claude。',true); throw r.error} return r.data}
+
+async function load(){
+  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; ok=false;
+  if(me){const p=await sbc.from('bom_profiles').select('role,status').eq('user_id',me.id).maybeSingle(); ok=!!(p.data&&p.data.role==='admin'&&p.data.status==='active')}
+  if(ok) await loadData();
+  render();
+}
+async function loadData(){
+  const r=await Promise.all([
+    sbc.from('coach_clients').select('id,name,stage,stores,biz_type,contact_name').order('name'),
+    sbc.from('doc_items').select('*').order('updated_at',{ascending:false}),
+    sbc.from('coach_actions').select('id,client_id,title,side,assignee,due_on,status').order('due_on',{ascending:true}),
+    sbc.from('fr_plans').select('id,coach_client_id')
+  ]);
+  D.missing=!!r[1].error;
+  [D.clients,D.docs,D.actions,D.fr]=r.map(x=>x.error?[]:(x.data||[]));
+}
+
+/* ---------- 範本 → 文字 ---------- */
+const lines=v=>String(v||'').split('\n').map(s=>s.trim()).filter(Boolean);
+function client(id){return D.clients.find(c=>c.id===id)}
+function isFr(c){return D.fr.some(f=>f.coach_client_id===c.id)}
+function recommended(t,c){return (c.stores||1)>=(t.stage||1)&&(!t.fr||isFr(c))}
+function autoVars(c,f,docNo){return {公司:c.name,品牌:c.name,店數:c.stores?c.stores+' 家':'',業態:c.biz_type||'',聯絡人:c.contact_name||'',日期:today(),文號:docNo||'',部門:'',部門主管:f._head||'',總經理:f._ceo||c.contact_name||''}}
+function fill(t,c,f,docNo){
+  const v=autoVars(c,f,docNo); v.部門=(DEPT[t.dept]||{}).name||'';
+  return t.b.replace(/\{([^{}*]+)(\*)?\}/g,(m,k,star)=>{
+    const val=k in v?v[k]:f[k];
+    if(star){const ls=lines(val); return ls.length?ls.map((x,i)=>/^[□✓\-・]/.test(x)?x:`　${i+1}. ${x}`).join('\n'):'　（待補）'}
+    const s=String(val??'').trim(); return s?s.split('\n').filter(Boolean).join('、'):'＿＿＿＿';
+  });
+}
+function nextNo(c,dept){
+  const ym=today().slice(0,7).replace('-','');
+  const n=D.docs.filter(d=>d.client_id===c.id&&d.dept===dept&&(d.doc_no||'').includes(ym)).length+1;
+  return `${c.name.slice(0,2)}-${dept.toUpperCase()}-${ym}-${String(n).padStart(3,'0')}`;
+}
+function lastHeads(c,dept){
+  const ds=D.docs.filter(d=>d.client_id===c.id);
+  const sd=ds.find(d=>d.dept===dept&&d.fields&&d.fields._head), any=ds.find(d=>d.fields&&d.fields._ceo);
+  return {_head:sd?sd.fields._head:'',_ceo:any?any.fields._ceo:(c.contact_name||'')};
+}
+const due=d=>d.status!=='停用'&&d.next_review&&d.next_review<=today();
+
+/* ---------- 路由 ---------- */
+function route(){const p=new URLSearchParams(location.hash.slice(1)); return {client:+p.get('client')||null,d:+p.get('d')||null,neu:p.get('new'),a:p.get('a')==='all'?'all':(+p.get('a')||null),edit:p.has('edit'),review:p.has('review')}}
+function curClient(){const r=route(); if(r.client) return client(r.client)||null; if(r.d){const d=D.docs.find(x=>x.id===r.d); return d?client(d.client_id):null}
+  try{const s=+localStorage.getItem('consult.client'); return s?client(s)||null:null}catch(_){return null}}
+
+function render(){
+  $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:4px"><a class="btn" href="${CONSULT}">顧問工作台</a><button type="button" data-out>登出</button></div>`:'';
+  if(!me){$('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">和業主入口、顧問工作台同一組帳號。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`;return}
+  if(!ok){$('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><div class="row"><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`;return}
+  if(D.missing){$('#app').innerHTML=`<div class="card"><h2>資料表還沒建立</h2><p class="sub">文件中心的資料表尚未安裝到資料庫，請 Claude 幫你準備安裝。</p></div>`;return}
+  const r=route(); let h;
+  if(r.review) h=vReview();
+  else if(r.d){const d=D.docs.find(x=>x.id===r.d); h=d?(r.edit?vEdit(d):vDoc(d)):`<div class="card"><h2>找不到這份文件</h2><div class="row"><a class="btn" href="#">回文件中心</a></div></div>`}
+  else{const c=curClient(); if(!c) h=vPick(); else if(r.neu) h=vNew(c,r.neu,r.a); else h=vClient(c)}
+  $('#app').innerHTML=h;
+  if(document.querySelector('[data-live]')) livePreview();
+}
+
+/* ---------- 選客戶 ---------- */
+function vPick(){
+  const dueAll=D.docs.filter(due);
+  return `${statsRow([[D.clients.length,'輔導客戶'],[D.docs.length,'文件總數'],[D.docs.filter(d=>d.status==='已發布').length,'已發布'],[dueAll.length,'該重新檢視','#review',true]])}
+  <div class="card"><h2>選一位客戶開始</h2><p class="sub">文件會依客戶的店數、是否有加盟，建議該準備哪些總部文件。</p>
+  ${D.clients.length?`<div class="chips">${D.clients.map(c=>{const n=D.docs.filter(d=>d.client_id===c.id).length;return `<a class="chip" href="#client=${c.id}">${esc(c.name)}${n?`（${n}）`:''}</a>`}).join('')}</div>`:`<p class="sub">還沒有輔導客戶，先到 <a href="${CONSULT}coach/#new">營運輔導</a> 新增。</p>`}</div>`;
+}
+function statsRow(a){return `<div class="stats">${a.map(([n,l,href,al])=>`<a class="stat ${al&&n?'alert':''}" href="${href||'#'}"><b>${n}</b><span>${l}</span></a>`).join('')}</div>`}
+
+/* ---------- 客戶文件總覽（部門 × 事件） ---------- */
+function vClient(c){
+  const ds=D.docs.filter(d=>d.client_id===c.id), rec=T.filter(t=>recommended(t,c));
+  const missing=rec.filter(t=>!ds.some(d=>d.tpl===t.id)), dueN=ds.filter(due);
+  const acts=D.actions.filter(a=>a.client_id===c.id&&a.status!=='已完成');
+  const show=t=>filt==='all'||recommended(t,c)||ds.some(d=>d.tpl===t.id);
+  const stg=STAGES.filter(s=>(c.stores||1)>=s[0]).pop()[1];
+  const depts=DEPTS.map(([k,nm,desc])=>{
+    const ts=T.filter(t=>t.dept===k&&show(t)); const extra=ds.filter(d=>d.dept===k&&!TPL[d.tpl]);
+    if(!ts.length&&!extra.length) return '';
+    const evs=[...new Set(ts.map(t=>t.ev))];
+    return `<div class="dept"><h3>${esc(nm)}</h3><p class="ds">${esc(desc)}</p>${evs.map(ev=>`<div class="ev">${esc(ev)}</div>`+ts.filter(t=>t.ev===ev).map(t=>tplRow(t,c,ds)).join('')).join('')}</div>`}).join('');
+  return `${statsRow([[ds.length,'這位客戶的文件'],[ds.filter(d=>d.status==='已發布').length,'已發布'],[missing.length,'建議但還沒產出'],[dueN.length,'該重新檢視','#review',true]])}
+  <div class="card noprint"><div class="row" style="margin:0;justify-content:space-between"><div><b>${esc(c.name)}</b>　<span class="note">${esc([c.biz_type,c.stores?c.stores+' 店':'',isFr(c)?'有加盟':''].filter(Boolean).join('｜'))}｜建議依「${stg}${isFr(c)?'＋加盟':''}」準備</span></div>
+  <div class="chips"><button class="chip ${filt==='rec'?'on':''}" data-filt="rec">只看建議</button><button class="chip ${filt==='all'?'on':''}" data-filt="all">全部範本</button></div></div>
+  ${missing.length?`<div class="row"><button class="pri" data-batch="${c.id}">一次產出 ${missing.length} 份建議文件（草稿）</button><span class="note">會用客戶資料先填好，之後再逐份修改。</span></div>`:''}</div>
+  ${acts.length?`<div class="card"><h2>從輔導待辦產出文件</h2><p class="sub">營運輔導裡還沒完成的待辦，可以直接轉成改善通知單交給門市。</p>
+   <div class="row" style="margin-top:0"><a class="btn pri" href="#client=${c.id}&new=ops-fix&a=all">把 ${acts.length} 項待辦轉成「稽核缺失改善通知單」</a>${isFr(c)?`<a class="btn" href="#client=${c.id}&new=fr-fix&a=all">轉成加盟店督導改善通知</a>`:''}</div></div>`:''}
+  <div class="depts">${depts}</div>
+  <p class="note">範本放在 consult/docs/library.js，可以加部門、事件或改內文。每份文件依「檢視週期」到期提醒，到期後按「已檢視」或改版即可。</p>`;
+}
+function tplRow(t,c,ds){
+  const mine=ds.filter(d=>d.tpl===t.id), rec=recommended(t,c);
+  const head=`<div class="nm"><span class="t">${esc(t.name)}</span><span class="k">${esc(t.kind)}${rec?'':'・此階段非必要'}</span></div>`;
+  if(!mine.length) return `<div class="doc ${rec?'':'off'}">${head}<div class="acts"><a class="btn sm ${rec?'pri':''}" href="#client=${c.id}&new=${t.id}">產出</a></div></div>`;
+  return mine.map((d,i)=>`<div class="doc"><div class="nm"><a href="#client=${c.id}&d=${d.id}">${esc(d.title)}</a><span class="k">${esc(d.doc_no||'')}・v${d.version}・${esc(d.updated_at.slice(0,10))}</span></div>
+    <div class="acts">${due(d)?'<span class="pill bad">該檢視</span>':''}<span class="pill ${d.status==='已發布'?'good':d.status==='停用'?'mute':'warn'}">${esc(d.status)}</span>${i===mine.length-1?`<a class="btn sm" href="#client=${c.id}&new=${t.id}" title="再產出一份">＋</a>`:''}</div></div>`).join('');
+}
+
+/* ---------- 新增 ---------- */
+function vNew(c,tid,aid){
+  const t=TPL[tid]; if(!t) return `<div class="card"><h2>找不到這個範本</h2><div class="row"><a class="btn" href="#client=${c.id}">回文件中心</a></div></div>`;
+  if(!draft||draft.key!==location.hash){
+    const f=Object.fromEntries(t.f.map(x=>[x[0],x[3]||''])); Object.assign(f,lastHeads(c,t.dept));
+    for(const x of t.f) if(x[2]==='d'&&!f[x[0]]) f[x[0]]=addDays(today(),7);
+    for(const x of t.f) if(x[0]==='store'&&!f.store) f.store=c.stores>1?'全門市':c.name;
+    if(aid){const acts=D.actions.filter(a=>a.client_id===c.id&&a.status!=='已完成'&&(aid==='all'||a.id===aid));
+      f.items=acts.map(a=>`${a.title}｜${a.side==='業主'?(a.assignee||'門市'):'顧問協助'}｜${a.due_on||'盡快'}`).join('\n'); f._acts=acts.map(a=>a.id)}
+    draft={key:location.hash,tpl:t.id,f,title:t.name,no:nextNo(c,t.dept)};
+  }
+  return `<div class="row noprint"><a class="btn" href="#client=${c.id}">← ${esc(c.name)} 的文件</a></div>
+  <div class="edit"><div class="card noprint"><h2>${esc(t.name)}</h2><p class="note" style="margin-top:0">${esc((DEPT[t.dept]||{}).name)}｜${esc(t.ev)}｜${esc(t.kind)}：${esc(KINDS[t.kind]||'')}</p>
+   ${formHtml(t,draft)}
+   <div class="row"><button class="pri" data-create="${c.id}">存成草稿</button><button data-create="${c.id}" data-pub>直接發布</button></div></div>
+   <div>${paperHtml(t,c,draft.f,draft.title,draft.no,1,'草稿')}</div></div>`;
+}
+function formHtml(t,s){
+  return `<label for="f__title">文件標題</label><input id="f__title" data-live value="${esc(s.title)}">
+   <div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px"><div><label for="f__head">${esc((DEPT[t.dept]||{}).name)}主管</label><input id="f__head" data-live data-k="_head" value="${esc(s.f._head)}" placeholder="姓名"></div>
+   <div><label for="f__ceo">總經理／負責人</label><input id="f__ceo" data-live data-k="_ceo" value="${esc(s.f._ceo)}"></div></div>
+   ${t.f.map(([k,l,ty])=>{const v=s.f[k]??''; const id='f_'+k;
+     if(ty==='a') return `<label for="${id}">${esc(l)}<span class="note">（一行一點）</span></label><textarea id="${id}" data-live data-k="${esc(k)}" rows="${Math.min(8,Math.max(3,lines(v).length+1))}">${esc(v)}</textarea>`;
+     return `<label for="${id}">${esc(l)}</label><input id="${id}" data-live data-k="${esc(k)}" type="${ty==='d'?'date':ty==='n'?'number':'text'}" value="${esc(v)}">`}).join('')}`;
+}
+function paperHtml(t,c,f,title,no,ver,status,body){
+  const txt=body!=null?body:fill(t,c,f,no);
+  return `<div class="paper" id="paper"><div class="hd"><b id="p_title">${esc(title)}</b><span>${esc(c.name)}｜${esc((DEPT[t.dept]||{}).name||'')}</span></div>
+   <div class="meta"><span>文號：${esc(no)}</span><span>類型：${esc(t.kind)}</span><span>版本：v${ver}（${esc(status)}）</span><span>日期：${today()}</span></div>
+   <div class="bd" id="p_body">${esc(txt)}</div>
+   <div class="ft"><span>${esc(c.name)} 內部文件，請勿外流</span><span>${esc(no)}・v${ver}</span></div></div>`;
+}
+function readForm(s){
+  for(const el of document.querySelectorAll('[data-k]')) s.f[el.dataset.k]=el.value;
+  const ti=$('#f__title'); if(ti) s.title=ti.value.trim()||s.title;
+}
+function livePreview(){
+  const s=draft; if(!s) return; readForm(s);
+  const t=TPL[s.tpl], c=s.client?client(s.client):curClient(); if(!t||!c) return;
+  if(s.manual) return; const b=$('#p_body'); if(b) b.textContent=fill(t,c,s.f,s.no); const pt=$('#p_title'); if(pt) pt.textContent=s.title;
+  const bt=$('#f__body'); if(bt&&!s.manual) bt.value=fill(t,c,s.f,s.no);
+}
+
+/* ---------- 文件頁 ---------- */
+function vDoc(d){
+  const c=client(d.client_id)||{name:'（已刪除客戶）'}, t=TPL[d.tpl]||{kind:d.kind||'',dept:d.dept,name:d.title};
+  const vs=(D.vers&&D.vers[d.id])||null;
+  const shown=verView&&vs&&vs.find(v=>v.version===verView);
+  return `<div class="row noprint"><a class="btn" href="#client=${d.client_id}">← ${esc(c.name)} 的文件</a></div>
+  <div class="edit"><div class="noprint">
+   <div class="card"><h2>${esc(d.title)}</h2><p class="note" style="margin-top:0">${esc((DEPT[d.dept]||{}).name||'')}｜${esc(d.ev||'')}｜${esc(d.doc_no||'')}</p>
+    <div class="row"><a class="btn pri" href="#client=${d.client_id}&d=${d.id}&edit">改版／編輯</a><button data-print>列印／存 PDF</button><button data-word="${d.id}">下載 Word</button><button data-copy="${d.id}">複製文字</button></div>
+    <label for="d_status">狀態</label><select id="d_status" data-dstatus="${d.id}">${STATUS.map(s=>`<option${s===d.status?' selected':''}>${s}</option>`).join('')}</select>
+    <h3>滾動更新</h3>
+    <p class="note" style="margin-top:0">每 ${d.review_days} 天檢視一次；下次：<b>${esc(d.next_review||'—')}</b>${due(d)?' <span class="pill bad">已到期</span>':''}</p>
+    <div class="row"><button data-reviewed="${d.id}">已檢視，內容不用改</button><button data-regen="${d.id}" class="${armed==='g'+d.id?'armed':''}">${armed==='g'+d.id?'再按一次（會覆蓋手動修改）':'依最新客戶資料重新產生'}</button></div>
+    <label for="d_rd">檢視週期（天）</label><input id="d_rd" type="number" min="7" value="${d.review_days}" data-rdays="${d.id}" style="max-width:140px">
+    ${d.action_id||((d.fields||{})._acts||[]).length?`<p class="note">來自營運輔導待辦，<a href="${CONSULT}coach/#c=${d.client_id}&t=actions">到待辦看執行狀況</a>。</p>`:''}
+   </div>
+   <div class="card vlist"><h2>版本歷程</h2>${vs?vs.map(v=>`<div class="item"><div class="row" style="margin:0;justify-content:space-between"><b>v${v.version}</b><span class="note" style="margin:0">${esc(v.created_at.slice(0,16).replace('T',' '))}</span></div>
+     <div class="note" style="margin:0">${esc(v.note||'')}</div><div class="row" style="margin-top:4px"><button class="sm" data-ver="${v.version}">${verView===v.version?'收起':'看這一版'}</button>${v.version!==d.version?`<button class="sm ${armed==='r'+v.id?'armed':''}" data-restore="${v.id}">${armed==='r'+v.id?'再按一次還原':'還原成這一版'}</button>`:''}</div></div>`).join(''):'<p class="note">讀取中…</p>'}
+   </div>
+   <div class="card"><h2>刪除</h2><p class="note" style="margin-top:0">連同所有版本一起刪除，無法復原。不再使用可以改成「停用」。</p><button class="${armed==='x'+d.id?'armed':''}" data-deld="${d.id}">${armed==='x'+d.id?'再按一次確定刪除':'刪除這份文件'}</button></div>
+  </div>
+  <div>${shown?`<div class="msg noprint">正在看 v${shown.version}（舊版），和目前版本的差異：</div><div class="diff noprint">${diffHtml(shown.body||'',d.body||'')}</div>`:''}
+   ${paperHtml(t,c,{},shown?shown.title:d.title,d.doc_no||'',shown?shown.version:d.version,shown?'舊版':d.status,shown?shown.body:d.body)}</div></div>`;
+}
+function diffHtml(a,b){
+  const A=a.split('\n'),B=b.split('\n'),n=A.length,m=B.length,L=Array.from({length:n+1},()=>new Int16Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=A[i]===B[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+  const out=[];let i=0,j=0;while(i<n&&j<m){if(A[i]===B[j]){out.push(esc(A[i]));i++;j++}else if(L[i+1][j]>=L[i][j+1]){out.push(`<span class="del">${esc(A[i])}</span>`);i++}else{out.push(`<span class="add">${esc(B[j])}</span>`);j++}}
+  while(i<n)out.push(`<span class="del">${esc(A[i++])}</span>`);while(j<m)out.push(`<span class="add">${esc(B[j++])}</span>`);
+  return out.join('\n')||'（沒有差異）';
+}
+function vEdit(d){
+  const c=client(d.client_id), t=TPL[d.tpl];
+  if(!draft||draft.key!==location.hash){draft={key:location.hash,tpl:d.tpl,f:Object.assign({},d.fields||{}),title:d.title,no:d.doc_no||'',client:d.client_id,manual:t?d.body!==fill(t,c,d.fields||{},d.doc_no||''):true,body:d.body}}
+  return `<div class="row noprint"><a class="btn" href="#client=${d.client_id}&d=${d.id}">← 回文件</a></div>
+  <div class="edit"><div class="card noprint"><h2>改版：${esc(d.title)}</h2><p class="note" style="margin-top:0">存檔會變成 v${d.version+1}，舊版保留在版本歷程。</p>
+   ${t?formHtml(t,draft):`<label for="f__title">文件標題</label><input id="f__title" value="${esc(draft.title)}">`}
+   <label for="f__body">內文（可以直接改字；改了之後上面的欄位就不再自動套用）</label><textarea id="f__body" rows="14">${esc(draft.manual?draft.body:(t?fill(t,c,draft.f,draft.no):d.body))}</textarea>
+   ${draft.manual&&t?`<div class="row" style="margin-top:4px"><button class="sm" data-unmanual>放棄手動修改，改回依欄位產生</button></div>`:''}
+   <label for="f__note">這一版改了什麼（會記在版本歷程）</label><input id="f__note" placeholder="例：店數增加，加入區經理簽核">
+   <div class="row"><button class="pri" data-savever="${d.id}">存成 v${d.version+1}</button></div></div>
+   <div>${t?paperHtml(t,c,draft.f,draft.title,draft.no,d.version+1,'編輯中',draft.manual?draft.body:null):''}</div></div>`;
+}
+function vReview(){
+  const list=D.docs.filter(due).sort((a,b)=>a.next_review<b.next_review?-1:1);
+  const soon=D.docs.filter(d=>d.status!=='停用'&&d.next_review&&d.next_review>today()&&d.next_review<=addDays(today(),30));
+  const row=d=>`<tr><td>${esc((client(d.client_id)||{}).name||'')}</td><td><a href="#client=${d.client_id}&d=${d.id}">${esc(d.title)}</a></td><td>v${d.version}・${esc(d.status)}</td><td>${esc(d.next_review)}</td></tr>`;
+  return `<div class="row noprint"><a class="btn" href="#">← 文件中心</a></div>
+  <div class="card"><h2>該重新檢視的文件（${list.length}）</h2>${list.length?`<div class="scroll"><table><tr><th>客戶</th><th>文件</th><th>版本</th><th>到期日</th></tr>${list.map(row).join('')}</table></div>`:'<p class="sub">目前沒有到期的文件。</p>'}</div>
+  <div class="card"><h2>30 天內到期（${soon.length}）</h2>${soon.length?`<div class="scroll"><table><tr><th>客戶</th><th>文件</th><th>版本</th><th>到期日</th></tr>${soon.map(row).join('')}</table></div>`:'<p class="sub">沒有。</p>'}</div>`;
+}
+
+/* ---------- 動作 ---------- */
+const val=id=>($('#'+id)||{}).value??'';
+async function act(fn){ if(busy) return; busy=true; try{ await fn() }catch(e){ console.warn(e) } finally{ busy=false } }
+async function loadVers(id){const r=await sbc.from('doc_versions').select('*').eq('doc_id',id).order('version',{ascending:false}); D.vers=D.vers||{}; D.vers[id]=r.error?[]:(r.data||[]); if(route().d===id) render()}
+async function createDoc(c,t,f,title,no,status,note,actIds){
+  const body=fill(t,c,f,no);
+  const o={client_id:c.id,tpl:t.id,dept:t.dept,ev:t.ev,kind:t.kind,title,doc_no:no,version:1,status,fields:f,body,review_days:t.review||180,next_review:addDays(today(),t.review||180),action_id:actIds&&actIds.length===1?actIds[0]:null};
+  const d=await q(sbc.from('doc_items').insert(o).select().single());
+  await q(sbc.from('doc_versions').insert({doc_id:d.id,version:1,title,body,fields:f,note:note||'第一版'}));
+  D.docs.unshift(d); return d;
+}
+document.addEventListener('input',e=>{ if(e.target.matches('[data-live]')) livePreview();
+  if(e.target.id==='f__body'&&draft){draft.manual=true; draft.body=e.target.value; const b=$('#p_body'); if(b) b.textContent=draft.body} });
+document.addEventListener('change',e=>{
+  const s=e.target.closest('[data-dstatus]');
+  if(s) return act(async()=>{const id=+s.dataset.dstatus; const o={status:s.value,updated_at:new Date().toISOString()}; await q(sbc.from('doc_items').update(o).eq('id',id)); Object.assign(D.docs.find(d=>d.id===id),o); say(`已改成「${s.value}」。`); render()});
+  const rd=e.target.closest('[data-rdays]');
+  if(rd) return act(async()=>{const id=+rd.dataset.rdays, n=Math.max(7,+rd.value||180), d=D.docs.find(x=>x.id===id); const o={review_days:n,next_review:addDays(today(),n)}; await q(sbc.from('doc_items').update(o).eq('id',id)); Object.assign(d,o); say(`檢視週期改成每 ${n} 天，下次 ${o.next_review}。`); render()});
+});
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button,[data-out]'); if(!b) return; const d0=b.dataset;
+  if('out' in d0){await sbc.auth.signOut(); location.href=PORTAL; return}
+  if(d0.filt){filt=d0.filt; render(); return}
+  if('print' in d0){window.print(); return}
+  if(d0.ver){verView=verView===+d0.ver?null:+d0.ver; render(); return}
+  if('unmanual' in d0){draft.manual=false; render(); return}
+  if(d0.create) return act(async()=>{const c=client(+d0.create), t=TPL[draft.tpl]; readForm(draft);
+    const st='pub' in d0?'已發布':'草稿';
+    const d=await createDoc(c,t,draft.f,draft.title,draft.no,st,'第一版',draft.f._acts);
+    draft=null; say(`已${st==='已發布'?'發布':'存成草稿'}：${d.title}（${d.doc_no}）。`); location.hash=`client=${c.id}&d=${d.id}`});
+  if(d0.batch) return act(async()=>{const c=client(+d0.batch); const ds=D.docs.filter(d=>d.client_id===c.id);
+    const miss=T.filter(t=>recommended(t,c)&&!ds.some(d=>d.tpl===t.id)); let n=0;
+    for(const t of miss){const f=Object.fromEntries(t.f.map(x=>[x[0],x[3]||''])); Object.assign(f,lastHeads(c,t.dept));
+      for(const x of t.f) if(x[0]==='store'&&!f.store) f.store=c.stores>1?'全門市':c.name;
+      await createDoc(c,t,f,t.name,nextNo(c,t.dept),'草稿','一次產出建議文件'); n++}
+    say(`已產出 ${n} 份草稿，空白處標「＿＿＿＿」的地方再逐份補上。`); render()});
+  if(d0.savever) return act(async()=>{const d=D.docs.find(x=>x.id===+d0.savever), c=client(d.client_id), t=TPL[d.tpl];
+    if(t) readForm(draft); else draft.title=val('f__title').trim()||draft.title;
+    const body=draft.manual||!t?val('f__body'):fill(t,c,draft.f,draft.no);
+    if(body===d.body&&draft.title===d.title){say('內容沒有變更，不用存新版本。如果只是確認過，請按「已檢視」。',true);return}
+    const v=d.version+1, note=val('f__note').trim()||'修改內容';
+    await q(sbc.from('doc_versions').insert({doc_id:d.id,version:v,title:draft.title,body,fields:draft.f,note}));
+    const o={version:v,title:draft.title,body,fields:draft.f,updated_at:new Date().toISOString(),next_review:addDays(today(),d.review_days)};
+    await q(sbc.from('doc_items').update(o).eq('id',d.id)); Object.assign(d,o); draft=null; if(D.vers) delete D.vers[d.id];
+    say(`已存成 v${v}，下次檢視 ${o.next_review}。`); location.hash=`client=${d.client_id}&d=${d.id}`});
+  if(d0.reviewed) return act(async()=>{const d=D.docs.find(x=>x.id===+d0.reviewed); const o={next_review:addDays(today(),d.review_days)};
+    await q(sbc.from('doc_items').update(o).eq('id',d.id)); Object.assign(d,o); say(`已記錄檢視，下次 ${o.next_review}。`); render()});
+  if(d0.regen){const d=D.docs.find(x=>x.id===+d0.regen), t=TPL[d.tpl]; if(!t){say('這份文件的範本已不存在，只能手動改版。',true);return}
+    if(armed!=='g'+d.id){armed='g'+d.id; render(); setTimeout(()=>{if(armed==='g'+d.id){armed=null;render()}},4000); return} armed=null;
+    return act(async()=>{const c=client(d.client_id); const f=Object.assign({},d.fields||{}); if(t.f.some(x=>x[0]==='store')&&(!f.store||f.store===c.name||f.store==='全門市')) f.store=c.stores>1?'全門市':c.name;
+      const body=fill(t,c,f,d.doc_no||''); if(body===d.body){const o={next_review:addDays(today(),d.review_days)}; await q(sbc.from('doc_items').update(o).eq('id',d.id)); Object.assign(d,o); say('客戶資料沒有影響這份文件，已記錄為檢視完成。'); render(); return}
+      const v=d.version+1; await q(sbc.from('doc_versions').insert({doc_id:d.id,version:v,title:d.title,body,fields:f,note:'依最新客戶資料重新產生'}));
+      const o={version:v,body,fields:f,updated_at:new Date().toISOString(),next_review:addDays(today(),d.review_days)}; await q(sbc.from('doc_items').update(o).eq('id',d.id)); Object.assign(d,o); if(D.vers) delete D.vers[d.id];
+      say(`已重新產生成 v${v}。`); render(); loadVers(d.id)})}
+  if(d0.restore){const id=+d0.restore; const d=D.docs.find(x=>x.id===route().d); const v=(D.vers[d.id]||[]).find(x=>x.id===id); if(!v) return;
+    if(armed!=='r'+id){armed='r'+id; render(); setTimeout(()=>{if(armed==='r'+id){armed=null;render()}},4000); return} armed=null;
+    return act(async()=>{const nv=d.version+1; await q(sbc.from('doc_versions').insert({doc_id:d.id,version:nv,title:v.title,body:v.body,fields:v.fields,note:`還原成 v${v.version}`}));
+      const o={version:nv,title:v.title||d.title,body:v.body,fields:v.fields||{},updated_at:new Date().toISOString()}; await q(sbc.from('doc_items').update(o).eq('id',d.id)); Object.assign(d,o); verView=null; delete D.vers[d.id];
+      say(`已還原成 v${v.version} 的內容（存成 v${nv}）。`); render(); loadVers(d.id)})}
+  if(d0.deld){const id=+d0.deld; if(armed!=='x'+id){armed='x'+id; render(); setTimeout(()=>{if(armed==='x'+id){armed=null;render()}},4000); return} armed=null;
+    return act(async()=>{const d=D.docs.find(x=>x.id===id); await q(sbc.from('doc_items').delete().eq('id',id),'刪除'); D.docs=D.docs.filter(x=>x.id!==id); say('已刪除。'); location.hash='client='+d.client_id})}
+  if(d0.copy){const d=D.docs.find(x=>x.id===+d0.copy); const txt=`${d.title}\n文號：${d.doc_no||''}\n\n${d.body}`;
+    try{await navigator.clipboard.writeText(txt); say('已複製，可以貼到 LINE、Email 或 Word。')}catch(_){say('瀏覽器不讓複製，請改用「下載 Word」。',true)} return}
+  if(d0.word){const d=D.docs.find(x=>x.id===+d0.word), c=client(d.client_id)||{name:''};
+    const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(d.title)}</title><style>body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;font-size:12pt;line-height:1.8}h1{font-size:18pt;text-align:center;margin:0}p.m{font-size:10pt;color:#555;text-align:center}</style></head><body><h1>${esc(d.title)}</h1><p class="m">${esc(c.name)}｜文號 ${esc(d.doc_no||'')}｜v${d.version}｜${today()}</p>${esc(d.body).split('\n').map(l=>`<p style="margin:0">${l||'&nbsp;'}</p>`).join('')}</body></html>`;
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿',html],{type:'application/msword'})); a.download=`${d.doc_no||'文件'}_${d.title}_v${d.version}.doc`; document.body.appendChild(a); a.click(); a.remove(); say('已下載 Word 檔。'); return}
+});
+window.addEventListener('hashchange',()=>{armed=null; verView=null; const r=route(); if(r.client){try{localStorage.setItem('consult.client',String(r.client))}catch(_){}}
+  render(); scrollTo(0,0); if(r.d&&!(D.vers&&D.vers[r.d])&&!r.edit) loadVers(r.d)});
+sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
+load().then(()=>{const r=route(); if(ok&&r.d&&!r.edit) loadVers(r.d)});
+</script>
+<script src="../kit/kit.js"></script>
+<script>window.Kit&&Kit.init({tool:'docs',sb:sbc})</script>
+</body>
+</html>
