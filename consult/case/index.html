@@ -251,7 +251,7 @@ function stores(det){ // 各店 × 月
 function orgSum(c){ const p=D.org.find(x=>x.client_id===c.id); if(!p) return null; const d=p.data||{}, pos=((d.asis||{}).positions)||[], tob=((d.tobe||{}).positions)||[];
   const gov=d.gov||{}, gv=Object.values(gov).map(Number).filter(v=>!isNaN(v));
   const multi={}; pos.forEach(x=>{ if(x.person) multi[x.person]=(multi[x.person]||0)+1 });
-  return {p,asis:pos.length,tobe:tob.length,need:Math.max(0,tob.length-pos.length),govPct:gv.length?Math.round(gv.reduce((a,v)=>a+v,0)*50/gv.length):null,govN:gv.length,dup:Object.values(multi).filter(n=>n>1).length,boss:(pos.find(x=>x.id==='boss')||{}).funcs||[]} }
+  return {p,asis:pos.length,tobe:tob.length,now:tob.filter(x=>!((+x.at||1)>(+p.stores||1))).length,need:Math.max(0,tob.length-pos.length),govPct:gv.length?Math.round(gv.reduce((a,v)=>a+v,0)*50/gv.length):null,govN:gv.length,dup:Object.values(multi).filter(n=>n>1).length,boss:(pos.find(x=>x.id==='boss')||{}).funcs||[]} }
 const READYN=20, CRIT=['p1','p2','l1'];
 function frSum(c){ const p=D.fr.find(x=>x.coach_client_id===c.id)||(c.brand_id&&D.fr.find(x=>x.brand_id===c.brand_id)); if(!p) return null;
   const r=(p.data||{}).ready||{}, v=Object.values(r).map(Number).filter(x=>!isNaN(x)); const fatal=CRIT.filter(k=>r[k]===0).length;
@@ -274,7 +274,7 @@ function journey(c,ctx){
   const qs=qscStores(c), qAvg=avg(qs.map(x=>x.last));
   const sopS=sop?S('sop','SOP 與稽核',qAvg!=null&&qAvg>=80?'done':'doing',`${sop.steps} 個步驟、${sop.audit} 個稽核點${qAvg!=null?`｜最近 QSC 平均 ${fmt(qAvg)}`:''}`,C+'sop/#m='+sop.s.id,'打開')
     :S('sop','SOP 與稽核','',`還沒有手冊`,C+'sop/#new&client='+c.id,'建立');
-  const orgS=org?S('org','總部組織',org.govPct!=null&&org.govPct>=60?'done':'doing',`現況 ${org.asis} 個職位 → 建議 ${org.tobe} 個${org.govPct!=null?`｜制度成熟度 ${org.govPct}`:''}`,C+'org/#p='+org.p.id,'打開')
+  const orgS=org?S('org','總部組織',org.govPct!=null&&org.govPct>=60?'done':'doing',`現況 ${org.asis} 個職位 → 建議 ${org.tobe} 個${org.now<org.tobe?`（現在先 ${org.now} 個，其他照店數補）`:''}${org.govPct!=null?`｜制度成熟度 ${org.govPct}`:''}`,C+'org/#p='+org.p.id,'打開')
     :S('org','總部組織','',`多店前先畫好權責`,C+'org/#t=new&client='+c.id,'建立');
   const frS=fr?S('fr','加盟準備度',fr.pct>=75&&!fr.fatal?'done':fr.fatal?'warn':'doing',`${fr.answered}/${READYN} 題｜${fr.pct}%${fr.fatal?`｜${fr.fatal} 個關鍵項未達`:''}`,C+'franchise/#p='+fr.p.id,'打開')
     :S('fr','加盟準備度','',`3 店以上再評估`,C+'franchise/#new&client='+c.id,'建立');
@@ -517,7 +517,7 @@ function vReport(c,ctx){
    <div class="card"><h2>本期完成與接下來</h2><div class="grid g2" style="margin-top:0"><div><h3>已完成</h3>${done.length?`<ul>${done.slice(-8).map(a=>`<li>${esc(a.title)}${a.result?'：'+esc(a.result):''}</li>`).join('')}</ul>`:'<p class="note">—</p>'}</div>
     <div><h3>接下來</h3>${open.length?`<ul>${open.slice(0,8).map(a=>`<li>${esc(a.title)}（${esc(a.assignee||a.side||'')}${a.due_on?'，'+esc(a.due_on)+' 前':''}）</li>`).join('')}</ul>`:'<p class="note">—</p>'}</div></div>
     ${vs.length?`<h3>最近訪視</h3>${vs.map(v=>`<p><b>${esc(v.visit_on)} ${esc(v.kind)}${v.store?'｜'+esc(v.store):''}</b><br>${esc(v.summary||'')}</p>`).join('')}`:''}</div>
-   <div class="card"><h2>總部建置進度</h2><ul><li>組織：${org?`現況 ${org.asis} 個職位，建議 ${org.tobe} 個`:'尚未診斷'}</li><li>SOP：${sop?`${esc(sop.s.title)}，${sop.steps} 個步驟`:'尚未建立'}</li><li>加盟準備度：${fr?fr.pct+'%'+(fr.fatal?`（${fr.fatal} 個關鍵項未達，暫不建議招募）`:''):'尚未評估'}</li></ul></div></div>`;
+   <div class="card"><h2>總部建置進度</h2><ul><li>組織：${org?`現況 ${org.asis} 個職位，建議 ${org.tobe} 個${org.now<org.tobe?`（現在先 ${org.now} 個，其他隨展店逐步補）`:''}`:'尚未診斷'}</li><li>SOP：${sop?`${esc(sop.s.title)}，${sop.steps} 個步驟`:'尚未建立'}</li><li>加盟準備度：${fr?fr.pct+'%'+(fr.fatal?`（${fr.fatal} 個關鍵項未達，暫不建議招募）`:''):'尚未評估'}</li></ul></div></div>`;
 }
 
 /* ---------- 互動 ---------- */
