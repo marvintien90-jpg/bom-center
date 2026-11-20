@@ -122,7 +122,7 @@ async function loadData(){
     sbc.from('coach_visits').select('*').order('visit_on',{ascending:false}),
     sbc.from('coach_actions').select('*').order('due_on',{ascending:true}),
     sbc.from('coach_kpis').select('*').order('month',{ascending:true}),
-    sbc.from('checkup_leads').select('id,brand,biz_type,stores,contact_name,phone,line_id,email,status,total').order('id',{ascending:false}).limit(300),
+    sbc.from('checkup_leads').select('id,brand,biz_type,stores,contact_name,phone,line_id,email,status,total,answers,finance,scores').order('id',{ascending:false}).limit(300),
     sbc.from('bom_brands').select('id,name').order('name'),
     sbc.rpc('coach_pl_clients')
   ]);
@@ -225,8 +225,19 @@ function vNew(){
   <div class="g2"><div><label for="n_lead">從健檢名單帶入</label><select id="n_lead"><option value="">（不使用）</option>${D.leads.map(l=>`<option value="${l.id}">${esc(l.brand||'未命名')}｜${esc(l.contact_name||'')}｜${esc(l.status||'')}</option>`).join('')}</select></div>
   <div><label for="n_brand">連結 BOM 品牌</label><select id="n_brand"><option value="">（不連結）</option>${D.brands.map(b=>`<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}</select></div></div>
   ${clientForm({stage:'輔導中',visit_every_days:14,start_on:today(),goals:defaultGoals()})}
+  <div id="seedbox" class="msg" style="display:none"><label style="margin:0;color:inherit;display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="f_seed" checked><span id="seedtxt"></span></label></div>
   <div class="row"><button class="pri" data-save-client="new">建立客戶</button></div></div>`;
 }
+/* 健檢 → 輔導：目標與第一批改善待辦 */
+const BENCH={food_pct:35,labor_pct:28,rent_pct:12,net_pct:12};
+function leadFin(l){const f=l&&l.finance||{}, rev=num(f.revenue); if(!rev) return null; const g=k=>num(f[k]); const net=rev-(g('food')||0)-(g('labor')||0)-(g('rent')||0)-(g('other')||0);
+  return {food_pct:g('food')!=null?g('food')*100/rev:null,labor_pct:g('labor')!=null?g('labor')*100/rev:null,rent_pct:g('rent')!=null?g('rent')*100/rev:null,net_pct:net*100/rev}}
+function goalFor(k,cur){const b=BENCH[k]; if(b==null) return ''; if(cur==null) return b; const dn=KPI[k].dir==='down';
+  // 差距太大時先訂 6 個月可達成的里程碑（改善一半），否則直接用參考值
+  const gap=dn?cur-b:b-cur; if(gap<=0) return Math.round(cur*10)/10; return gap>4?Math.round((dn?cur-gap/2:cur+gap/2)*10)/10:b}
+function weakItems(l,n){ if(!l||!l.answers||!window.Checkup) return [];
+  const sc=l.scores||{}, out=[]; Checkup.DIMS.forEach(d=>d.qs.forEach(([id,t])=>{const v=l.answers[id]; if(v!=null&&+v<=1) out.push({id,t,v:+v,dim:d.full,ds:+sc[d.key]||0})}));
+  return out.sort((a,b)=>a.v-b.v||a.ds-b.ds).slice(0,n||5) }
 function defaultGoals(){return [{kpi:'food_pct',target:'',dir:'down'},{kpi:'labor_pct',target:'',dir:'down'},{kpi:'net_pct',target:'',dir:'up'}]}
 function clientForm(c){
   const pl=D.pl.map(p=>`${p.client_name}｜${p.brand_name||''}`);
@@ -261,7 +272,7 @@ function goalRow(g){return `<div class="gl"><select data-g="kpi" aria-label="指
 function readClient(){
   const v=id=>($('#'+id)||{}).value??'';
   const name=v('f_name').trim(); if(!name){say('請填客戶名稱。',true);return null}
-  const pl=v('f_pl'); const [plc,plb]=pl?pl.split('｜'):['',''];
+  const pl=v('f_pl'); const cut=pl.lastIndexOf('｜'), [plc,plb]=pl?(cut>=0?[pl.slice(0,cut),pl.slice(cut+1)]:[pl,'']):['',''];
   const goals=[...document.querySelectorAll('#goals .gl')].map(r=>({kpi:r.querySelector('[data-g=kpi]').value,target:num(r.querySelector('[data-g=target]').value),dir:r.querySelector('[data-g=dir]').value||(KPI[r.querySelector('[data-g=kpi]').value]||{}).dir}))
     .filter(g=>g.kpi&&g.target!=null).map(g=>({...g,label:KPI[g.kpi].l}));
   const o={name,stage:v('f_stage'),biz_type:v('f_biz')||null,stores:num(v('f_stores')),contact_name:v('f_contact')||null,phone:v('f_phone')||null,line_id:v('f_line')||null,email:v('f_email')||null,
@@ -417,7 +428,10 @@ document.addEventListener('change',e=>{
   if(sh) return act(async()=>{const id=+sh.dataset.ashare; await q(sbc.from('coach_actions').update({share:sh.checked}).eq('id',id)); D.actions.find(a=>a.id===id).share=sh.checked; say(sh.checked?'這項會放進業主報告。':'這項不會放進業主報告。')});
   if(e.target.id==='r_month'){reportMonth=e.target.value; render()}
   if(e.target.id==='n_lead'){const l=D.leads.find(x=>x.id===+e.target.value); if(l){const set=(id,v)=>{const el=$('#'+id); if(el&&v!=null&&v!=='') el.value=v};
-    set('f_name',l.brand);set('f_biz',l.biz_type);set('f_stores',l.stores);set('f_contact',l.contact_name);set('f_phone',l.phone);set('f_line',l.line_id);set('f_email',l.email)}}
+    set('f_name',l.brand);set('f_biz',l.biz_type);set('f_stores',l.stores);set('f_contact',l.contact_name);set('f_phone',l.phone);set('f_line',l.line_id);set('f_email',l.email);
+    const fin=leadFin(l); let filled=0; if(fin) document.querySelectorAll('#goals .gl').forEach(r=>{const k=r.querySelector('[data-g=kpi]').value, t=r.querySelector('[data-g=target]'); if(k&&!t.value&&BENCH[k]!=null){t.value=goalFor(k,fin[k]);filled++}});
+    const w=weakItems(l,5), box=$('#seedbox'); if(box){box.style.display=w.length?'':'none'; $('#seedtxt').textContent=`同時把健檢最弱的 ${w.length} 題開成改善待辦（30 天內，放進業主報告）：${w.map(x=>x.t).join('；')}`}
+    if(filled) say(`已依健檢數字預填 ${filled} 個目標（差距大的先訂 6 個月里程碑），可以再改。`)}}
   if(e.target.id==='n_brand'){const b=D.brands.find(x=>x.id===e.target.value); if(b&&!val('f_name').trim()) $('#f_name').value=b.name}
 });
 document.addEventListener('click',async e=>{
@@ -432,7 +446,8 @@ document.addEventListener('click',async e=>{
   if(d.saveClient) return act(async()=>{const o=readClient(); if(!o) return; o.updated_at=new Date().toISOString();
     if(d.saveClient==='new'){const r=await q(sbc.from('coach_clients').insert(o).select().single(),'建立'); D.clients.push(r);
       const ld=r.lead_id&&D.leads.find(l=>l.id===r.lead_id); let extra='';
-      if(ld&&r.stage==='輔導中'&&ld.status!=='已成交'){const u=await sbc.from('checkup_leads').update({status:'已成交'}).eq('id',ld.id); if(!u.error){ld.status='已成交'; extra='健檢名單已標成「已成交」。'}}
+      if(ld&&$('#f_seed')&&$('#f_seed').checked){const w=weakItems(ld,5); if(w.length){const rs=await sbc.from('coach_actions').insert(w.map(x=>({client_id:r.id,title:x.t,side:'業主',priority:x.v===0?'高':'中',due_on:addDays(today(),30),status:'待辦',share:true}))).select(); if(!rs.error){D.actions.push(...rs.data); extra+=`已依健檢開出 ${w.length} 項改善待辦。`}}}
+      if(ld&&r.stage==='輔導中'&&ld.status!=='已成交'){const u=await sbc.from('checkup_leads').update({status:'已成交'}).eq('id',ld.id); if(!u.error){ld.status='已成交'; extra+='健檢名單已標成「已成交」。'}}
       say('已建立客戶。'+extra+'下一步：記第一筆訪視或填 KPI。'); if(window.Kit) Kit.refresh(); go('c='+r.id)}
     else{const id=+d.saveClient; await q(sbc.from('coach_clients').update(o).eq('id',id)); Object.assign(D.clients.find(x=>x.id===id),o); say('已儲存設定。'); go('c='+id)}});
   if(d.saveVisit) return act(async()=>{const cid=+d.saveVisit;
@@ -474,6 +489,7 @@ window.addEventListener('hashchange',()=>{armed=null; say(flash&&!flashBad?flash
 sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
 load();
 </script>
+<script src="../../checkup/score.js"></script>
 <script src="../kit/kit.js"></script>
 <script>window.Kit&&Kit.init({tool:'coach',sb:sbc})</script>
 </body>

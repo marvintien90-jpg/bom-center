@@ -84,6 +84,7 @@
   }
   const TOOLS=[
     ['home','客戶檔案',c=>({u:CONSULT+'#c='+c.id,has:true})],
+    ['case','客戶全景',c=>({u:CONSULT+'case/#c='+c.id,has:true})],
     ['coach','營運輔導',c=>({u:CONSULT+'coach/#c='+c.id,has:true})],
     ['org','組織診斷',c=>{const p=K.D.org.find(x=>x.client_id===c.id); return p?{u:CONSULT+'org/#p='+p.id,has:true}:{u:CONSULT+'org/#t=new&client='+c.id}}],
     ['franchise','加盟體系',c=>{const p=K.D.fr.find(x=>x.coach_client_id===c.id); return p?{u:CONSULT+'franchise/#p='+p.id,has:true}:{u:CONSULT+'franchise/#new&client='+c.id}}],
@@ -92,7 +93,7 @@
   function detect(){
     const p=hp(), D=K.D, n=k=>+p.get(k)||null;
     if(n('client')) return n('client');
-    if(K.tool==='coach'&&n('c')) return n('c');
+    if((K.tool==='coach'||K.tool==='case')&&n('c')) return n('c');
     if(K.tool==='org'&&n('p')){const x=D.org.find(o=>o.id===n('p')); if(x) return x.client_id||null; return undefined}
     if(K.tool==='franchise'&&n('p')){const x=D.fr.find(o=>o.id===n('p')); if(x) return x.coach_client_id||(x.brand_id&&(D.clients.find(c=>c.brand_id===x.brand_id)||{}).id)||null; return undefined}
     if(K.tool==='sop'&&n('m')){const x=D.sop.find(o=>o.id===n('m')); if(x) return x.coach_client_id||(x.brand_id&&(D.clients.find(c=>c.brand_id===x.brand_id)||{}).id)||null; return undefined}
@@ -187,6 +188,7 @@
     ['home','台','顧問工作台','consult/',[['','總覽']],1],
     ['leads','單','健檢名單','checkup/leads/',[['','名單列表']],1],
     ['checkup','檢','經營健檢（業主填）','checkup/',[['','健檢問卷']],1],
+    ['case','景','客戶全景','consult/case/',[['','客戶清單']],1],
     ['coach','導','營運輔導','consult/coach/',[['','輔導客戶'],['#todo','全部待辦'],['#new','新增客戶']],1],
     ['org','組','組織診斷','consult/org/',[['','診斷列表'],['#t=new','新增診斷']],1],
     ['franchise','盟','加盟體系','consult/franchise/',[['','加盟方案'],['#new','新增方案']],1],
