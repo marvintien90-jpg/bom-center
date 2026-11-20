@@ -1,0 +1,107 @@
+/* 反向找點 v2：大地圖工作區、篩選面板、彈跳資訊卡、快捷鍵 */
+:root{--sticky-top:calc(var(--kit-nav-h,0px) + 8px)}
+#map{height:540px}
+/* 滑鼠提示：寬度跟著內容，不會被擠成一字一行 */
+.leaflet-tooltip.tip{width:max-content;max-width:min(320px,80vw);white-space:normal;word-break:normal;line-break:strict;padding:6px 10px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);background:var(--panel);color:var(--fg);border:1px solid var(--line)}
+.leaflet-tooltip.tip::before{display:none}
+.leaflet-tooltip.tip.tt{white-space:nowrap;max-width:none}
+.tt b{font-size:14px}.tt span{display:block;color:var(--mute);font-size:12.5px}
+
+/* 反向模式：左邊條件、右邊大地圖 */
+body.rev .wrap{max-width:1480px}
+body.rev #ws{display:grid;grid-template-columns:minmax(330px,400px) minmax(0,1fr);gap:0 14px;align-items:start}
+body.rev #revCard{grid-row:1/3;grid-column:1;position:sticky;top:var(--sticky-top);max-height:calc(100vh - var(--sticky-top) - 8px);overflow:auto;overscroll-behavior:contain;padding:14px}
+body.rev #mapCard{grid-column:2;padding:8px;scroll-margin-top:var(--sticky-top)}
+body.rev #rOut{grid-column:2;min-width:0}
+body.rev #map{height:calc(100vh - var(--sticky-top) - 32px);min-height:520px}
+@media (max-width:980px){
+  body.rev #ws{display:block}
+  body.rev #revCard,body.rev #mapCard{position:static;max-height:none}
+  body.rev #map{height:68vh;min-height:380px}
+}
+#map.fs{position:fixed!important;inset:0;height:100vh!important;width:100vw;z-index:3000;border-radius:0;border:0}
+body.mapfs{overflow:hidden}
+
+/* 地圖按鈕 */
+.leaflet-touch .leaflet-bar a,.leaflet-bar a{width:36px;height:36px;line-height:36px;font-size:20px}
+.mctl{display:flex;flex-direction:column}
+.mctl button{width:36px;height:36px;padding:0;border:0;border-bottom:1px solid #ccc;border-radius:0;background:#fff;color:#222;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.mctl button:last-child{border-bottom:0}
+.mctl button:hover{background:#f1f4f3}
+.mctl svg{width:18px;height:18px}
+.mlegend{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:12.5px/1.6 var(--sans);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.mlegend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 8px;vertical-align:-1px}
+.mlegend i:first-child{margin-left:0}
+
+/* 條件面板 */
+.rsec{border-top:1px solid var(--line);padding-top:10px;margin-top:12px}
+.rsec:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.rsec h3{display:flex;align-items:center;gap:8px;margin:0 0 4px}
+.rsec h3 .n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px;align-items:center;justify-content:center}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.f2 .w{grid-column:1/-1}
+.mini{font-size:12.5px;padding:3px 9px}
+.towns{max-height:132px;overflow:auto;padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+.towns .chip{font-size:12.5px;padding:2px 9px;margin:2px}
+.gobar{position:sticky;bottom:-14px;background:var(--panel);padding:10px 0 4px;margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);z-index:2}
+.gobar .pri{flex:1;min-width:140px;font-weight:600}
+.fcount{font-size:14px;margin:4px 0 8px}
+.fcount b{font-size:20px;color:var(--accent)}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.presets button{font-size:12.5px;padding:3px 10px;border-radius:999px;background:var(--field)}
+.presets button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+details.fg{border:1px solid var(--line);border-radius:8px;margin:8px 0;background:var(--field)}
+details.fg>summary{padding:7px 10px;font-weight:600;color:var(--fg);list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.fg>summary::-webkit-details-marker{display:none}
+details.fg>summary::after{content:"▾";color:var(--mute);transition:transform .15s}
+details.fg[open]>summary::after{transform:rotate(180deg)}
+details.fg>summary .on{font-weight:400;font-size:12px;color:var(--accent);margin-left:auto;margin-right:8px}
+.fgb{padding:2px 10px 10px}
+.fs1{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:center;margin:6px 0 0;font-size:13.5px}
+.fs1 output{font-weight:600;font-size:13px;min-width:64px;text-align:right}
+.fs1 output.none{color:var(--mute);font-weight:400}
+.fs1 input[type=range]{grid-column:1/-1;padding:0;margin:2px 0 0;background:none;border:0;accent-color:var(--accent);height:22px}
+.fs1 select{grid-column:1/-1}
+.fs1.dis{opacity:.45}
+.fchk{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--fg);margin:8px 0 0}
+.fchk input{width:auto;margin:0}
+
+/* 結果表 */
+#rOut tr.hl td{background:var(--accent-soft)}
+#rOut tbody tr{cursor:pointer}
+#rOut tbody tr:hover td{background:var(--field)}
+#rOut th{position:sticky;top:0;background:var(--panel);z-index:1}
+#rOut .tblwrap{max-height:70vh;overflow:auto}
+.ok{color:var(--good)}
+
+/* 地圖上的資訊卡 */
+.leaflet-popup-content{margin:12px 14px;font:13.5px/1.55 var(--sans);width:300px!important;max-width:calc(100vw - 80px)}
+.leaflet-popup-content-wrapper{border-radius:12px}
+.pc-h{display:flex;align-items:center;gap:8px;font-size:16px;margin-bottom:8px}
+.pc-s{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.pc-s div{background:#f3f6f5;border-radius:8px;padding:5px 4px;text-align:center}
+.pc-s b{display:block;font-size:17px;line-height:1.2}
+.pc-s span{font-size:11px;color:#5d6a65}
+.pc-k{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px}
+.pc-k dt{color:#5d6a65}.pc-k dd{margin:0;text-align:right;font-weight:600}
+.pc-w{margin:8px 0;font-size:13px;color:#3b4a44}
+.pc-b{display:flex;gap:6px}
+.pc-b button{flex:1;padding:6px 8px;font-size:13px}
+
+/* 快捷鍵說明 */
+.modal{position:fixed;inset:0;z-index:4000;background:rgba(10,20,16,.45);display:flex;align-items:center;justify-content:center;padding:16px;animation:mfade .15s ease-out}
+.modal .box{background:var(--panel);color:var(--fg);border-radius:14px;max-width:520px;width:100%;max-height:85vh;overflow:auto;padding:18px 20px;box-shadow:0 20px 50px rgba(0,0,0,.3);animation:mpop .18s ease-out}
+.modal h2{display:flex;justify-content:space-between;align-items:center}
+.modal table td{white-space:normal}
+kbd{display:inline-block;min-width:24px;text-align:center;font:600 12px/1 ui-monospace,monospace;padding:4px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;background:var(--field);margin-right:3px}
+@keyframes mfade{from{opacity:0}}@keyframes mpop{from{transform:translateY(8px) scale(.98);opacity:0}}
+.toolbar{display:flex;gap:6px;align-items:center;margin-left:auto}
+.tabs{align-items:flex-end}
+.kbtn{font-size:12.5px;padding:4px 10px;border-radius:999px;background:var(--field)}
+@media (prefers-reduced-motion:reduce){.modal,.modal .box{animation:none}}
+/* 備援跳出訊息（共用元件沒載入時） */
+.rtoasts{position:fixed;right:16px;bottom:16px;z-index:5000;display:flex;flex-direction:column;gap:8px;align-items:flex-end;max-width:min(400px,calc(100vw - 32px))}
+.rtoast{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:14px;animation:mpop .2s ease-out}
+.rtoast.bad{border-left-color:var(--bad)}
+.pri kbd{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.35);color:inherit}
+.leaflet-popup-content{color:#18211e}
