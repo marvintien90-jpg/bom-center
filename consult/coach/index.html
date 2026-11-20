@@ -235,6 +235,13 @@ function leadFin(l){const f=l&&l.finance||{}, rev=num(f.revenue); if(!rev) retur
 function goalFor(k,cur){const b=BENCH[k]; if(b==null) return ''; if(cur==null) return b; const dn=KPI[k].dir==='down';
   // 差距太大時先訂 6 個月可達成的里程碑（改善一半），否則直接用參考值
   const gap=dn?cur-b:b-cur; if(gap<=0) return Math.round(cur*10)/10; return gap>4?Math.round((dn?cur-gap/2:cur+gap/2)*10)/10:b}
+// 健檢題 → 第一個可以馬上做的動作（做什麼、交付什麼、用哪個工具）
+const FIRST={p1:'主力 10 道菜拍標準照、寫份量，建成 BOM 配方卡',p2:'前 10 名品項算出每份成本與毛利（BOM 中心配方）',p3:'月底盤點一次，在 BOM 中心比對理論與實際用量',p4:'前 20 項食材訂安全庫存與叫貨點',p5:'冷藏冷凍溫度與效期改用每日檢核表，店長每天簽',
+ m1:'寫一頁定位：目標客群、3 個主要競品、我們不同在哪',m2:'每月記來客數、客單價、回客率三個數字',m3:'Google 商家每週回覆評論，負評 24 小時內回',m4:'設計一個簡單集點或會員回購方案，先試 1 個月',m5:'外送與內用分開算毛利（BOM 中心通路分析）',
+ h1:'先寫開店、出餐、收店 3 份 SOP（SOP 手冊產生器）',h2:'做新人 2 週訓練表與上線檢核表',h3:'用前 4 週營業額排下週班表（BOM 中心排班）',h4:'每週一次門市自檢，缺失寫負責人與期限（門市稽核）',h5:'訂店長與員工的月考核 3 項指標與獎金',
+ r1:'跑一次菜單四象限，列出要調價與要下架的品項',r2:'新品上市前先在 BOM 中心試算成本與售價',r3:'訂新品流程：試作→內部試吃→限時試賣→檢討',r4:'排出下一季的季節品與節慶活動',r5:'每月看一次 3 個競品的新品與價格',
+ f1:'每月 10 日前出上月損益表（損益中心）',f2:'算出每月損益兩平營業額，貼在辦公室',f3:'訂下個月營收與三大成本預算，月底比對',f4:'做未來 3 個月現金流表',f5:'每月看食材、人事、租金三個占比是否超標',
+ i1:'POS 每月匯出銷售明細，存到固定資料夾',i2:'進貨、盤點、損益都改在 BOM＋損益中心登記',i3:'主管每週一看上週營收、來客、食材率三個數字',i4:'交辦改用待辦清單追到完成，不只丟 LINE 群組',i5:'SOP、合約、證照集中放在一個雲端資料夾'};
 function weakItems(l,n){ if(!l||!l.answers||!window.Checkup) return [];
   const sc=l.scores||{}, out=[]; Checkup.DIMS.forEach(d=>d.qs.forEach(([id,t])=>{const v=l.answers[id]; if(v!=null&&+v<=1) out.push({id,t,v:+v,dim:d.full,ds:+sc[d.key]||0})}));
   return out.sort((a,b)=>a.v-b.v||a.ds-b.ds).slice(0,n||5) }
@@ -430,7 +437,7 @@ document.addEventListener('change',e=>{
   if(e.target.id==='n_lead'){const l=D.leads.find(x=>x.id===+e.target.value); if(l){const set=(id,v)=>{const el=$('#'+id); if(el&&v!=null&&v!=='') el.value=v};
     set('f_name',l.brand);set('f_biz',l.biz_type);set('f_stores',l.stores);set('f_contact',l.contact_name);set('f_phone',l.phone);set('f_line',l.line_id);set('f_email',l.email);
     const fin=leadFin(l); let filled=0; if(fin) document.querySelectorAll('#goals .gl').forEach(r=>{const k=r.querySelector('[data-g=kpi]').value, t=r.querySelector('[data-g=target]'); if(k&&!t.value&&BENCH[k]!=null){t.value=goalFor(k,fin[k]);filled++}});
-    const w=weakItems(l,5), box=$('#seedbox'); if(box){box.style.display=w.length?'':'none'; $('#seedtxt').textContent=`同時把健檢最弱的 ${w.length} 題開成改善待辦（30 天內，放進業主報告）：${w.map(x=>x.t).join('；')}`}
+    const w=weakItems(l,5), box=$('#seedbox'); if(box){box.style.display=w.length?'':'none'; $('#seedtxt').textContent=`同時把健檢最弱的 ${w.length} 題開成改善待辦（每 2 週一項，放進業主報告）：${w.map(x=>FIRST[x.id]||x.t).join('；')}`}
     if(filled) say(`已依健檢數字預填 ${filled} 個目標（差距大的先訂 6 個月里程碑），可以再改。`)}}
   if(e.target.id==='n_brand'){const b=D.brands.find(x=>x.id===e.target.value); if(b&&!val('f_name').trim()) $('#f_name').value=b.name}
 });
@@ -446,7 +453,7 @@ document.addEventListener('click',async e=>{
   if(d.saveClient) return act(async()=>{const o=readClient(); if(!o) return; o.updated_at=new Date().toISOString();
     if(d.saveClient==='new'){const r=await q(sbc.from('coach_clients').insert(o).select().single(),'建立'); D.clients.push(r);
       const ld=r.lead_id&&D.leads.find(l=>l.id===r.lead_id); let extra='';
-      if(ld&&$('#f_seed')&&$('#f_seed').checked){const w=weakItems(ld,5); if(w.length){const rs=await sbc.from('coach_actions').insert(w.map(x=>({client_id:r.id,title:x.t,side:'業主',priority:x.v===0?'高':'中',due_on:addDays(today(),30),status:'待辦',share:true}))).select(); if(!rs.error){D.actions.push(...rs.data); extra+=`已依健檢開出 ${w.length} 項改善待辦。`}}}
+      if(ld&&$('#f_seed')&&$('#f_seed').checked){const w=weakItems(ld,5); if(w.length){const rs=await sbc.from('coach_actions').insert(w.map((x,i)=>({client_id:r.id,title:FIRST[x.id]||x.t,side:'業主',priority:x.v===0?'高':'中',due_on:addDays(today(),Math.min(60,14*(i+1))),status:'待辦',share:true}))).select(); if(!rs.error){D.actions.push(...rs.data); extra+=`已依健檢開出 ${w.length} 項改善待辦。`}}}
       if(ld&&r.stage==='輔導中'&&ld.status!=='已成交'){const u=await sbc.from('checkup_leads').update({status:'已成交'}).eq('id',ld.id); if(!u.error){ld.status='已成交'; extra+='健檢名單已標成「已成交」。'}}
       say('已建立客戶。'+extra+'下一步：記第一筆訪視或填 KPI。'); if(window.Kit) Kit.refresh(); go('c='+r.id)}
     else{const id=+d.saveClient; await q(sbc.from('coach_clients').update(o).eq('id',id)); Object.assign(D.clients.find(x=>x.id===id),o); say('已儲存設定。'); go('c='+id)}});
