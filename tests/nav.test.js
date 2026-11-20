@@ -114,7 +114,7 @@ async function openBom(br, role, w, hash) {
     log(await pg.evaluate(() => __S.tables.coach_visits.length === 0), 'correct password deletes (even after arm timeout)', W);
     await clean(pg, 'coach delete ' + W); await pg.close();
 
-    // 3. 業主入口：只看到業主系統、側欄可收合
+    // 3. 餐策雲 DineOS：只看到業主系統、側欄可收合
     const own = data(); own.bom_profiles = [{ user_id: 'u1', role: 'client', status: 'active' }];
     pg = await open(br, { user: U, tables: own }, vw, 'portal/'); await sleep(700);
     await pg.click('[data-kit-menu]'); await sleep(300); d = await pg.innerText('#kit-drawer');

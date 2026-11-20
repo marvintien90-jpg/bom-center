@@ -356,8 +356,8 @@ function route(){const h=location.hash.slice(1), p=new URLSearchParams(h); retur
 function go(h){ if(location.hash==='#'+h) render(); else location.hash=h }
 function render(){
   $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:4px"><a class="btn" href="${CONSULT}">顧問工作台</a><button type="button" data-out>登出</button></div>`:'';
-  if(!me){$('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">和業主入口、顧問工作台同一組帳號。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`;return}
-  if(!ok){$('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><div class="row"><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`;return}
+  if(!me){$('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">和餐策雲 DineOS、顧問工作台同一組帳號。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`;return}
+  if(!ok){$('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在餐策雲 DineOS。</p><div class="row"><a class="btn pri" href="${PORTAL}">回餐策雲 DineOS</a></div></div>`;return}
   if(D.missing){$('#app').innerHTML=`<div class="card"><h2>資料表還沒建立</h2><p class="sub">加盟體系的資料表尚未安裝到資料庫，請 Claude 幫你執行安裝。</p></div>`;return}
   const r=route(); let h;
   if(r.v==='new') h=vNew();

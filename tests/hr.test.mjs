@@ -27,6 +27,7 @@ const db=window.__db||(window.__db={hr_settings:null,hr_employees:JSON.parse(ses
 const save=()=>sessionStorage.setItem('emps',JSON.stringify(db.hr_employees));
 const mk=tb=>{let op='sel',payload=null,id=null;const res=()=>{
   if(tb==='bom_profiles'||tb==='pl_profiles')return {data:prof};
+  if(tb==='sub_subscriptions')return {data:{plan:'basic',status:'active',period_end:'2099-01-01'}};
   if(tb==='hr_settings'){if(op==='up'){db.hr_settings=payload;sessionStorage.setItem('set',JSON.stringify(payload));return {data:null}}const v=db.hr_settings||JSON.parse(sessionStorage.getItem('set')||'null');return {data:v}}
   if(op==='ins'){const r={id:'e'+Date.now()+Math.random().toString(36).slice(2,6),active:true,created_at:new Date().toISOString(),...payload};db.hr_employees.push(r);save();return {data:r}}
   if(op==='upd'){const i=db.hr_employees.findIndex(x=>x.id===id);db.hr_employees[i]={...db.hr_employees[i],...payload};save();return {data:db.hr_employees[i]}}
@@ -34,7 +35,7 @@ const mk=tb=>{let op='sel',payload=null,id=null;const res=()=>{
   return {data:db.hr_employees}};
  const q={select(){return q},order(){return q},eq(k,v){if(k==='id')id=v;return q},insert(p){op='ins';payload=p;return q},update(p){op='upd';payload=p;return q},delete(){op='del';return q},upsert(p){op='up';payload=p;return q},
   maybeSingle:async()=>res(),single:async()=>res(),then(ok,no){return Promise.resolve(res()).then(ok,no)}};return q};
-return {from:mk,auth:{getSession:async()=>({data:{session:${user ? "{user:{id:'u1',email:'o@x.com'},access_token:'t'}" : 'null'}}}),onAuthStateChange(){},signOut:async()=>{},signInWithPassword:async()=>({error:{message:'Invalid login'}})}}}}`;
+return {from:mk,rpc:async(n)=>n==='sub_my_modules'?${status === 200 ? "{data:[{module:'bom'},{module:'hr'}],error:null}" : status === 402 ? "{data:null,error:{message:'Could not find the function'}}" : "{data:[{module:'bom'},{module:'pl'}],error:null}"}:{data:null,error:{message:'x'}},auth:{getSession:async()=>({data:{session:${user ? "{user:{id:'u1',email:'o@x.com'},access_token:'t'}" : 'null'}}}),onAuthStateChange(){},signOut:async()=>{},signInWithPassword:async()=>({error:{message:'Invalid login'}})}}}}`;
 const pages = ['', '#qa', '#qa/pay', '#qa/all/q27', '#emp', '#emp/new', '#calc/ins', '#tpl/job-post', '#case', '#case/ot/start.wd.wd_ok', '#case/fire/start.mis.mis_light', '#case/leave/start.injury_go', '#tpl', '#tpl/contract-ft', '#tpl/layoff', '#law', '#law/LEAVE:9-1', '#law/NOTE', '#calc/ot', '#calc/sev', '#calc/al', '#calc/min', '#calc/unused', '#set', '#q/特休'];
 const br = await chromium.launch(); let fail = bad.length ? 1 : 0;
 const run = async (label, user, status, hash, vw, want, fn) => {
@@ -54,7 +55,8 @@ const run = async (label, user, status, hash, vw, want, fn) => {
 };
 for (const vw of [{ width: 1200, height: 900 }, { width: 375, height: 800 }]) {
   await run('未登入', false, 200, '', vw, ['登入', '忘記密碼']);
-  await run('沒權限', true, 403, '', vw, ['還沒開通', '會員中心']);
+  await run('基本版沒有人資', true, 403, '', vw, ['需要訂閱', '看方案、開始試用']);
+  await run('函式未裝好時用訂閱判斷', true, 402, '', vw, ['需要訂閱']);
   for (const h of pages) await run('業主', true, 200, h, vw, h === '' ? ['常見情境', '29,500'] : null);
 }
 const W = { width: 1200, height: 900 };
