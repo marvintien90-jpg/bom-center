@@ -253,7 +253,7 @@ async function load(){
   if(ok){
     const r=await sbc.from('org_plans').select('*').order('updated_at',{ascending:false});
     if(r.error){ plans=null; say('組織診斷的資料表還沒安裝，請 Claude 執行資料庫更新（'+r.error.message+'）。',true) } else plans=r.data||[];
-    const c=await sbc.from('coach_clients').select('id,name,stores,biz_type,stage').order('name');
+    const c=await sbc.from('coach_clients').select('id,name,stores,biz_type,stage,lead_id,brand_id').order('name');
     if(c.error){ coachOk=false; clients=[] } else clients=c.data||[];
   }
   render();
@@ -351,7 +351,7 @@ function tDiag(){
   ${a.flags.length?`<div class="card"><h2>組織結構警訊</h2>${a.flags.map(f=>`<div class="chk"><span class="pill ${f[0]}">${f[0]==='bad'?'嚴重':'注意'}</span> ${esc(f[1])}</div>`).join('')}</div>`:''}
   <div class="card"><h2>職能缺口檢查</h2><p class="note">「現況」會依你在②畫的組織自動判斷，也可以手動改。「這階段需要」是 ${esc(STAGES[s].n)} 該有的水準。</p>
   <div class="scroll"><table><thead><tr><th>總部職能</th><th>現況</th><th>這階段需要</th><th class="c">落差</th></tr></thead><tbody>${fx}</tbody></table></div></div>
-  <div class="card"><h2>管理制度檢查</h2><p class="note">跟業主或總部主管一題一題問，答「部分有」代表有在做但沒有書面或沒有固定。</p><div class="scroll"><table><tbody>${gq}</tbody></table></div></div>
+  <div class="card"><h2>管理制度檢查</h2><p class="note">跟業主或總部主管一題一題問，答「部分有」代表有在做但沒有書面或沒有固定。</p>${cur.client_id?`<div class="row noprint" style="margin-top:4px"><button type="button" class="sm" data-govfill>依健檢與輔導紀錄帶入（只填還沒答的題）</button></div>`:''}<div class="scroll"><table><tbody>${gq}</tbody></table></div></div>
   <div class="card"><h2>顧問觀察</h2><label for="note_diag">訪談重點、業主說法、你的判斷（會放進業主報告）</label><textarea id="note_diag" data-note="diag">${esc(d.notes.diag||'')}</textarea></div>`;
 }
 function nodeHtml(org,p,a,edit){
@@ -514,6 +514,20 @@ function tSet(){
   <div class="row"><button class="pri" data-saveset>儲存設定</button><button data-delplan class="${armed==='plan'?'armed':''}">${armed==='plan'?'再按一次：刪除整份診斷':'刪除這份診斷'}</button></div></div>`;
 }
 
+/* ===== 依健檢、營運輔導、SOP 帶入管理制度題 ===== */
+// 健檢 0 沒有／1 偶爾／2 大致有／3 完整 → 制度題 0 沒有／1 部分有／2 有
+const GOVMAP={pl:['f1'],sop:['h1','h2'],bud:['f3'],qsc:['h4'],data:['i2','i3'],mtg:['i4']};
+async function govFill(D){
+  const c=clients.find(x=>x.id===cur.client_id)||{}; let lead=null, n=0;
+  if(c.lead_id){ const r=await sbc.from('checkup_leads').select('answers').eq('id',c.lead_id).maybeSingle(); lead=r.data&&r.data.answers||null }
+  const to=v=>v==null?null:v>=3?2:v>=1?1:0;
+  if(lead) for(const [k,qs] of Object.entries(GOVMAP)){ if(D.gov[k]!=null&&D.gov[k]!=='') continue; const vs=qs.map(q=>lead[q]).filter(v=>v!=null).map(Number); if(!vs.length) continue; D.gov[k]=to(Math.min(...vs)); n++ }
+  // 有 SOP 手冊且已交付 → SOP 至少「部分有」；有 QSC 稽核紀錄 → 稽核至少「部分有」
+  try{ const s=await sbc.from('sop_manuals').select('id,status').eq('coach_client_id',cur.client_id); if(s.data&&s.data.length&&(D.gov.sop==null||D.gov.sop==='')){D.gov.sop=1;n++} }catch(_){}
+  if(c.brand_id){ try{ const a=await sbc.from('qsc_audits').select('audit_id').eq('brand_id',c.brand_id).limit(1); if(a.data&&a.data.length&&(D.gov.qsc==null||D.gov.qsc==='')){D.gov.qsc=1;n++} }catch(_){} }
+  return n;
+}
+
 /* ===== 存檔（樂觀鎖：rev 對不上就提醒，不蓋掉別的視窗的修改） ===== */
 function touch(rerender){ dirty=true; saveState='尚未存檔…'; const s=$('#saved'); if(s) s.textContent=saveState; clearTimeout(saveT); saveT=setTimeout(saveNow,800); if(rerender){ const y=scrollY; render(); scrollTo(0,y) } }
 async function saveNow(){
@@ -552,6 +566,7 @@ document.addEventListener('click',e=>{
   if(d.delpos){ const [w,id]=d.delpos.split('|'); if(armed!=='del'+id){ armed='del'+id; return posDialog(w,id) }
     const org=D[w], p=org.positions.find(x=>x.id===id); org.positions.forEach(x=>{ if(x.parent===id) x.parent=p.parent }); org.positions=org.positions.filter(x=>x.id!==id); armed=null; $('#dlg').close(); touch(true); return }
   if(d.tpl!=null){ D.tobe={positions:tpl(+d.tpl,!!cur.franchise)}; D.tobe.positions.forEach(p=>p.kpis=suggestKpi(p,D.tobe)); D.raci={}; autoRaci(); say('已套用範本，並自動帶入 RACI 和 KPI 建議。點職位填上人名或調整。'); return touch(true) }
+  if(d.govfill!==undefined) return act(async()=>{ const n=await govFill(D); if(n) touch(true); say(n?`已帶入 ${n} 題（依健檢答案與輔導資料），請跟業主確認後再改。`:'沒有可以帶入的題目（健檢沒答到，或這幾題已經答過）。',!n) });
   if(d.copyasis!==undefined){ D.tobe=JSON.parse(JSON.stringify(D.asis)); D.raci={}; return touch(true) }
   if(d.resetTobe!==undefined){ if(armed!=='tobe'){ armed='tobe'; return render() } armed=null; D.tobe=null; D.raci={}; return touch(true) }
   if(d.autoraci!==undefined){ if(armed!=='raci'){ armed='raci'; return render() } armed=null; autoRaci(); return touch(true) }
