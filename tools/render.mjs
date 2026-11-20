@@ -6,7 +6,11 @@ const src = fs.readFileSync("layout.js", "utf8");
 const buildCard = new Function(src + "; return buildCard;")();
 const u = (s) => "data:image/svg+xml;base64," + Buffer.from(s).toString("base64");
 const PAPER = u(paperSvg("#F3F1EC", "#E3DED7", 0.22)), DARK = u(paperSvg("#1A1A1A", "#262422", 0.25));
+const LOCAL = { "Noto+Sans+TC:500": "NotoSansTC-500.ttf", "Noto+Sans+TC:900": "NotoSansTC-900.ttf", "Forum:400": "Forum-400.ttf" };
 async function loadFont(fam, w, text) {
+  // 先用 tools/fonts 裡的字型（排程環境連不到 Google Fonts），沒有才上網抓
+  const f = new URL("./fonts/" + LOCAL[`${fam}:${w}`], import.meta.url);
+  if (LOCAL[`${fam}:${w}`] && fs.existsSync(f)) { const b = fs.readFileSync(f); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); }
   const css = await (await fetch(`https://fonts.googleapis.com/css2?family=${fam}:wght@${w}&text=${encodeURIComponent(text)}`)).text();
   const m = css.match(/src:\s*url\(([^)]+)\)\s*format\('(opentype|truetype)'\)/);
   return await (await fetch(m[1])).arrayBuffer();
