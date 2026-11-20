@@ -216,6 +216,13 @@ function baseline(c){ // 健檢當時的財務數字當基準
   const net=rev-(food||0)-(labor||0)-(rent||0)-(other||0);
   return {month:l.created_at.slice(0,7),revenue:rev,food_pct:food!=null?pct(food,rev):null,labor_pct:labor!=null?pct(labor,rev):null,rent_pct:rent!=null?pct(rent,rev):null,net_pct:pct(net,rev)};
 }
+function preBase(c,ks){ // 開始輔導前（start_on 之前）實際損益的平均
+  const s=c.start_on&&ym(c.start_on); if(!s) return null; const pre=ks.filter(k=>ym(k.month)<s).slice(-3); if(!pre.length) return null;
+  const o={months:pre.length,from:ym(pre[0].month),to:ym(pre[pre.length-1].month)}; ['revenue','food_pct','labor_pct','rent_pct','net_pct'].forEach(k=>o[k]=avg(pre.map(x=>num(x[k])))); return o }
+function payback(c,plan,st){ // 創業客戶：第一家店開幕後累計淨利 vs 總投資
+  const inv=invest(plan); if(!inv.total||!st||!st.list.length) return null; const first=st.list.slice().sort((a,b)=>b.n-a.n)[0];
+  const cum=Object.values(first.o).reduce((a,x)=>a+(x.net||0),0); const run=first.avgNet>0?Math.max(0,inv.total-cum)/first.avgNet:null;
+  return {store:first.name,cum,pct:Math.round(cum*100/inv.total),months:first.n,left:run} }
 function ingCost(b){ // 每個基本單位的成本
   const m={}, ing={}, semi={}; (b.ingredients||[]).forEach(i=>ing[i.id]=i); (b.semis||[]).forEach(s=>semi[s.id]=s);
   const cost=(ref,depth=0)=>{ if(m[ref]!=null) return m[ref]; const [t,id]=String(ref).split(':'); let v=0;
@@ -243,11 +250,13 @@ function stores(det){ // 各店 × 月
     const r3={rev:0,net:0,food:0,labor:0,rent:0}; recent.forEach(m=>Object.keys(r3).forEach(k=>r3[k]+=o[m][k]));
     const fixed=r3.labor+r3.rent+(r3.rev-r3.food-r3.labor-r3.rent-r3.net); // 人事＋租金＋其他費用
     const be=r3.rev&&r3.food<r3.rev?fixed/(1-r3.food/r3.rev)/Math.max(1,recent.length):null;
-    const lossM=ms.filter(m=>o[m]&&o[m].net<0).length;
-    return {name,o,last,rev:L.rev,net:L.net,netp:pct(L.net,L.rev),food:pct(r3.food,r3.rev),labor:pct(r3.labor,r3.rev),rent:pct(r3.rent,r3.rev),avgRev:r3.rev/Math.max(1,recent.length),avgNet:r3.net/Math.max(1,recent.length),be,lossM} });
+    const lossM=ms.filter(m=>o[m]&&o[m].net<0).length, n=ms.filter(m=>o[m]).length;
+    return {name,o,last,n,ramp:n<3&&ms.length>=3,rev:L.rev,net:L.net,netp:pct(L.net,L.rev),food:pct(r3.food,r3.rev),labor:pct(r3.labor,r3.rev),rent:pct(r3.rent,r3.rev),avgRev:r3.rev/Math.max(1,recent.length),avgNet:r3.net/Math.max(1,recent.length),be,lossM} });
   list.sort((a,b)=>(b.avgNet||0)-(a.avgNet||0));
   return {list,ms};
 }
+const lossOf=st=>st?st.list.filter(s=>s.avgNet<0&&!s.ramp):[], rampOf=st=>st?st.list.filter(s=>s.ramp):[];
+const nm=n=>n<2?'第 1 個月':`前 ${n} 個月`;
 function orgSum(c){ const p=D.org.find(x=>x.client_id===c.id); if(!p) return null; const d=p.data||{}, pos=((d.asis||{}).positions)||[], tob=((d.tobe||{}).positions)||[];
   const gov=d.gov||{}, gv=Object.values(gov).map(Number).filter(v=>!isNaN(v));
   const multi={}; pos.forEach(x=>{ if(x.person) multi[x.person]=(multi[x.person]||0)+1 });
@@ -269,7 +278,7 @@ function journey(c,ctx){
   const {plan,type,lead,ks,st,me,org,fr,sop,acts}=ctx, lastK=ks[ks.length-1], g=c.goals||[];
   const S=(k,t,state,info,u,ul)=>({k,t,state,info,u,ul});
   const chk=plan.check||{}, nck=Object.values(chk).filter(Boolean).length, sites=plan.sites||[], pick=sites.find(s=>s.pick);
-  const inv=invest(plan), loss=st?st.list.filter(s=>s.avgNet<0):[];
+  const inv=invest(plan), loss=lossOf(st);
   const goalsHit=g.length&&lastK?g.filter(x=>hit(x,kv(c,lastK,x.kpi))===true).length:0;
   const qs=qscStores(c), qAvg=avg(qs.map(x=>x.last));
   const sopS=sop?S('sop','SOP 與稽核',qAvg!=null&&qAvg>=80?'done':'doing',`${sop.steps} 個步驟、${sop.audit} 個稽核點${qAvg!=null?`｜最近 QSC 平均 ${fmt(qAvg)}`:''}`,C+'sop/#m='+sop.s.id,'打開')
@@ -282,7 +291,8 @@ function journey(c,ctx){
   if(type==='startup') return [
     S('site','定位與選址',pick?'done':sites.length?'doing':'',pick?`選定：${pick.name}`:sites.length?`${sites.length} 個候選店址`:'用立地評估比 3 個店址','#c='+c.id+'&v=plan','記錄'),
     S('menu','菜單與成本',me?(me.rate<=me.target?'done':'warn'):'',me?`${me.it.length} 道菜｜食材率 ${fmt(me.rate,1)}%（目標 ${me.target}%）`:'到 BOM 中心建配方',c.brand_id?BOM+'#matrix&b='+encodeURIComponent(c.brand_id):C+'coach/#c='+c.id+'&t=edit',c.brand_id?'四象限':'連結品牌'),
-    S('invest','投資與回本',inv.total?(inv.payback!=null&&inv.payback<=24?'done':'warn'):'',inv.total?`投資 ${money(inv.total)}｜${inv.payback==null?'月虧損，回不了本':'約 '+fmt(inv.payback,0)+' 個月回本'}`:'填投資與月損益試算','#c='+c.id+'&v=plan','試算'),
+    (()=>{const pb=payback(c,plan,st); if(pb) return S('invest','投資與回本',pb.pct>=100||(pb.left!=null&&pb.months+pb.left<=24)?'done':'warn',`投資 ${money(inv.total)}｜${pb.store}已回收 ${pb.pct}%${pb.pct<100&&pb.left!=null?`，再約 ${fmt(pb.left,0)} 個月`:''}`,'#c='+c.id+'&v=plan','試算');
+      return S('invest','投資與回本',inv.total?(inv.payback!=null&&inv.payback<=24?'done':'warn'):'',inv.total?`投資 ${money(inv.total)}｜${inv.payback==null?'月虧損，回不了本':'約 '+fmt(inv.payback,0)+' 個月回本'}`:'填投資與月損益試算','#c='+c.id+'&v=plan','試算')})(),
     S('prep','開店籌備',nck>=PREPN?'done':nck?'doing':'',`${nck}/${PREPN} 項完成${plan.open_on?`｜開幕 ${plan.open_on}`:''}`,'#c='+c.id+'&v=plan','清單'),
     sopS, kpiS, orgS, frS];
   return [
@@ -302,11 +312,16 @@ function nextSteps(c,ctx){
   const {plan,type,lead,ks,st,me,org,fr,sop,acts}=ctx, out=[], t=today(), lastK=ks[ks.length-1];
   const late=acts.filter(a=>a.status!=='已完成'&&a.due_on&&a.due_on<t);
   if(late.length) out.push(['bad','辦',`${late.length} 項改善逾期`,late.slice(0,2).map(a=>a.title).join('、'),C+'coach/#c='+c.id+'&t=actions']);
-  if(st) st.list.filter(s=>s.avgNet<0).forEach(s=>out.push(['bad','損',`${s.name} 近 3 月平均每月虧 ${money(-s.avgNet)}`,`損益兩平約需月營收 ${money(s.be)}（現在 ${money(s.avgRev)}）｜人事 ${fmt(s.labor,1)}%、租金 ${fmt(s.rent,1)}%`,'#c='+c.id+'&v=stores']));
+  rampOf(st).forEach(s=>out.push([s.avgNet<0?'warn':'good','新',`${s.name} 開幕${nm(s.n)}${s.avgNet<0?`，每月虧 ${money(-s.avgNet)}`:'就有賺錢'}`,`損益兩平約需月營收 ${money(s.be)}（現在 ${money(s.avgRev)}）｜新店先盯來客數與人事排班，滿 3 個月還虧再進入止血`,'#c='+c.id+'&v=stores']));
+  lossOf(st).forEach(s=>out.push(['bad','損',`${s.name} 近 3 月平均每月虧 ${money(-s.avgNet)}`,`損益兩平約需月營收 ${money(s.be)}（現在 ${money(s.avgRev)}）｜人事 ${fmt(s.labor,1)}%、租金 ${fmt(s.rent,1)}%`,'#c='+c.id+'&v=stores']));
   if(st) st.list.filter(s=>s.avgNet>=0&&s.food>36).forEach(s=>out.push(['warn','料',`${s.name} 食材率 ${fmt(s.food,1)}%`,'到 BOM 中心看用量差異與份量，抽秤主力品項',c.brand_id?BOM+'#var&b='+encodeURIComponent(c.brand_id):'#c='+c.id+'&v=stores']));
-  if(me){ const dogs=me.it.filter(x=>x.k==='dog'), horses=me.it.filter(x=>x.k==='horse');
-    if(horses.length) out.push(['warn','菜',`耕馬 ${horses.length} 道：好賣但毛利低`,horses.slice(0,3).map(x=>x.name).join('、')+'｜先調價或降份量成本',BOM+'#matrix&b='+encodeURIComponent(c.brand_id)]);
-    if(dogs.length) out.push(['mute','菜',`瘦狗 ${dogs.length} 道：考慮下架或重做`,dogs.slice(0,3).map(x=>x.name).join('、'),BOM+'#matrix&b='+encodeURIComponent(c.brand_id)]) }
+  if(me){ const ps=me.it.map(x=>x.price).sort((a,b)=>a-b), med=ps[Math.floor(ps.length/2)], core=me.it.filter(x=>x.price>=med*0.5), side=me.it.filter(x=>x.price<med*0.5);
+    const dogs=core.filter(x=>x.k==='dog'), horses=core.filter(x=>x.k==='horse'), U=BOM+'#matrix&b='+encodeURIComponent(c.brand_id);
+    if(horses.length) out.push(['warn','菜',`主餐耕馬 ${horses.length} 道：好賣但每份賺得少`,horses.slice(0,3).map(x=>`${x.name}（每份毛利 ${fmt(x.cm,0)} 元，主餐平均 ${fmt(avg(core.map(y=>y.cm)),0)}）`).join('、')+'｜先試漲 5–10 元或減少高價配料',U]);
+    if(dogs.length) out.push(['mute','菜',`主餐瘦狗 ${dogs.length} 道：考慮下架或重做`,dogs.slice(0,3).map(x=>`${x.name}（月銷 ${fmt(x.q,0)}）`).join('、')+'｜下架前先看是不是被套餐綁住',U]);
+    const hi=side.filter(x=>x.rate>40); if(hi.length) out.push(['mute','菜',`配菜飲品 ${hi.length} 項成本率超過 40%`,hi.slice(0,3).map(x=>`${x.name} ${fmt(x.rate,0)}%`).join('、'),U]);
+    const kk=ks.slice(-3).map(k=>num(k.food_pct)).filter(v=>v!=null), act=avg(kk), rev3=avg(ks.slice(-3).map(k=>num(k.revenue)).filter(v=>v!=null));
+    if(act!=null&&act-me.rate>2) out.push(['warn','差',`實際食材率比配方理論高 ${fmt(act-me.rate,1)} 個百分點`,`配方理論 ${fmt(me.rate,1)}%、損益表近 3 月 ${fmt(act,1)}%${rev3?`｜每月約多花 ${money(rev3*(act-me.rate)/100)}`:''}：盤點比對理論用量，查耗損、份量與叫貨`,c.brand_id?BOM+'#var&b='+encodeURIComponent(c.brand_id):'#c='+c.id+'&v=stores']) }
   if(type==='startup'){ const inv=invest(plan), chk=plan.check||{};
     if(!(plan.sites||[]).some(s=>s.pick)) out.push(['warn','址','還沒選定店址','先用立地評估比 3 個候選點，記在「開店籌備」','#c='+c.id+'&v=plan']);
     if(inv.total&&inv.payback!=null&&inv.payback>24) out.push(['warn','本',`回本要 ${fmt(inv.payback,0)} 個月`,'超過 24 個月：降低裝潢、縮小坪數或提高客單','#c='+c.id+'&v=plan']);
@@ -372,7 +387,7 @@ function render(){
   $('#app').innerHTML=hero(c,ctx)+tabs(c,r.v)+(r.v==='plan'?vPlan(c,ctx):r.v==='stores'?vStores(c,ctx):r.v==='report'?vReport(c,ctx):vHome(c,ctx));
 }
 function context(c,det){ const plan=planOf(c), type=typeOf(c,plan), ks=kpisOf(c), st=det.pl.length?stores(det):null, me=menuEng(det.brand);
-  return {plan,type,lead:leadOf(c),ks,st,me,det,org:orgSum(c),fr:frSum(c),sop:sopSum(c),acts:D.actions.filter(a=>a.client_id===c.id),base:baseline(c)} }
+  return {plan,type,lead:leadOf(c),ks,st,me,det,org:orgSum(c),fr:frSum(c),sop:sopSum(c),acts:D.actions.filter(a=>a.client_id===c.id),base:baseline(c),pre:preBase(c,ks)} }
 function hero(c,ctx){
   return `<div class="hero noprint"><div class="av" aria-hidden="true">${esc(c.name.slice(0,1))}</div><div><h1>${esc(c.name)}</h1><div class="meta">${esc(TYPES[ctx.type])}｜${esc([c.stage,c.biz_type,(+c.stores||0)?c.stores+' 店':'籌備中',c.contact_name].filter(Boolean).join('｜'))}</div></div>
    <div class="acts"><a class="btn" href="${C}coach/#c=${c.id}">營運輔導</a><a class="btn" href="${C}#c=${c.id}">客戶檔案</a><a class="btn pri" href="#c=${c.id}&v=report">整合報告</a></div></div>`;
@@ -423,11 +438,11 @@ function headline(c,ctx){
   if(type==='startup'&&!lastK){ const inv=invest(plan), chk=Object.values(plan.check||{}).filter(Boolean).length, left=plan.open_on?daysTo(today(),plan.open_on):null;
     return card('距離開幕',left==null?'—':left>=0?left+' 天':'已開幕',plan.open_on||'到「開店籌備」設定開幕日')+card('總投資',money(inv.total),inv.total?'押金＋裝潢＋設備＋開辦＋週轉':'尚未試算')
       +card('預估回本',inv.payback==null?'—':fmt(inv.payback,0)+' 個月',inv.payback==null?'':(inv.payback<=24?'在 24 個月內':'偏久'),inv.payback==null?'':inv.payback<=24?'good':'bad')+card('籌備進度',`${chk}/${PREPN}`,'開店前清單') }
-  const loss=st?st.list.filter(s=>s.avgNet<0).length:0;
+  const loss=lossOf(st).length;
   return card(`月營收 ${lastK?ym(lastK.month):''}`,money(lastK&&lastK.revenue),d('revenue'))
     +card('淨利率',lastK&&lastK.net_pct!=null?fmt(lastK.net_pct,1)+'%':'—',d('net_pct'),lastK&&num(lastK.net_pct)!=null?(+lastK.net_pct>=12?'good':+lastK.net_pct<5?'bad':'warn'):'')
     +card('食材／人事',lastK?`${fmt(lastK.food_pct,1)}／${fmt(lastK.labor_pct,1)}%`:'—',d('food_pct'),lastK&&(+lastK.food_pct>35||+lastK.labor_pct>28)?'warn':'')
-    +(st?card('虧損門市',`${loss}/${st.list.length}`,loss?st.list.filter(s=>s.avgNet<0).map(s=>s.name).join('、')+' 近 3 月平均虧損':'各店近 3 月都賺錢',loss?'bad':'good'):card('QSC',fmt(qscOf(c,lastK)),'當月訪視或稽核平均'));
+    +(st?card('虧損門市',`${loss}/${st.list.length}`,loss?lossOf(st).map(s=>s.name).join('、')+' 近 3 月平均虧損':rampOf(st).length?rampOf(st).map(s=>s.name+' 開幕'+nm(s.n)).join('、')+'，其他店都賺錢':'各店近 3 月都賺錢',loss?'bad':rampOf(st).length?'':'good'):card('QSC',fmt(qscOf(c,lastK)),'當月訪視或稽核平均'));
 }
 function goalCharts(c,ctx){
   const {ks,base}=ctx, g=(c.goals||[]).filter(x=>KPI[x.kpi]); if(!ks.length&&!base) return `<section class="card"><h2>KPI 對目標</h2><p class="note">還沒有每月 KPI。連結損益中心後到營運輔導按「從損益中心帶入」。</p><a class="btn sm" href="${C}coach/#c=${c.id}&t=kpi">填 KPI</a></section>`;
@@ -483,6 +498,7 @@ function vPlan(c,ctx){
     <div class="kpi" style="margin-top:8px"><span>每月淨利</span><b class="${inv.profit<0?'down':''}">${inv.rev?money(inv.profit):'—'}</b><small>${inv.netp!=null?'淨利率 '+fmt(inv.netp,1)+'%':''}</small></div>
     <div class="kpi ${inv.payback==null?'':inv.payback<=24?'good':'bad'}" style="margin-top:8px"><span>回本</span><b>${inv.payback==null?(inv.rev?'回不了本':'—'):fmt(inv.payback,1)+' 個月'}</b></div>
     <div class="kpi" style="margin-top:8px"><span>損益兩平月營收</span><b>${money(inv.be)}</b><small>${inv.perDay?'每天約 '+fmt(inv.perDay,0)+' 位客人':''}</small></div>
+    ${(()=>{const pb=payback(c,p,ctx.st); return pb?`<div class="kpi ${pb.pct>=100?'good':''}" style="margin-top:8px"><span>實際回收（${esc(pb.store)}，開幕 ${pb.months} 個月）</span><b>${pb.pct}%</b><small>累計淨利 ${money(pb.cum)}${pb.pct<100&&pb.left!=null?`｜照近 3 月獲利再約 ${fmt(pb.left,0)} 個月回本`:''}</small></div>`:''})()}
     <p class="note">回本超過 24 個月或兩平營收高於預估營收的 85%，都代表風險偏高。</p></section></div>
    <div class="grid g2"><section class="card"><h2>投資預算</h2><div class="fgrid">${F('budget','deposit','押金與頂讓','元',b.deposit)}${F('budget','fitout','裝潢工程','元',b.fitout)}${F('budget','equip','設備與 POS','元',b.equip)}${F('budget','preopen','開辦（招募、訓練、行銷）','元',b.preopen)}${F('budget','working','週轉金（建議 3 個月固定費用）','元',b.working)}</div></section>
     <section class="card"><h2>每月損益預估</h2><div class="fgrid">${F('month','rev','月營收','元',m.rev)}${F('month','ticket','客單價','元',m.ticket)}${F('month','food','食材成本率','%',m.food)}${F('month','labor','人事費','元',m.labor)}${F('month','rent','租金','元',m.rent)}${F('month','other','其他固定費用','元',m.other)}</div>
@@ -501,18 +517,20 @@ function readPlan(){
   return p;
 }
 
+function preNote(ctx){ const {base,pre}=ctx; if(!base||!pre||base.net_pct==null||pre.net_pct==null) return '';
+  const gap=base.net_pct-pre.net_pct; return Math.abs(gap)>=3?`<p class="note">健檢時業主自估淨利率 ${fmt(base.net_pct,1)}%，但損益表實際只有 ${fmt(pre.net_pct,1)}%（差 ${fmt(Math.abs(gap),1)} 個百分點）。輔導成效以「輔導前實際」為準。</p>`:'' }
 function vReport(c,ctx){
   const {ks,st,me,lead,base,acts,org,fr,sop,type,plan}=ctx, lastK=ks[ks.length-1], t=today(), steps=journey(c,ctx);
   const done=acts.filter(a=>a.share&&a.status==='已完成'), open=acts.filter(a=>a.share&&a.status!=='已完成');
   const g=(c.goals||[]).filter(x=>KPI[x.kpi]);
   const vs=D.visits.filter(v=>v.client_id===c.id&&v.share).slice(-4);
-  const cmp=g.map(x=>{const k=KPI[x.kpi], b=base?base[x.kpi]:null, v=kv(c,lastK,x.kpi), h=hit(x,v); return `<tr><td>${esc(k.l)}</td><td class="n">${fmt(b,k.d)}</td><td class="n"><b>${fmt(v,k.d)}</b></td><td class="n">${(x.dir||k.dir)==='down'?'≤':'≥'} ${fmt(x.target,k.d)}</td><td>${h==null?'—':h?'<span class="pill good">達標</span>':'<span class="pill bad">未達</span>'}</td></tr>`}).join('');
+  const pre=ctx.pre; const cmp=g.map(x=>{const k=KPI[x.kpi], b=base?base[x.kpi]:null, pb=pre?pre[x.kpi]:null, v=kv(c,lastK,x.kpi), h=hit(x,v); return `<tr><td>${esc(k.l)}</td><td class="n">${fmt(b,k.d)}</td>${pre?`<td class="n">${fmt(pb,k.d)}</td>`:''}<td class="n"><b>${fmt(v,k.d)}</b></td><td class="n">${(x.dir||k.dir)==='down'?'≤':'≥'} ${fmt(x.target,k.d)}</td><td>${h==null?'—':h?'<span class="pill good">達標</span>':'<span class="pill bad">未達</span>'}</td></tr>`}).join('');
   return `<div class="row noprint"><button class="pri" data-print>列印／存成 PDF</button><span class="note">只放分享給業主的訪視與待辦；內部觀察、月費、備註不會出現。</span></div>
    <div class="report"><div class="card" style="border-top:6px solid var(--spice)"><h1 style="margin:0">${esc(c.name)}｜經營整合報告</h1><p class="note" style="margin:2px 0 0">品牌加辣餐飲顧問工作室｜${t}${lastK?`｜數字到 ${ym(lastK.month)}`:''}</p></div>
    <div class="card"><h2>一、現在在哪個階段</h2><div class="road">${steps.map((s,i)=>`<div class="st ${s.state}"><div class="dot">${s.state==='done'?'✓':s.state==='warn'?'!':i+1}</div><b>${esc(s.t)}</b><small>${esc(s.info)}</small></div>`).join('')}</div></div>
    ${lead&&lead.scores?`<div class="card"><h2>二、健檢診斷</h2><div class="grid g2" style="margin-top:0"><div>${radar(DIMS.map(([k,n])=>({l:n,v:+lead.scores[k]})))}</div><div><p>健檢總分 <b>${lead.total??'-'}</b> 分（${lead.created_at.slice(0,10)}）。</p><ul>${DIMS.map(([k,n,f])=>({f,v:+lead.scores[k]})).sort((a,b)=>a.v-b.v).slice(0,3).map(x=>`<li>${esc(x.f)}：${x.v} 分</li>`).join('')}</ul><p class="note">分數最低的三個面向是這次輔導的優先順序。</p></div></div></div>`:''}
-   ${g.length&&(lastK||base)?`<div class="card"><h2>三、目標與進步</h2><div class="scroll"><table><tr><th>指標</th><th class="n">輔導前</th><th class="n">最新</th><th class="n">目標</th><th>結果</th></tr>${cmp}</table></div>${goalCharts(c,ctx).replace(/<section class="card"><h2>KPI 對目標<\/h2>/,'<div>').replace(/<\/section>$/,'</div>')}</div>`:''}
-   ${st?`<div class="card"><h2>四、各店表現（近 3 個月平均）</h2><div class="scroll"><table><tr><th>門市</th><th class="n">月營收</th><th class="n">食材</th><th class="n">人事</th><th class="n">租金</th><th class="n">月淨利</th></tr>${st.list.map(s=>`<tr><td>${esc(s.name)}</td><td class="n">${money(s.avgRev)}</td><td class="n">${fmt(s.food,1)}%</td><td class="n">${fmt(s.labor,1)}%</td><td class="n">${fmt(s.rent,1)}%</td><td class="n ${s.avgNet<0?'down':'up'}">${s.avgNet<0?'-':''}${money(Math.abs(s.avgNet))}</td></tr>`).join('')}</table></div></div>`:''}
+   ${g.length&&(lastK||base)?`<div class="card"><h2>三、目標與進步</h2><div class="scroll"><table><tr><th>指標</th><th class="n">健檢自填</th>${ctx.pre?`<th class="n">輔導前實際<br><small>${ctx.pre.from.slice(2).replace('-','/')}–${ctx.pre.to.slice(2).replace('-','/')} 平均</small></th>`:''}<th class="n">最新</th><th class="n">目標</th><th>結果</th></tr>${cmp}</table></div>${preNote(ctx)}${goalCharts(c,ctx).replace(/<section class="card"><h2>KPI 對目標<\/h2>/,'<div>').replace(/<\/section>$/,'</div>')}</div>`:''}
+   ${st?`<div class="card"><h2>四、各店表現（近 3 個月平均）</h2><div class="scroll"><table><tr><th>門市</th><th class="n">月營收</th><th class="n">食材</th><th class="n">人事</th><th class="n">租金</th><th class="n">月淨利</th></tr>${st.list.map(s=>`<tr><td>${esc(s.name)}${s.ramp?`<br><small class="note">開幕${nm(s.n)}</small>`:''}</td><td class="n">${money(s.avgRev)}</td><td class="n">${fmt(s.food,1)}%</td><td class="n">${fmt(s.labor,1)}%</td><td class="n">${fmt(s.rent,1)}%</td><td class="n ${s.avgNet<0?'down':'up'}">${s.avgNet<0?'-':''}${money(Math.abs(s.avgNet))}</td></tr>`).join('')}</table></div></div>`:''}
    ${type==='startup'&&invest(plan).total?(()=>{const inv=invest(plan); return `<div class="card"><h2>${st?'五':'四'}、投資與回本試算</h2><div class="grid g4" style="margin-top:0"><div class="kpi"><span>總投資</span><b>${money(inv.total)}</b></div><div class="kpi"><span>預估月淨利</span><b>${money(inv.profit)}</b></div><div class="kpi"><span>回本</span><b>${inv.payback==null?'—':fmt(inv.payback,1)+' 月'}</b></div><div class="kpi"><span>兩平月營收</span><b>${money(inv.be)}</b></div></div></div>`})():''}
    <div class="card"><h2>本期完成與接下來</h2><div class="grid g2" style="margin-top:0"><div><h3>已完成</h3>${done.length?`<ul>${done.slice(-8).map(a=>`<li>${esc(a.title)}${a.result?'：'+esc(a.result):''}</li>`).join('')}</ul>`:'<p class="note">—</p>'}</div>
     <div><h3>接下來</h3>${open.length?`<ul>${open.slice(0,8).map(a=>`<li>${esc(a.title)}（${esc(a.assignee||a.side||'')}${a.due_on?'，'+esc(a.due_on)+' 前':''}）</li>`).join('')}</ul>`:'<p class="note">—</p>'}</div></div>
