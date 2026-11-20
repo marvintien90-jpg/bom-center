@@ -8,7 +8,7 @@ rep("else saveLocalVers(); render(); return }","else siteDeleteVer(id); render()
 { const a=h.indexOf('<div class="wrap">'), b=h.indexOf('<script src="https://cdnjs'); if(a<0||b<0) throw new Error('layout');
 h=h.slice(0,a)+`<div class="shell bare" id="shell">
   <aside id="side" aria-label="主選單">
-    <div class="sidehead"><h1>BOM 運算中心</h1><button id="btnClose" class="only-m" aria-label="關閉選單">✕</button></div>
+    <div class="sidehead"><h1><span>BOM 運算中心<small>餐策雲 DineOS</small></span></h1><button id="btnClose" class="only-m" aria-label="關閉選單">✕</button></div>
     <div class="sidebrand" id="brandbar">
       <label for="brandSel">目前品牌</label>
       <select id="brandSel"></select>
@@ -25,7 +25,7 @@ h=h.slice(0,a)+`<div class="shell bare" id="shell">
     </header>
     <div id="banner"></div>
     <main id="main"><div class="empty"><p class="sub">讀取中…</p></div></main>
-    <footer class="note" style="text-align:center">BOM 運算中心 · 品牌加辣餐飲顧問工作室 授權使用</footer>
+    <footer class="note" style="text-align:center">BOM 運算中心 · 餐策雲 DineOS · 品牌加辣餐飲顧問工作室 授權使用</footer>
   </div>
 </div>
 
@@ -76,6 +76,34 @@ main tbody th{width:140px}
  .shell.open #side{transform:none}.shell.open #scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:15}
  .only-m{display:inline-block}}
 @media (prefers-reduced-motion:reduce){#side{transition:none}}
+/* 餐策雲 DineOS 共用外觀（比照入口 portal/）：深綠側欄、橘色標誌、圓角卡片、按鈕動態由 consult/kit 提供 */
+:root{--side:#0e2a24;--side-fg:#d6e6e1;--side-mute:#8fb0a7;--bg:#f2f4f3;--line:#e0e5e2}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--side:#0b1311;--side-mute:#7f9a92;--bg:#101614;--line:#2a3632}}
+:root[data-theme="dark"]{--side:#0b1311;--side-mute:#7f9a92}
+body{-webkit-font-smoothing:antialiased}
+#side{background:var(--side);color:var(--side-fg);border-right:0;padding:22px 14px}
+.sidehead h1{color:#fff;font-size:16px;display:flex;align-items:center;gap:10px;margin:0}
+.sidehead h1::before{content:"策";flex:none;width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,#e2552b,#f2a93b);color:#fff;display:grid;place-items:center;font-weight:800;font-size:16px;box-shadow:0 6px 16px rgba(226,85,43,.3)}
+.sidehead small{display:block;font-size:11px;color:var(--side-mute);font-weight:400}
+#side .sidebrand>label,#side .navg{color:var(--side-mute)}
+#side select{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:7px 9px}
+#side select option{color:#16201c;background:#fff}
+#side button{background:rgba(255,255,255,.08);border-color:transparent;color:var(--side-fg);border-radius:9px}
+#side button:hover{background:rgba(255,255,255,.14)}
+#side .navi{background:none;color:var(--side-fg);border-radius:9px;padding:7px 10px}
+#side .navi:hover{background:rgba(255,255,255,.07)}
+#side .navi[aria-current=page]{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+#side .navi .pill,#side .navi .tag{background:rgba(255,255,255,.12);color:var(--side-fg)}
+#userbar{border-top-color:rgba(255,255,255,.1)!important;color:var(--side-mute)}#userbar a{color:#9fe0cf}
+#userbar button{width:100%}
+main{border-radius:16px;box-shadow:0 1px 2px rgba(16,24,22,.03)}
+button{border-radius:9px}button.pri{font-weight:600}
+.btnlink{background:var(--accent);border-radius:9px;padding:8px 15px;font-weight:600}
+.scroll{border-radius:12px}
+.step,.tile,.board,details{border-radius:14px}
+.step,.tile{transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s}
+.step:hover,.tile:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(16,24,22,.08)}
+@media (prefers-reduced-motion:reduce){.step,.tile{transition:none}.step:hover,.tile:hover{transform:none}}
 </style>`);
 const i=h.lastIndexOf("boot();"); h=h.slice(0,i)+fs.readFileSync('sitecode.js','utf8')+h.slice(i+7);
 h='<!doctype html>\n<html lang="zh-Hant">\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<meta name="robots" content="noindex">\n'+h+'\n</html>\n';

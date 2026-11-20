@@ -310,8 +310,8 @@ const lvl=v=>v>=80?'good':v>=60?'warn':'bad';
 /* ===== 畫面 ===== */
 function render(){
   $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:4px"><a class="btn" href="${CONSULT}">顧問工作台</a><button type="button" data-out>登出</button></div>`:'';
-  if(!me){ $('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">和顧問工作台、業主入口用同一組帳號。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`; return }
-  if(!ok){ $('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><div class="row"><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`; return }
+  if(!me){ $('#app').innerHTML=`<div class="card" style="max-width:460px"><h2>請先登入</h2><p class="sub">和顧問工作台、餐策雲 DineOS用同一組帳號。</p><div class="row"><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`; return }
+  if(!ok){ $('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在餐策雲 DineOS。</p><div class="row"><a class="btn pri" href="${PORTAL}">回餐策雲 DineOS</a></div></div>`; return }
   if(plans===null){ $('#app').innerHTML=''; return }
   const r=route();
   if(r.id){ const pl=plans.find(x=>x.id===r.id); if(!pl){ $('#app').innerHTML=`<div class="card"><h2>找不到這份診斷</h2><div class="row"><a class="btn pri" href="#">回清單</a></div></div>`; return }

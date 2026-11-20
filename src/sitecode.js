@@ -116,9 +116,9 @@ ${s2?`<div class="tiles"><div class="tile"><span>食材</span><b>${b.ingredients
 <p class="note">手上已經有 Excel 或 PDF 資料？不用一筆一筆輸入。 <button data-tab="io">前往上傳與下載表單</button></p>
 <h2>最近的修改</h2><div class="scroll"><table><thead><tr><th>時間</th><th>誰</th><th>改了哪些</th></tr></thead><tbody>${logRows===null?'<tr><td colspan="3">讀取中…</td></tr>':rows.map(r=>`<tr><td>${tm(r.at)}</td><td>${esc(r.actor_email||'')}（${who[r.actor_role]||''}）</td><td style="white-space:normal">${(r.sections||[]).map(x=>SEC[x]||x).join('、')||'建立或刪除'}</td></tr>`).join('')||'<tr><td colspan="3">這個品牌還沒有修改紀錄。</td></tr>'}</tbody></table></div>
 <p class="note">資料會自動儲存，不需要按存檔。每個人每天第一次修改前，系統會先自動備份一份，可以在「版本與備份」還原。</p>` };
-V.account=()=>`<div class="head"><div><h2>我的帳號</h2><p class="sub">查看你的方案和到期日，或修改登入密碼。</p></div></div>
+V.account=()=>`<div class="head"><div><h2>我的帳號</h2><p class="sub">查看你的方案和到期日。</p></div></div>
 <div class="scroll"><table><tbody><tr><th>登入 Email</th><td>${esc(me&&me.email||'')}</td></tr><tr><th>名稱</th><td>${esc(prof&&prof.display_name||'')}</td></tr><tr><th>身分</th><td>${isAdmin()?'管理員（顧問）':'業主'}</td></tr>${isAdmin()?'':`<tr><th>方案</th><td>${PLAN_NAME[prof.plan]}</td></tr><tr><th>權限</th><td>${RO()?'只能看':'可編輯'}</td></tr><tr><th>到期日</th><td>${esc(prof.expires_on||'不限期')}</td></tr>`}</tbody></table></div>
-<h2>修改密碼</h2><form id="pwForm" class="col" style="max-width:380px">${pwField('npw','新密碼','new-password',true)}<div><button class="pri" type="submit">儲存新密碼</button></div></form>
+<h2>登入密碼</h2><p class="sub">密碼統一在餐策雲 DineOS 的「帳號設定」修改，改一次，BOM、損益、人資、訂閱中心都適用。</p><p><a class="btnlink" href="portal/#account">到帳號設定改密碼</a></p>
 ${acctMsg?`<p class="sample" role="status">${esc(acctMsg)}</p>`:''}
 <p class="note">想變更方案、權限或登入 Email，請聯絡 ${LICENSOR}。</p>`;
 V.help=()=>`<div class="head"><div><h2>使用說明</h2><p class="sub">常見問題整理在這裡。點問題可以展開答案。</p></div></div>
@@ -348,14 +348,12 @@ async function resendConfirm(){ grab(); if(!authF.email){ authMsg='請先在上�
   try{ const {error}=await sbc.auth.resend({type:'signup',email:authF.email,options:{emailRedirectTo:REDIR()}}); if(error) throw error; authMsg='如果 '+authF.email+' 是尚未驗證的帳號，驗證信已重新寄出。請到信箱點最新那封信的連結，也看一下垃圾信匣。' }catch(e){ authMsg=AUTH_ERR(e) } render() }
 async function authSubmit(){ grab(); const pe=document.getElementById('auPass'), pass=pe?pe.value:''; authMsg='處理中…'; render();
   try{ if(G==='recover'){ const {error}=await sbc.auth.updateUser({password:pass}); if(error) throw error; authMsg=''; notice='密碼已更新，下次請用新密碼登入。'; G='loading'; render(); return loadAll() }
-    if(authMode==='forgot'){ const {error}=await sbc.auth.resetPasswordForEmail(authF.email,{redirectTo:REDIR()}); if(error) throw error; authMsg='如果這個 Email 有註冊過，重設信已經寄出。請在一小時內點信裡的連結；沒收到請看垃圾信匣。'; return render() }
+    if(authMode==='forgot'){ const {error}=await sbc.auth.resetPasswordForEmail(authF.email,{redirectTo:location.origin+'/bom-center/portal/'}); if(error) throw error; authMsg='如果這個 Email 有註冊過，重設信已經寄出。請在一小時內點信裡的連結；沒收到請看垃圾信匣。'; return render() }
     if(authMode==='up'){ const {data,error}=await sbc.auth.signUp({email:authF.email,password:pass,options:{data:{display_name:authF.name},emailRedirectTo:REDIR()}}); if(error) throw error;
       if(data.user&&data.user.identities&&!data.user.identities.length){ authMode='in'; authMsg='這個 Email 已經註冊過，請直接登入。忘記密碼可按「忘記密碼」。'; return render() }
       if(!data.session){ authMode='in'; needConfirm=true; authMsg='註冊成功。我們寄了一封確認信到 '+authF.email+'，請點信裡的連結完成驗證，再回來登入。沒收到請看垃圾信匣，或按「重寄驗證信」。'; return render() } authMsg=''; return }
     const {error}=await sbc.auth.signInWithPassword({email:authF.email,password:pass}); if(error) throw error; authMsg=''; needConfirm=false }
   catch(e){ authMsg=AUTH_ERR(e); render() } }
-async function pwSubmit(){ const e=document.getElementById('npw'), p=e?e.value:''; acctMsg='處理中…'; render();
-  const {error}=await sbc.auth.updateUser({password:p}); acctMsg=error?AUTH_ERR(error):'密碼已更新，下次請用新密碼登入。'; render() }
 
 async function loadAll(){ try{
     let {data:p,error:pe}=await sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(); if(pe) throw pe;
@@ -396,7 +394,7 @@ document.addEventListener('submit',e=>{ if(e.target.id==='annForm'&&isAdmin()){ 
     if(v.line_url&&!/^https:\/\//.test(v.line_url)){ pubMsg='沒有儲存：LINE 連結要以 https:// 開頭'; return render() } v.updated_at=new Date().toISOString(); pubMsg='儲存中…'; render();
     sbc.from('bom_public_settings').update(v).eq('id',1).select('id').then(({data,error})=>{ if(error||!data||!data.length) pubMsg='沒有儲存成功，請重新整理後再試'; else { Object.assign(pub,v); pubMsg='已儲存 ✓ '+tm(v.updated_at)+'，登入頁已更新' } render() }); return }
   if(e.target.id==='nbForm'&&isAdmin()){ e.preventDefault(); const n=$('#nbName').value.trim(); if(!n) return; const id=makeBrand(n,$('#nbFrom').value); cur=id; selItem=selSemi=null; touchId(id); tab='home'; notice='已建立品牌「'+n+'」。下一步：到「授權管理」把它指派給業主，或直接開始建立食材。'; window.scrollTo(0,0); render(); return }
-  if(e.target.id==='authForm'){ e.preventDefault(); authSubmit() } if(e.target.id==='pwForm'){ e.preventDefault(); pwSubmit() } });
+  if(e.target.id==='authForm'){ e.preventDefault(); authSubmit() } });
 document.addEventListener('input',e=>{ const h=document.querySelector('[data-pwhint="'+e.target.id+'"]'); if(!h) return; const n=e.target.value.length; h.textContent=n>=8?'長度足夠。':'還差 '+(8-n)+' 個字。' });
 document.addEventListener('click',e=>{ if(e.target.id==='scrim') $('#shell').classList.remove('open') });
 document.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; const a=t.dataset.auth;

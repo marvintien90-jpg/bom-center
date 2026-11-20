@@ -276,7 +276,7 @@ const GROUPS=[
   {ic:'SOP',name:'SOP 手冊與督導稽核',desc:'選業態產出門市 SOP，一鍵交付到門市；督導總覽看各店稽核分數與待改善。',where:'顧問專用；門市在 BOM 中心看手冊',
    go:[['進入 SOP 手冊',C+'sop/'],['督導總覽',C+'sop/#audit']]}]},
  {k:'g5',t:'客戶與帳號',s:'授權、訂閱與人資',items:[
-  {ic:'入',name:'業主入口（總覽）',desc:'每位業主可以進哪些系統、授權到期日。',where:'網頁',go:[['打開業主總覽',PORTAL]]},
+  {ic:'入',name:'餐策雲 DineOS（業主總覽）',desc:'每位業主可以進哪些系統、授權到期日。',where:'網頁',go:[['打開業主總覽',PORTAL]]},
   {ic:'訂',name:'訂閱與會員管理',desc:'訂閱、試點名單、付款、發票與設定。',where:'管理員',go:[['進入訂閱管理',BOM+'member/']]},
   {ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢、投保級距與違規提醒；也可以陪業主一起看。',where:'業主也用',go:[['進入人資中心',BOM+'hr/']]}]}
 ];
@@ -361,7 +361,7 @@ function side(st,td){
    <button type="button" class="nv" data-jump="clients">${ICO.users}客戶旅程<span class="cnt">${D.clients.filter(c=>c.stage!=='結案').length}</span></button>
    <button type="button" class="nv" data-jump="tools">${ICO.grid}工具箱</button>
    <div class="gnav"><div class="nav-h">顧問流程</div>${gn}</div>
-   <div class="foot">${esc(me.email)}<div class="row"><a class="btn" href="${PORTAL}">業主入口</a><button type="button" data-sheet="out">登出</button></div></div></aside>`;
+   <div class="foot">${esc(me.email)}<div class="row"><a class="btn" href="${PORTAL}">餐策雲 DineOS</a><button type="button" data-sheet="out">登出</button></div></div></aside>`;
 }
 function hero(){
   const h=new Date(Date.now()+8*3600e3).getUTCHours(), g=h<11?'早安':h<14?'午安':h<18?'午安':'晚安';
@@ -456,8 +456,8 @@ function drawer(){
 
 function render(){
   const root=$('#root');
-  if(!me){ root.innerHTML=`<div class="main" style="max-width:520px;margin:40px auto"><div class="card"><h2>請先登入</h2><p class="sub">顧問工作台和業主入口用同一組帳號，登入一次兩邊都能用。</p><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`; return }
-  if(!ok){ root.innerHTML=`<div class="main" style="max-width:560px;margin:40px auto"><div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`; return }
+  if(!me){ root.innerHTML=`<div class="main" style="max-width:520px;margin:40px auto"><div class="card"><h2>請先登入</h2><p class="sub">顧問工作台和餐策雲 DineOS用同一組帳號，登入一次兩邊都能用。</p><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`; return }
+  if(!ok){ root.innerHTML=`<div class="main" style="max-width:560px;margin:40px auto"><div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在餐策雲 DineOS。</p><a class="btn pri" href="${PORTAL}">回餐策雲 DineOS</a></div></div>`; return }
   const td=todos();
   root.innerHTML=`<div class="shell${first?' enter':''}">${side(leadStats(),td.length)}${topbar()}<main class="main" id="app">${hero()}${stats()}<div class="two">${todoCard(td)}${pipe()}</div>${tools()}</main></div>${tabbar(td.length)}`;
   stagger(root); first=false; spy();
@@ -511,9 +511,9 @@ function sheetBody(k){
     <div class="linkbox"><input id="shareUrl" readonly value="${esc(shareUrl())}" aria-label="健檢連結"><button type="button" class="pri" data-copy-share>複製</button></div>
     <div class="foot2"><a class="btn" href="${esc(shareUrl())}" target="_blank" rel="noopener">預覽健檢頁</a><a class="btn pri" id="lineShare" href="https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl())}" target="_blank" rel="noopener">用 LINE 傳送</a></div>`;
   if(k==='me') return `<h2>帳號</h2><p class="note" style="margin:0 0 12px;word-break:break-all">${esc(me.email)}</p><ul class="menu">
-    <li><a class="btn" href="${PORTAL}">${mi('入','g5','業主入口','切換到業主看到的畫面與總覽')}</a></li>
-    <li><button type="button" data-sheet="out">${mi('出','g5','登出','這台裝置會登出工作台與業主入口')}</button></li></ul>`;
-  if(k==='out') return `<h2>確定要登出嗎？</h2><p class="note">這台裝置上的顧問工作台和業主入口會一起登出。</p><div class="foot2"><button type="button" data-close-sheet>取消</button><button type="button" class="pri" data-out>登出</button></div>`;
+    <li><a class="btn" href="${PORTAL}">${mi('入','g5','餐策雲 DineOS','切換到業主看到的畫面與總覽')}</a></li>
+    <li><button type="button" data-sheet="out">${mi('出','g5','登出','這台裝置會登出工作台與餐策雲 DineOS')}</button></li></ul>`;
+  if(k==='out') return `<h2>確定要登出嗎？</h2><p class="note">這台裝置上的顧問工作台和餐策雲 DineOS會一起登出。</p><div class="foot2"><button type="button" data-close-sheet>取消</button><button type="button" class="pri" data-out>登出</button></div>`;
   return '';
 }
 function openSheet(k){
