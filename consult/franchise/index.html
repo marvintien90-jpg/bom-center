@@ -202,10 +202,62 @@ const DEF_CALC={fee:150000,train:50000,deposit:100000,build:1200000,other:200000
   rev:600000,food:35,labor:25,rent:60000,util:5,otherFix:10000,
   royMode:'pct',royPct:4,royFix:8000,mkt:1,
   supplyShare:60,supplyMargin:15,buildMargin:0,openCost:80000,supCost:8000,
-  y1:3,y2:6,y3:10};
+  y1:3,y2:6,y3:10,hqFixed:150000};
 const DEF_MODEL={type:'一般加盟',years:5,renew:'期滿前 3 個月提出，最近一年稽核平均 80 分以上，續約金 5 萬',radius:500,territory:'',minArea:20,storeType:'街邊店',capital:200,
   qualify:'需親自經營或指定專職店長，完成總部訓練並通過考核',multi:'第一家營運滿 1 年且稽核合格，可申請第二家',supply:'核心醬料、包材、指定食材向總部採購；其餘可自行採購但須符合規格',
   trainDays:30,support:'開幕前選點評估、裝潢監工、開幕前 3 天駐店、開幕後第 1 個月每週督導',visitDays:30};
+
+/* ================= v2：業態範本、階段、招募 ================= */
+/* 業態參考值（台灣常見區間，僅供起始假設；請用客戶實際數字取代） */
+const FORMATS={
+ '手搖飲':{fee:300000,train:50000,deposit:100000,build:1000000,other:300000,rev:500000,food:32,labor:22,rent:40000,util:5,otherFix:8000,royMode:'fixed',royFix:8000,mkt:1,supplyShare:85,supplyMargin:20,openCost:60000,supCost:6000,area:12,
+   r:{food:[28,36],labor:[18,26],rent:[6,12]},types:[['外帶小店',.7,.7,.6],['商場櫃位',1.2,1.1,1.6]]},
+ '小吃麵食':{fee:150000,train:50000,deposit:100000,build:1200000,other:200000,rev:600000,food:35,labor:25,rent:60000,util:5,otherFix:10000,royMode:'pct',royPct:4,mkt:1,supplyShare:60,supplyMargin:15,openCost:80000,supCost:8000,area:20,
+   r:{food:[30,38],labor:[20,28],rent:[6,12]},types:[['外帶小店',.6,.6,.5],['商場美食街',1.3,1.2,1.8]]},
+ '便當外帶':{fee:150000,train:50000,deposit:100000,build:1000000,other:200000,rev:700000,food:42,labor:22,rent:50000,util:5,otherFix:8000,royMode:'fixed',royFix:10000,mkt:1,supplyShare:50,supplyMargin:10,openCost:60000,supCost:6000,area:15,
+   r:{food:[38,46],labor:[18,26],rent:[5,10]},types:[['小型外帶',.7,.7,.6],['團膳型',1.2,1.4,1]]},
+ '炸物小吃攤':{fee:100000,train:30000,deposit:50000,build:600000,other:150000,rev:350000,food:38,labor:18,rent:30000,util:6,otherFix:5000,royMode:'fixed',royFix:5000,mkt:0,supplyShare:80,supplyMargin:15,openCost:40000,supCost:5000,area:8,
+   r:{food:[34,42],labor:[12,22],rent:[5,12]},types:[['行動餐車',.5,.6,.2],['店面型',1.5,1.4,1.8]]},
+ '咖啡早午餐':{fee:300000,train:80000,deposit:150000,build:2500000,other:400000,rev:900000,food:32,labor:30,rent:120000,util:6,otherFix:15000,royMode:'pct',royPct:4,mkt:1.5,supplyShare:40,supplyMargin:15,openCost:120000,supCost:10000,area:30,
+   r:{food:[26,34],labor:[26,34],rent:[8,15]},types:[['外帶咖啡站',.4,.45,.35],['旗艦店',1.6,1.5,1.8]]},
+ '烘焙甜點':{fee:300000,train:100000,deposit:150000,build:3000000,other:500000,rev:1200000,food:35,labor:28,rent:120000,util:7,otherFix:15000,royMode:'pct',royPct:3,mkt:1.5,supplyShare:50,supplyMargin:15,openCost:150000,supCost:10000,area:25,
+   r:{food:[30,38],labor:[24,32],rent:[7,12]},types:[['衛星店（中央工廠供貨）',.5,.6,.6],['百貨專櫃',1,1.2,1.5]]},
+ '火鍋燒肉':{fee:500000,train:100000,deposit:300000,build:4000000,other:500000,rev:2000000,food:38,labor:25,rent:200000,util:7,otherFix:30000,royMode:'pct',royPct:3,mkt:1,supplyShare:50,supplyMargin:12,openCost:200000,supCost:12000,area:60,
+   r:{food:[35,42],labor:[22,30],rent:[7,12]},types:[['小型店（個人鍋）',.6,.6,.6],['商場店',1.3,1.3,1.6]]},
+ '餐酒館正餐':{fee:500000,train:100000,deposit:300000,build:5000000,other:600000,rev:1800000,food:33,labor:30,rent:180000,util:7,otherFix:30000,royMode:'pct',royPct:3,mkt:1,supplyShare:30,supplyMargin:12,openCost:200000,supCost:12000,area:50,
+   r:{food:[28,36],labor:[26,34],rent:[8,14]},types:[['小酒館',.6,.6,.6],['旗艦店',1.5,1.4,1.6]]}
+};
+const STAGE=[
+ {k:'起步期',min:0,max:1,d:'只有 1 家店，還不能證明模式可以複製。',focus:'先開第 2 家直營、把 SOP 和配方標準化；這階段不建議收加盟。'},
+ {k:'驗證期',min:2,max:3,d:'2–3 家店，開始有複製的證據。',focus:'補齊準備度缺口、註冊商標、寫好揭露書；可用委託加盟或合作經營試 1–2 家。'},
+ {k:'複製期',min:4,max:9,d:'4–9 家店，總部要開始專業分工。',focus:'設專職督導與訓練、集中供貨，正式開放加盟並辦說明會。'},
+ {k:'擴張期',min:10,max:29,d:'10–29 家店，管理會開始失控。',focus:'區域督導制度、權利金與營業額回報系統化、加盟主分級管理。'},
+ {k:'體系期',min:30,max:1e9,d:'30 家以上，是一個體系了。',focus:'區域代理或分區總部、物流倉儲、加盟主大會與續約制度、品牌升級。'}
+];
+const DEF_NOW={fmt:'小吃麵食',direct:1,fr:0,avgRev:null,target3:10,capital:'中',owner:'親自經營',region:'',goal:'',pitch:''};
+const PST=['詢問','初談','說明會','已交付揭露書','合約審閱中','已簽約','籌備中','已開幕','不合適'];
+const SC=[['cap','資金實力'],['exp','餐飲／管理經驗'],['self','親自投入程度'],['fit','理念與配合度'],['loc','預定地點條件']];
+const stageOf=n=>STAGE.find(s=>n>=s.min&&n<=s.max)||STAGE[0];
+const getK=(o,path)=>path.split('.').reduce((a,k)=>a==null?a:a[k],o);
+function setPath(o,path,v){const ks=path.split('.'); let x=o; ks.slice(0,-1).forEach(k=>{if(x[k]==null) x[k]=/^\d+$/.test(k)?[]:{}; x=x[k]}); x[ks[ks.length-1]]=v}
+function typesOf(p){const d=P(p); return [{name:'標準店'},...(d.types||[])]}
+function calcType(c,t){const o={...c}; for(const k of ['build','other','rev','rent']) if(t[k]!=null&&t[k]!=='') o[k]=+t[k]; return calc(o)}
+function hqBreak(c){const r=calc(c); return r.hqMonth>0&&+c.hqFixed>0?Math.ceil(+c.hqFixed/r.hqMonth):null}
+/* 招募：合規檢查（公平會處理原則第 3、4 點） */
+function pCheck(x){
+  const iss=[], t=today(), sIdx=PST.indexOf(x.stage);
+  if(sIdx>=PST.indexOf('合約審閱中')&&sIdx<=PST.indexOf('已開幕')&&!x.disclosed_on) iss.push(['bad','沒有紀錄揭露書交付日']);
+  if(x.signed_on&&x.disclosed_on&&daysBetween(x.disclosed_on,x.signed_on)<10) iss.push(['bad',`揭露書只提前 ${daysBetween(x.disclosed_on,x.signed_on)} 天（至少 10 天）`]);
+  if(x.signed_on&&x.contract_on&&daysBetween(x.contract_on,x.signed_on)<5) iss.push(['bad',`合約審閱只有 ${daysBetween(x.contract_on,x.signed_on)} 天（至少 5 天）`]);
+  if(x.signed_on&&!x.contract_on) iss.push(['warn','沒有紀錄合約交付審閱日']);
+  if(x.signed_on&&!x.delivered_on){const d=daysBetween(x.signed_on,t); if(d>30) iss.push(['bad',`簽約 ${d} 天還沒交付合約正本（30 天內）`]); else iss.push(['warn',`合約正本請在 ${addDays(x.signed_on,30)} 前交付`])}
+  if(x.signed_on&&x.delivered_on&&daysBetween(x.signed_on,x.delivered_on)>30) iss.push(['bad','合約正本超過 30 天才交付']);
+  if(!x.signed_on&&x.disclosed_on&&sIdx<PST.indexOf('已簽約')){const ok=addDays(x.disclosed_on,10); if(ok>t) iss.push(['mute',`最早 ${ok} 可簽約`])}
+  return iss;
+}
+const pScore=x=>{const v=SC.map(([k])=>+((x.sc||{})[k])||0); return v.some(n=>!n)?null:v.reduce((a,b)=>a+b,0)};
+const pScoreLv=s=>s==null?'mute':s>=20?'good':s>=15?'warn':'bad';
+const tv=(t,k,c)=>t[k]!=null&&t[k]!==''?+t[k]:+c[k];
 
 /* ================= 狀態 ================= */
 let me=null, ok=false, D={plans:[],stores:[],visits:[],dues:[],coach:[],brands:[],pl:[],qsc:[]}, flash='', flashBad=false, armed=null, busy=false, saveT=null;
@@ -235,7 +287,7 @@ async function loadData(){
   [D.plans,D.stores,D.visits,D.dues,D.coach,D.brands,D.pl,D.qsc]=r.map(x=>x.error?[]:(x.data||[]));
   D.plans.forEach(p=>p.data=p.data||{});
 }
-const P=p=>{const d=p.data; d.ready=d.ready||{}; d.calc={...DEF_CALC,...(d.calc||{})}; d.model={...DEF_MODEL,...(d.model||{})}; d.contract=d.contract||{}; return d};
+const P=p=>{const d=p.data; d.ready=d.ready||{}; d.calc={...DEF_CALC,...(d.calc||{})}; d.model={...DEF_MODEL,...(d.model||{})}; d.contract=d.contract||{}; d.now={...DEF_NOW,...(d.now||{})}; d.prospects=d.prospects||[]; d.types=d.types||[]; return d};
 
 /* ================= 計算 ================= */
 function readiness(p){
@@ -300,7 +352,7 @@ function storeHealth(s){
 const LV={bad:'要處理',warn:'注意',good:'正常',mute:''};
 
 /* ================= 畫面 ================= */
-function route(){const h=location.hash.slice(1), p=new URLSearchParams(h); return {p:+p.get('p')||null,s:+p.get('s')||null,t:p.get('t')||'ready',v:h.split('&')[0]}}
+function route(){const h=location.hash.slice(1), p=new URLSearchParams(h); return {p:+p.get('p')||null,s:+p.get('s')||null,t:p.get('t')||'now',v:h.split('&')[0]}}
 function go(h){ if(location.hash==='#'+h) render(); else location.hash=h }
 function render(){
   $('#who').innerHTML=me?`${esc(me.email)}<div class="row" style="justify-content:flex-end;margin-top:4px"><a class="btn" href="${CONSULT}">顧問工作台</a><button type="button" data-out>登出</button></div>`:'';
@@ -324,12 +376,12 @@ function vHome(){
   const plans=D.plans.map(p=>{const rd=readiness(p), n=D.stores.filter(s=>s.plan_id===p.id&&s.status!=='解約／結束').length, nb=hs.filter(x=>x.s.plan_id===p.id&&x.h.lv==='bad').length;
     return `<a class="cl ${rd.lv==='good'?'green':rd.lv==='warn'?'yellow':rd.lv==='bad'?'red':''}" href="#p=${p.id}"><div class="row" style="margin:0;justify-content:space-between"><h3>${esc(p.name)}</h3><span class="pill mute">${esc(p.status)}</span></div>
       <div class="dim" style="grid-template-columns:72px 1fr 46px"><span>準備度</span><div class="bar ${rd.lv}"><i style="width:${rd.answered?rd.pct:0}%"></i></div><b>${rd.answered?rd.pct+'%':'—'}</b></div>
-      <ul><li>${esc(rd.verdict)}</li><li>${esc(P(p).model.type)}｜門市 ${n} 家${nb?`｜<b style="color:var(--bad)">${nb} 家要處理</b>`:''}</li></ul></a>`}).join('');
+      <ul><li>${esc(stageOf((+P(p).now.direct||0)+(+P(p).now.fr||0)).k)}｜${esc(P(p).now.fmt)}｜${esc(rd.verdict)}</li><li>${esc(P(p).model.type)}｜門市 ${n} 家${nb?`｜<b style="color:var(--bad)">${nb} 家要處理</b>`:''}</li></ul></a>`}).join('');
   return `<div class="stats">${stat(D.plans.length,'加盟方案')}${stat(act.length,'營運中門市')}${stat(bad.length,'要處理的門市',true)}<div class="stat ${owe?'alert':''}"><b>${money(owe)}</b><span>未繳權利金＋行銷基金</span></div></div>
   ${bad.length?`<div class="card"><h2>要處理的門市</h2>${bad.map(x=>`<div class="item"><a href="#s=${x.s.id}"><b>${esc(x.s.name)}</b></a> <span class="note">${esc((D.plans.find(p=>p.id===x.s.plan_id)||{}).name||'')}</span><div class="meta">${x.h.why.map(esc).join('｜')}</div></div>`).join('')}</div>`:''}
   <div class="row" style="justify-content:space-between"><h2 style="margin:0">加盟方案</h2><a class="btn pri" href="#new">＋ 新增加盟方案</a></div>
   ${D.plans.length?`<div class="clients" style="margin-top:12px">${plans}</div>`:`<div class="card"><p class="sub">還沒有加盟方案。按「新增加盟方案」，先幫客戶做加盟準備度健檢。</p></div>`}
-  <p class="note">流程：① 準備度健檢 → ② 選加盟模式與條件 → ③ 試算加盟主回本與總部收入 → ④ 合約要點與揭露書 → ⑤ 開店後督導加盟店。</p>`;
+  <p class="note">流程：⓪ 業主現況與階段 → ① 準備度健檢 → ② 模式與條件 → ③ 試算回本與總部收入 → ④ 合約與揭露書 → ⑤ 招募加盟主 → ⑥ 督導加盟店 → ⑦ 路線圖與報告。</p>`;
 }
 function linkFields(p){
   p=p||{};
@@ -348,12 +400,12 @@ function readLink(){
 }
 function vNew(){return `<p><a href="#">← 加盟方案清單</a></p><div class="card"><h2>新增加盟方案</h2><p class="sub">選了營運輔導客戶，名稱和損益中心會自動帶入。</p>${linkFields({})}<div class="row"><button class="pri" data-saveplan="new">建立</button></div></div>`}
 
-const TABS=[['ready','① 準備度'],['model','② 模式與條件'],['calc','③ 費用與回本'],['contract','④ 合約與揭露'],['stores','⑤ 加盟店督導'],['set','設定']];
+const TABS=[['now','⓪ 現況與目標'],['ready','① 準備度'],['model','② 模式與條件'],['calc','③ 費用與回本'],['contract','④ 合約與揭露'],['recruit','⑤ 招募'],['stores','⑥ 加盟店督導'],['report','⑦ 路線圖與報告'],['set','設定']];
 function vPlan(p,t){
   const rd=readiness(p);
   const head=`<p class="noprint"><a href="#">← 加盟方案清單</a></p><div class="row noprint" style="justify-content:space-between;margin-top:0"><div><h2 style="margin:0">${esc(p.name)}</h2><span class="note">${esc(p.status)}｜準備度 ${rd.answered?rd.pct+'%':'未完成'}｜${esc(P(p).model.type)}${p.coach_client_id?`｜<a href="${COACH}#c=${p.coach_client_id}">營運輔導</a>`:''}</span></div><span class="saved" id="saved"></span></div>
    <nav class="tabs">${TABS.map(([k,l])=>`<a href="#p=${p.id}&t=${k}" class="${k===t?'on':''}">${l}</a>`).join('')}</nav>`;
-  const body={ready:tReady,model:tModel,calc:tCalc,contract:tContract,stores:tStores,set:tSet}[t]||tReady;
+  const body={now:tNow,ready:tReady,model:tModel,calc:tCalc,contract:tContract,recruit:tRecruit,stores:tStores,report:tReport,set:tSet}[t]||tNow;
   return head+body(p,rd);
 }
 function tReady(p,rd){
@@ -369,8 +421,8 @@ function tReady(p,rd){
   return `<div class="two"><div class="card"><h2>加盟準備度健檢</h2><p class="sub">和業主一起逐題回答，答完右邊會給結論與補強清單。</p>${qs}</div><div>${res}${gaps}</div></div>`;
 }
 function fld(path,label,o={}){
-  const [a,b]=path.split('.'), v=(o.p?P(o.p)[a][b]:'');
-  const id='x_'+a+'_'+b;
+  const v0=o.p?getK(P(o.p),path):''; const v=v0==null?'':v0;
+  const id='x_'+path.replace(/\./g,'_');
   if(o.ta) return `<div style="grid-column:1/-1"><label for="${id}">${esc(label)}</label><textarea id="${id}" data-k="${path}">${esc(v)}</textarea></div>`;
   if(o.sel) return `<div><label for="${id}">${esc(label)}</label><select id="${id}" data-k="${path}">${o.sel.map(s=>`<option value="${esc(s[0])}"${String(v)===String(s[0])?' selected':''}>${esc(s[1])}</option>`).join('')}</select></div>`;
   return `<div><label for="${id}">${esc(label)}${o.u?`（${esc(o.u)}）`:''}</label><input id="${id}" data-k="${path}" ${o.txt?'':'type="number" step="any" inputmode="decimal"'} value="${esc(v)}"></div>`;
@@ -398,7 +450,10 @@ function tCalc(p){
    <div class="card"><h2>總部收費</h2><div class="grid">
     ${fld('calc.royMode','權利金方式',{p,sel:[['pct','抽營業額 %'],['fixed','每月固定金額']]})}${c.royMode==='fixed'?F('royFix','每月權利金','元'):F('royPct','權利金','% 營業額')}${F('mkt','行銷基金','% 營業額')}
     ${F('supplyShare','食材向總部採購比例','%')}${F('supplyMargin','總部供貨毛利率','%')}${F('buildMargin','總部承攬裝潢設備毛利率','%')}</div></div>
-   <div class="card"><h2>總部成本與展店節奏</h2><div class="grid">${F('openCost','每開一家店的總部支援成本','元')}${F('supCost','每店每月督導成本','元')}${F('y1','第 1 年新開','家')}${F('y2','第 2 年新開','家')}${F('y3','第 3 年新開','家')}</div></div>
+   <div class="card"><h2>總部成本與展店節奏</h2><div class="grid">${F('openCost','每開一家店的總部支援成本','元')}${F('supCost','每店每月督導成本','元')}${F('hqFixed','總部每月固定開銷（人事、辦公室）','元')}${F('y1','第 1 年新開','家')}${F('y2','第 2 年新開','家')}${F('y3','第 3 年新開','家')}</div></div>
+   <div class="card"><h2>其他店型</h2><p class="sub">同一品牌常有不同店型。空白＝和標準店一樣。</p>
+    ${P(p).types.map((t,i)=>`<div class="grid" style="border-top:1px solid var(--line);padding-top:6px">${fld(`types.${i}.name`,'店型名稱',{p,txt:1})}${fld(`types.${i}.build`,'裝潢＋設備',{p,u:'元'})}${fld(`types.${i}.other`,'其他開辦',{p,u:'元'})}${fld(`types.${i}.rev`,'月營收',{p,u:'元'})}${fld(`types.${i}.rent`,'租金',{p,u:'元／月'})}<div style="align-self:end"><button class="sm" data-deltype="${i}">移除</button></div></div>`).join('')}
+    <div class="row">${P(p).types.length<3?`<button class="sm" data-addtype="${p.id}">＋ 加一種店型</button>`:''}</div></div>
   </div><div id="out"></div></div>`;
 }
 function drawCalc(){
@@ -411,6 +466,10 @@ function drawCalc(){
   if(r.take!=null&&r.take>45) warn.push('總部拿走超過 45% 的利潤，加盟主容易不滿或偷報營業額。');
   if(r.hqMonth<=0) warn.push('每家店每月總部收入扣掉督導成本是負的，開越多賠越多。');
   if(calc(c,0.8).net<=0) warn.push('營收少 20% 加盟主就虧錢，抗風險能力弱。');
+  const fm=FORMATS[P(p).now.fmt], be=hqBreak(c), types=typesOf(p).map(t=>({t,r:calcType(c,t)}));
+  const rng=(v,[lo,hi])=>v==null?'mute':v<lo?'warn':v>hi?'bad':'good';
+  const bench=fm?[['食材成本率',+c.food,fm.r.food],['人事費用率',+c.labor,fm.r.labor],['租金占營收',r.rev?(+c.rent)*100/r.rev:null,fm.r.rent]]:[];
+  if(bench.some(b=>rng(b[1],b[2])!=='good')) warn.push(`有數字超出「${P(p).now.fmt}」常見範圍，請確認是不是客戶實際狀況。`);
   $('#out').innerHTML=`<div class="card"><h2>加盟主</h2>
    <div class="row" style="margin:0 0 8px;align-items:baseline"><span class="big">${r.payback==null?'無法回本':fmt(r.payback,1)+' 個月'}</span>${pill(lvPay(r.payback),'回本')}</div>
    <div class="kv"><span>開店投資（不含保證金）</span><b>${money(r.invest)}</b><span>另付保證金（可退）</span><b>${money(r.deposit)}</b>
@@ -422,12 +481,135 @@ function drawCalc(){
    <span>扣督導成本後每月</span><b>${money(r.hqMonth)}</b><span>行銷基金（專款，不算收入）</span><b>${money(r.mkt)}</b>
    <span>總部分走的利潤比例</span><b>${r.take==null?'—':fmt(r.take,0)+'%'} ${pill(lvTake(r.take),lvTake(r.take)==='good'?'合理':lvTake(r.take)==='bad'?'太高':'留意')}</b></div>
    <p class="note">利潤比例 = 總部從每店拿到的（權利金＋供貨毛利）÷（它＋加盟主淨利）。15–35% 通常雙方都撐得住。</p></div>
+  ${types.length>1?`<div class="card"><h2>店型比較（加盟主）</h2><div class="scroll"><table><tr><th>店型</th><th class="n">投資</th><th class="n">月淨利</th><th class="n">淨利率</th><th class="n">回本</th><th class="n">總部每月</th></tr>
+   ${types.map(({t,r})=>`<tr><td>${esc(t.name||'未命名')}</td><td class="n">${wan(r.invest)}</td><td class="n">${money(r.net)}</td><td class="n">${fmt(r.netPct,1)}%</td><td class="n">${r.payback==null?'無法回本':fmt(r.payback,1)+' 月'} ${pill(lvPay(r.payback),lvPay(r.payback)==='good'?'好':lvPay(r.payback)==='warn'?'普通':'差')}</td><td class="n">${money(r.hqMonth)}</td></tr>`).join('')}</table></div></div>`:''}
+  ${bench.length?`<div class="card"><h2>和「${esc(P(p).now.fmt)}」常見範圍比</h2>${bench.map(([l,v,rg])=>`<div class="dim" style="grid-template-columns:110px 1fr auto"><span>${l}</span><span class="note">常見 ${rg.join('–')}%</span><b>${fmt(v,1)}% ${pill(rng(v,rg),rng(v,rg)==='good'?'正常':rng(v,rg)==='warn'?'偏低':'偏高')}</b></div>`).join('')}<p class="note">到「⓪ 現況與目標」可以換業態或一鍵套用參考數字。</p></div>`:''}
   <div class="card"><h2>3 年展店試算（總部）</h2><div class="scroll"><table><tr><th>年</th><th class="n">新開</th><th class="n">累計門市</th><th class="n">當年收入</th><th class="n">累計</th></tr>
-   ${ro.map(x=>`<tr><td>第 ${x.y} 年</td><td class="n">${x.n}</td><td class="n">${x.open}</td><td class="n">${wan(x.inc)}</td><td class="n">${wan(x.cum)}</td></tr>`).join('')}</table></div><p class="note">新店當年以半年計。未扣總部固定開銷（辦公室、人事）。</p></div>
+   ${ro.map(x=>`<tr><td>第 ${x.y} 年</td><td class="n">${x.n}</td><td class="n">${x.open}</td><td class="n">${wan(x.inc)}</td><td class="n">${wan(x.cum)}</td></tr>`).join('')}</table></div><p class="note">新店當年以半年計。${+c.hqFixed>0?`總部每月固定開銷 ${money(c.hqFixed)}，${be?`要 <b>${be} 家</b>加盟店總部才打平`:'每店每月收入為負，永遠無法打平'}；第 3 年扣掉固定開銷後 ${wan(ro[2].inc-(+c.hqFixed)*12)}。`:'未扣總部固定開銷。'}</p></div>
   <div class="card"><h2>營收變動時</h2><div class="scroll"><table><tr><th>月營收</th><th class="n">加盟主月淨利</th><th class="n">回本</th><th class="n">總部每店每月</th></tr>
    ${sens.map(x=>`<tr${x.m===1?' style="font-weight:600"':''}><td>${x.m===1?'預估':(x.m<1?'少 ':'多 ')+Math.round(Math.abs(1-x.m)*100)+'%'}｜${wan(x.r.rev)}</td><td class="n">${money(x.r.net)}</td><td class="n">${x.r.payback==null?'無法回本':fmt(x.r.payback,1)+' 月'}</td><td class="n">${money(x.r.hqMonth)}</td></tr>`).join('')}</table></div></div>
   ${warn.length?`<div class="card"><h2>要注意</h2><ul>${warn.map(w=>`<li>${esc(w)}</li>`).join('')}</ul></div>`:''}`;
 }
+
+/* ---------- ⓪ 現況與目標 ---------- */
+function tNow(p){
+  const n=P(p).now, st=stageOf((+n.direct||0)+(+n.fr||0)), f=FORMATS[n.fmt];
+  const F=(k,l,o={})=>fld('now.'+k,l,{...o,p});
+  const tgt=stageOf(+n.target3||0);
+  return `<div class="two"><div class="card"><h2>業主現況</h2><p class="sub">先填這裡，後面的試算、建議與路線圖都會依這些條件調整。</p><div class="grid">
+    ${F('fmt','業態',{sel:Object.keys(FORMATS).map(k=>[k,k])})}${F('direct','目前直營店',{u:'家'})}${F('fr','目前加盟店',{u:'家'})}${F('avgRev','直營店平均月營收',{u:'元'})}
+    ${F('target3','3 年後想要的總店數',{u:'家'})}${F('capital','總部可動用資金',{sel:[['低','低（500 萬以下）'],['中','中（500–2000 萬）'],['高','高（2000 萬以上）']]})}
+    ${F('owner','老闆角色',{sel:[['親自經營','還在第一線'],['半退','已交給店長，偶爾巡店'],['經營者','只管總部與策略']]})}${F('region','預計展店區域',{txt:1})}
+    ${F('goal','業主想透過加盟達成什麼',{ta:1})}</div>
+    <div class="row"><button class="pri" data-applyfmt="${p.id}">套用「${esc(n.fmt)}」參考數字到試算</button><span class="note">會覆蓋 ③ 的投資、成本與收費欄位${n.avgRev?'（月營收改用你填的直營店實際數字）':''}，並建立 3 種店型。</span></div></div>
+   <div id="nowside">${nowSide(p)}</div></div>`;
+}
+function nowSide(p){
+  const n=P(p).now, st=stageOf((+n.direct||0)+(+n.fr||0)), f=FORMATS[n.fmt], tgt=stageOf(+n.target3||0);
+  return `<div class="card"><h2>現在的階段</h2><div class="row" style="margin:0 0 6px;align-items:baseline"><span class="big">${esc(st.k)}</span>${pill('mute',`共 ${(+n.direct||0)+(+n.fr||0)} 家`)}</div>
+    <p style="margin:0">${esc(st.d)}</p><p><b>這階段該做：</b>${esc(st.focus)}</p>
+    ${+n.target3>(+n.direct||0)+(+n.fr||0)?`<p class="note">3 年目標 ${fmt(n.target3)} 家，會進入「${esc(tgt.k)}」：${esc(tgt.focus)}</p>`:''}
+    ${n.fr>0?`<p class="msg">已經有加盟店：重點是把現有加盟體系管好（合約改版、督導、權利金回收），再談擴張。</p>`:''}
+    ${n.owner==='親自經營'&&(+n.target3||0)>=5?`<p class="msg bad">老闆還在第一線但目標 ${fmt(n.target3)} 家：要先培養店長和總部幹部，否則展店會卡在老闆一個人。</p>`:''}
+    ${n.capital==='低'?`<p class="note">資金偏低：適合一般加盟（加盟主出資），不適合委託加盟。</p>`:n.capital==='高'?`<p class="note">資金充足：可考慮委託加盟或合作經營，品質控制力較高。</p>`:''}</div>
+   ${f?`<div class="card"><h2>${esc(n.fmt)} 常見範圍</h2><div class="kv"><span>食材成本率</span><b>${f.r.food.join('–')}%</b><span>人事費用率</span><b>${f.r.labor.join('–')}%</b><span>租金占營收</span><b>${f.r.rent.join('–')}%</b><span>標準店投資（裝潢設備）</span><b>${wan(f.build)}</b><span>常見最小坪數</span><b>${f.area} 坪</b><span>常見權利金</span><b>${f.royMode==='fixed'?'每月 '+money(f.royFix):f.royPct+'%'}</b></div><p class="note">市場常見區間，僅作起始假設；請用客戶實際數字取代。</p></div>`:''}`;
+}
+function applyFormat(p){
+  const d=P(p), f=FORMATS[d.now.fmt]; if(!f) return;
+  const keep={y1:d.calc.y1,y2:d.calc.y2,y3:d.calc.y3,hqFixed:d.calc.hqFixed,buildMargin:d.calc.buildMargin};
+  const c={...DEF_CALC}; for(const k of Object.keys(DEF_CALC)) if(f[k]!=null) c[k]=f[k];
+  if(+d.now.avgRev>0) c.rev=+d.now.avgRev;
+  d.calc={...c,...keep};
+  d.types=f.types.map(([name,kb,kr,krent])=>({name,build:Math.round(c.build*kb/1e4)*1e4,other:Math.round(c.other*kb/1e4)*1e4,rev:Math.round(c.rev*kr/1e4)*1e4,rent:Math.round(c.rent*krent/1e3)*1e3}));
+  d.model.minArea=f.area;
+  {const r=calc(d.calc); d.model.capital=Math.ceil((r.invest+r.deposit)*0.5/1e5)*10}
+}
+
+/* ---------- ⑤ 招募 ---------- */
+function tRecruit(p){
+  const ps=P(p).prospects, cnt=PST.map(s=>ps.filter(x=>x.stage===s).length);
+  const bad=ps.filter(x=>pCheck(x).some(i=>i[0]==='bad')).length;
+  const card=(x,i)=>{const iss=pCheck(x), s=pScore(x);
+    const sel=(f,opts,v)=>`<select data-pp="${i}.${f}" aria-label="${f}">${opts.map(o=>`<option${String(o)===String(v)?' selected':''}>${o}</option>`).join('')}</select>`;
+    const dt=(f,l)=>`<div><label>${l}</label><input type="date" data-pp="${i}.${f}" value="${esc(x[f])}"></div>`;
+    return `<div class="card"><div class="row" style="margin:0;justify-content:space-between"><h3 style="margin:0">${esc(x.name)} <span class="note">${esc([x.city,x.phone].filter(Boolean).join('｜'))}</span></h3>
+     <span class="row" style="margin:0">${s!=null?pill(pScoreLv(s),`甄選 ${s}/25`):pill('mute','未評分')}${sel('stage',PST,x.stage)}</span></div>
+     ${iss.length?`<div class="row" style="margin-top:6px">${iss.map(([lv,t])=>pill(lv,t)).join(' ')}</div>`:''}
+     <div class="grid">${dt('disclosed_on','揭露書交付日')}${dt('contract_on','合約交付審閱日')}${dt('signed_on','簽約日')}${dt('delivered_on','合約正本交付日')}</div>
+     <div class="grid">${SC.map(([k,l])=>`<div><label>${l}</label><select data-pp="${i}.sc.${k}"><option value="">—</option>${[1,2,3,4,5].map(n=>`<option${+((x.sc||{})[k])===n?' selected':''}>${n}</option>`).join('')}</select></div>`).join('')}
+      <div><label>預算</label><input data-pp="${i}.budget" type="number" value="${esc(x.budget)}" placeholder="萬"></div></div>
+     <label>備註</label><input data-pp="${i}.note" value="${esc(x.note)}" placeholder="來源、想開的地點、顧慮">
+     <div class="row">${x.store_id?`<a class="btn" href="#s=${x.store_id}">看門市</a>`:['已簽約','籌備中','已開幕'].includes(x.stage)?`<button data-pstore="${i}">建立成門市</button>`:''}
+      <button class="sm ${armed==='pp'+i?'armed':''}" data-pdel="${i}">${armed==='pp'+i?'再按一次刪除':'刪除'}</button></div></div>`};
+  return `<div class="stats">${PST.slice(0,8).map((s,i)=>`<div class="stat"><b>${cnt[i]}</b><span>${s}</span></div>`).join('')}<div class="stat ${bad?'alert':''}"><b>${bad}</b><span>合規有問題</span></div></div>
+   <div class="card"><h2>新增加盟申請人</h2><div class="grid"><div><label for="r_name">姓名</label><input id="r_name"></div><div><label for="r_phone">電話</label><input id="r_phone"></div><div><label for="r_city">想開的縣市／商圈</label><input id="r_city"></div>
+    <div><label for="r_budget">預算（萬）</label><input id="r_budget" type="number"></div></div><div class="row"><button class="pri" data-padd="${p.id}">新增</button>
+    <span class="note">公平會規定：簽約或收訂金前 10 天交付揭露書、合約至少審閱 5 天、簽約後 30 天內交付合約。填日期系統就會檢查。</span></div></div>
+   ${ps.length?ps.map(card).join(''):'<p class="sub">還沒有申請人。</p>'}
+   <p class="note">甄選評分：每項 1–5 分，20 分以上優先、15–19 可考慮、15 以下不建議。</p>`;
+}
+
+/* ---------- ⑦ 路線圖與報告 ---------- */
+function roadmap(p){
+  const d=P(p), n=d.now, rd=readiness(p), c=d.calc, total=(+n.direct||0)+(+n.fr||0), m=d.model.type;
+  const ct=d.contract, legalLeft=CK[0].items.filter(([k])=>!['已完成','不適用'].includes((ct[k]||{}).st)).length;
+  const crit=rd.gaps.filter(g=>g.crit).map(g=>GAP[g.k]), hard=rd.gaps.filter(g=>!g.crit&&g.v===0).map(g=>GAP[g.k]), soft=rd.gaps.filter(g=>!g.crit&&g.v===1).map(g=>GAP[g.k]);
+  const ph=[];
+  if(n.fr>0){
+    ph.push({t:'0–3 個月｜整頓現有加盟',it:[legalLeft?`補齊揭露與合約規定（還有 ${legalLeft} 項）並更新合約版本`:'合約已符合揭露規定，排定續約版本檢討',`每家加盟店建立營業額回報與權利金對帳（目前 ${n.fr} 家）`,`排督導巡店：每 ${fmt(d.model.visitDays)} 天一次，先做一輪 QSC 稽核`,...crit]});
+    ph.push({t:'3–6 個月｜制度化',it:['加盟主分級（A/B/C）與輔導改善流程','連續稽核不合格的處理與解約條件',...hard,...soft.slice(0,3)]});
+  }else{
+    ph.push({t:'0–3 個月｜打底',it:[...crit,...hard,legalLeft?`寫好揭露書與合約（公平會規定還有 ${legalLeft} 項未完成）`:'揭露書與合約已備妥'].filter(Boolean)});
+    ph.push({t:'3–6 個月｜標準化',it:[...soft,'指定一家直營店當訓練店','做出招商說明（本頁「招商說明」可產出）']});
+  }
+  const pilot=m==='直營'||rd.rec==='直營'?[`再開直營店到至少 2–3 家（目前 ${total} 家）並跑滿 12 個月`]:m==='委託加盟'?['委託加盟試點 1–2 家，總部出資、加盟主經營']:m==='合作經營'?['與優秀店長合作經營 1–2 家']:[`首批加盟 ${fmt(c.y1)} 家，辦 2 場招商說明會`];
+  ph.push({t:'6–12 個月｜試點',it:[...pilot,'每家新店開幕後第 1 個月每週督導','檢討試點門市的實際營收與回本，修正試算']});
+  ph.push({t:'12–24 個月｜複製',it:[`第 2 年新開 ${fmt(c.y2)} 家`,(+c.y1+ +c.y2)>=10?'增設第 2 位督導與區域會議':'督導維持 1 人，建立督導報表','集中採購與物流合約重議','年度加盟主大會、續約制度']});
+  if(+n.target3>=30||(+c.y1+ +c.y2+ +c.y3)>=30) ph.push({t:'24–36 個月｜擴張',it:[`第 3 年新開 ${fmt(c.y3)} 家`,'評估區域代理或分區總部','中央廚房／物流倉儲投資評估']});
+  else ph.push({t:'24–36 個月｜擴張',it:[`第 3 年新開 ${fmt(c.y3)} 家`,'品牌升級與新店型測試']});
+  return ph;
+}
+function staffPlan(c){
+  const ro=rollout(c); return ro.map(x=>({...x,sup:Math.max(1,Math.ceil(x.open/10)),rec:x.n>=3?1:0,tr:x.open>=5?1:0,log:x.open>=10?1:0}));
+}
+let rview='owner';
+function tReport(p){
+  const d=P(p), n=d.now, rd=readiness(p), c=d.calc, r=calc(c), st=stageOf((+n.direct||0)+(+n.fr||0)), ro=staffPlan(c), be=hqBreak(c);
+  const ct=d.contract, done=CK.flatMap(g=>g.items).filter(([k])=>['已完成','不適用'].includes((ct[k]||{}).st)).length, tot=CK.flatMap(g=>g.items).length;
+  const types=typesOf(p).map(t=>({t,r:calcType(c,t)}));
+  const sw=`<div class="row noprint" style="margin-top:0"><button class="${rview==='owner'?'pri':''}" data-rview="owner">給業主的顧問報告</button><button class="${rview==='fr'?'pri':''}" data-rview="fr">給加盟主的招商說明</button><button data-print>列印／存成 PDF</button>${rview==='owner'?`<button data-copyrep="${p.id}">複製文字</button>`:''}</div>`;
+  const map=roadmap(p).map(x=>`<h3>${esc(x.t)}</h3><ul>${x.it.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`).join('');
+  if(rview==='fr'){
+    return sw+`<div class="card doc report"><h2>${esc(p.name)} 加盟招商說明</h2>
+     ${n.pitch?`<p class="pre">${esc(n.pitch)}</p>`:`<p class="note noprint">在下方「品牌介紹」寫幾句，會放在這裡。</p>`}
+     <h3>開店投資（預估）</h3><div class="scroll"><table><tr><th>店型</th><th class="n">加盟金＋訓練</th><th class="n">裝潢設備</th><th class="n">其他開辦</th><th class="n">保證金（可退）</th><th class="n">合計</th></tr>
+      ${types.map(({t,r})=>`<tr><td>${esc(t.name)}</td><td class="n">${money((+c.fee||0)+(+c.train||0))}</td><td class="n">${money(tv(t,'build',c))}</td><td class="n">${money(tv(t,'other',c))}</td><td class="n">${money(c.deposit)}</td><td class="n">${money(r.invest+r.deposit)}</td></tr>`).join('')}</table></div>
+     <h3>營運情境（預估）</h3><div class="scroll"><table><tr><th>店型</th><th class="n">月營收</th><th class="n">月淨利</th><th class="n">回本</th></tr>
+      ${types.map(({t,r})=>`<tr><td>${esc(t.name)}</td><td class="n">${wan(r.rev)}</td><td class="n">${money(r.net)}</td><td class="n">${r.payback==null?'—':fmt(r.payback,0)+' 個月'}</td></tr>`).join('')}</table></div>
+     <p class="note">以上為依假設條件試算之預估值，不代表保證獲利；實際營收受地點、經營方式與市場影響。</p>
+     <h3>每月費用</h3><ul><li>權利金：${c.royMode==='fixed'?'每月 '+money(c.royFix):'營業額 '+fmt(c.royPct,1)+'%'}</li><li>行銷基金：營業額 ${fmt(c.mkt,1)}%</li><li>進貨：${esc(d.model.supply)}</li></ul>
+     <h3>總部支援</h3><ul><li>${esc(d.model.support)}</li><li>開幕前訓練 ${fmt(d.model.trainDays)} 天</li><li>督導約每 ${fmt(d.model.visitDays)} 天訪店</li></ul>
+     <h3>加盟條件</h3><ul><li>加盟期間 ${fmt(d.model.years)} 年；${esc(d.model.renew)}</li><li>${+d.model.radius>0?`區域保護：半徑 ${fmt(d.model.radius)} 公尺`:'不設區域保護'}</li><li>最低 ${fmt(d.model.minArea)} 坪，建議自備款 ${fmt(d.model.capital)} 萬以上</li><li>${esc(d.model.qualify)}</li></ul>
+     <h3>加盟流程</h3><ol><li>填寫申請、初次面談</li><li>參加說明會</li><li>收到加盟資訊揭露書（簽約前至少 10 天）</li><li>合約審閱（至少 5 天）</li><li>簽約、選點評估</li><li>裝潢工程、教育訓練</li><li>開幕與開幕後督導</li></ol></div>
+     <div class="card noprint"><label for="x_now_pitch">品牌介紹（會出現在招商說明最上面）</label><textarea id="x_now_pitch" data-k="now.pitch">${esc(n.pitch)}</textarea></div>`;
+  }
+  return sw+`<div class="card doc report"><h2>${esc(p.name)} 加盟體系規劃報告</h2><p class="note">品牌加辣餐飲顧問工作室｜${today()}</p>
+   <h3>一、現況與階段</h3><p>${esc(n.fmt)}｜直營 ${fmt(n.direct)} 家、加盟 ${fmt(n.fr)} 家｜目前在<b>${esc(st.k)}</b>：${esc(st.d)} ${n.goal?`業主目標：${esc(n.goal)}`:''}</p><p>${esc(st.focus)}</p>
+   <h3>二、加盟準備度：${rd.answered?rd.pct+'%｜'+esc(rd.verdict):'尚未完成'}</h3><ul>${rd.dims.map(x=>`<li>${esc(x.t)}：${x.pct}%</li>`).join('')}</ul>
+   ${rd.gaps.length?`<p>優先補強：</p><ol>${rd.gaps.slice(0,6).map(g=>`<li>${esc(g.t)}——${esc(GAP[g.k])}</li>`).join('')}</ol>`:''}
+   <h3>三、加盟模式：${esc(d.model.type)}${rd.rec&&rd.rec!==d.model.type?`（準備度建議：${esc(rd.rec)}）`:''}</h3><p>加盟期間 ${fmt(d.model.years)} 年、${+d.model.radius>0?`保護半徑 ${fmt(d.model.radius)} 公尺`:'不設區域保護'}、最低 ${fmt(d.model.minArea)} 坪、加盟主自備 ${fmt(d.model.capital)} 萬以上。</p>
+   <h3>四、單店經濟（加盟主）</h3><div class="scroll"><table><tr><th>店型</th><th class="n">投資</th><th class="n">月營收</th><th class="n">月淨利</th><th class="n">淨利率</th><th class="n">回本</th></tr>
+    ${types.map(({t,r})=>`<tr><td>${esc(t.name)}</td><td class="n">${wan(r.invest)}</td><td class="n">${wan(r.rev)}</td><td class="n">${money(r.net)}</td><td class="n">${fmt(r.netPct,1)}%</td><td class="n">${r.payback==null?'無法回本':fmt(r.payback,1)+' 月'}</td></tr>`).join('')}</table></div>
+   <h3>五、總部收益</h3><p>每家標準店：開店一次性 ${money(r.hqOnce)}，之後每月 ${money(r.hqMonth)}（已扣督導成本），總部分走利潤 ${r.take==null?'—':fmt(r.take,0)+'%'}。${be?`總部每月固定開銷 ${money(c.hqFixed)}，需要 <b>${be} 家</b>加盟店才打平。`:''}</p>
+   <div class="scroll"><table><tr><th>年</th><th class="n">新開</th><th class="n">累計</th><th class="n">總部收入</th><th class="n">扣固定開銷</th><th class="n">督導</th><th class="n">招商</th><th class="n">訓練</th><th class="n">採購物流</th></tr>
+    ${ro.map(x=>`<tr><td>第 ${x.y} 年</td><td class="n">${x.n}</td><td class="n">${x.open}</td><td class="n">${wan(x.inc)}</td><td class="n">${wan(x.inc-(+c.hqFixed||0)*12)}</td><td class="n">${x.sup}</td><td class="n">${x.rec}</td><td class="n">${x.tr}</td><td class="n">${x.log}</td></tr>`).join('')}</table></div>
+   <h3>六、合約與法規：完成 ${done}／${tot}</h3><p>依公平會規定，簽約或收訂金前 10 天須以書面交付加盟重要資訊、合約審閱至少 5 天、簽約後 30 天內交付合約。</p>
+   <h3>七、執行路線圖</h3>${map}</div>`;
+}
+function reportText(p){
+  const el=document.querySelector('.report'); return el?el.innerText:'';
+}
+
 function tContract(p){
   const ct=P(p).contract; let done=0,tot=0;
   const groups=CK.map(g=>`<h3>${esc(g.g)}</h3>${g.items.map(([k,t,law])=>{const it=ct[k]||{}, st=it.st||'未處理'; tot++; if(st==='已完成'||st==='不適用') done++;
@@ -514,13 +696,14 @@ function queueSave(p){
   clearTimeout(saveT); const s=$('#saved'); if(s) s.textContent='儲存中…';
   saveT=setTimeout(()=>act(async()=>{const at=new Date().toISOString(); await q(sbc.from('fr_plans').update({data:p.data,updated_at:at}).eq('id',p.id),'自動儲存'); p.updated_at=at; const s=$('#saved'); if(s) s.textContent='已自動儲存'}),600);
 }
-function setK(p,path,el){const [a,b]=path.split('.'); const d=P(p); d[a][b]=el.type==='number'?num(el.value):el.value}
+function setK(p,path,el){setPath(P(p),path,el.type==='number'?num(el.value):el.value)}
 document.addEventListener('input',e=>{
   const el=e.target.closest('[data-k]'); if(!el||el.type==='radio'||el.tagName==='SELECT') return;
-  const p=curPlan(); if(!p) return; setK(p,el.dataset.k,el); if(el.dataset.k.startsWith('calc.')) drawCalc(); queueSave(p);
+  const p=curPlan(); if(!p) return; setK(p,el.dataset.k,el); if(/^(calc|types)\./.test(el.dataset.k)) drawCalc(); if(/^now\./.test(el.dataset.k)&&$('#nowside')) $('#nowside').innerHTML=nowSide(p); queueSave(p);
 });
 document.addEventListener('change',e=>{
   const p=curPlan(), el=e.target;
+  if(p&&el.hasAttribute('data-pp')){const [i,...rest]=el.dataset.pp.split('.'); const x=P(p).prospects[+i]; if(!x) return; setPath(x,rest.join('.'),el.type==='number'?num(el.value):el.value); queueSave(p); if(rest[0]!=='note'&&rest[0]!=='budget') render(); return}
   if(p&&el.dataset.ready){P(p).ready[el.dataset.ready]=+el.value; queueSave(p); render(); return}
   if(p&&el.closest('[data-k]')&&(el.type==='radio'||el.tagName==='SELECT')){setK(p,el.dataset.k,el); queueSave(p); render(); return}
   if(p&&el.dataset.ck){const c=P(p).contract; c[el.dataset.ck]={...(c[el.dataset.ck]||{}),st:el.value}; queueSave(p); render(); return}
@@ -534,6 +717,21 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
   if('out' in d){await sbc.auth.signOut(); location.href=PORTAL; return}
   if('print' in d){window.print(); return}
+  if(d.rview){rview=d.rview; render(); return}
+  if(d.copyrep){const t=reportText(); try{await navigator.clipboard.writeText(t); say('已複製報告文字，可以貼到 LINE、Word 或 Google 文件。')}catch(_){say('瀏覽器不讓複製，請改用「列印／存成 PDF」。',true)} return}
+  if(d.applyfmt){const p=D.plans.find(x=>x.id===+d.applyfmt); applyFormat(p); queueSave(p); say(`已套用「${P(p).now.fmt}」參考數字與 ${P(p).types.length+1} 種店型，到 ③ 看試算。`); render(); return}
+  if(d.addtype){const p=D.plans.find(x=>x.id===+d.addtype); P(p).types.push({name:'新店型'}); queueSave(p); render(); return}
+  if(d.deltype!=null&&b.hasAttribute('data-deltype')){const p=curPlan(); P(p).types.splice(+d.deltype,1); queueSave(p); render(); return}
+  if(d.padd){const p=D.plans.find(x=>x.id===+d.padd), name=val('r_name').trim(); if(!name){say('請填姓名。',true);return}
+    P(p).prospects.unshift({id:Date.now(),name,phone:val('r_phone')||'',city:val('r_city')||'',budget:num(val('r_budget')),stage:'詢問',sc:{},created_on:today()}); queueSave(p); say('已新增申請人。'); render(); return}
+  if(b.hasAttribute('data-pdel')){const p=curPlan(), i=+d.pdel; if(armed!=='pp'+i){armed='pp'+i; render(); setTimeout(()=>{if(armed==='pp'+i){armed=null;render()}},4000); return}
+    armed=null; P(p).prospects.splice(i,1); queueSave(p); say('已刪除申請人。'); render(); return}
+  if(b.hasAttribute('data-pstore')) return act(async()=>{const p=curPlan(), x=P(p).prospects[+d.pstore], c=P(p).calc, m=P(p).model;
+    const open=x.stage==='已開幕'?(x.open_on||today()):null;
+    const o={plan_id:p.id,name:(x.city?x.city+' ':'')+x.name+' 店',kind:m.type==='一般加盟'||m.type==='區域代理'?'加盟':m.type==='直營'?'加盟':m.type,owner_name:x.name,phone:x.phone||null,
+      status:open?'營運中':'籌備中',open_on:open,royalty_mode:c.royMode,royalty_value:c.royMode==='fixed'?c.royFix:c.royPct,mkt_pct:c.mkt,brand_id:p.brand_id||null,
+      contract_end:x.signed_on&&m.years?addDays(x.signed_on,Math.round(+m.years*365.25)-1):null};
+    const r=await q(sbc.from('fr_stores').insert(o).select().single(),'建立門市'); D.stores.push(r); x.store_id=r.id; queueSave(p); say('已建立門市，之後到「⑥ 加盟店督導」追蹤。'); render()});
   if(d.copydoc){const p=D.plans.find(x=>x.id===+d.copydoc); const t=`${p.name} 加盟重要資訊揭露書（草稿）\n\n`+discLines(p).map(([h,ls])=>h+'\n'+ls.map(l=>'・'+l).join('\n')).join('\n\n');
     try{await navigator.clipboard.writeText(t); say('已複製揭露書文字，可以貼到 Word 或 Google 文件再修。')}catch(_){say('瀏覽器不讓複製，請改用「列印／存成 PDF」。',true)} return}
   if(d.saveplan) return act(async()=>{const o=readLink(); if(!o) return; o.updated_at=new Date().toISOString();
