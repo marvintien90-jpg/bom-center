@@ -9,6 +9,7 @@ maybeSingle(){maybe=true;return o},single(){one=true;return o},
 insert(p){op='insert';payload=p;return o},update(p){op='update';payload=p;return o},delete(){op='delete';return o},
 then(res,rej){let rows=S.tables[t],out;const m=r=>f.every(([k,v])=>r[k]===v);
  if(S.fail===t) return Promise.resolve({data:null,error:{message:'relation does not exist'}}).then(res,rej);
+ if(S.noProfile&&(op==='insert'||op==='update')&&[].concat(payload).some(p=>p&&'profile' in p)) return Promise.resolve({data:null,error:{message:"Could not find the 'profile' column of 'sop_manuals'"}}).then(res,rej);
  if(op==='select'){out=rows.filter(m)}
  else if(op==='insert'){const ts=new Date(Date.now()+(seq)).toISOString();out=[].concat(payload).map(p=>({id:seq++,status:'草稿',version:1,published_at:null,note:null,created_at:ts,updated_at:ts,...p}));rows.push(...out)}
  else if(op==='update'){out=rows.filter(m);out.forEach(r=>Object.assign(r,JSON.parse(JSON.stringify(payload))))}
@@ -34,6 +35,7 @@ async function open(br, st, vw, hash) {
   pg.on('pageerror', e => pg.errs.push(e.message));
   await pg.route('**/supabase.js', r => r.fulfill({ contentType: 'application/javascript', body: fake(st) }));
   await pg.route('https://sop.test/', r => r.fulfill({ contentType: 'text/html', body: html }));
+  await pg.route('**/checkup/score.js', r => r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(__dirname, '../checkup/score.js'), 'utf8') }));
   await pg.goto('https://sop.test/' + (hash || '')); await pg.waitForTimeout(250); return pg;
 }
 const txt = pg => pg.innerText('body');
@@ -53,6 +55,8 @@ const SHOT = process.env.SHOT_DIR || require('os').tmpdir();
   await pg.click('label:has-text("麵食／拉麵")'); await pg.waitForTimeout(80);
   await pg.fill('#n_client', '阿明麵館'); await pg.selectOption('#n_brand', 'b1');
   await pg.click('label:has-text("異常與客訴處理")'); await pg.waitForTimeout(80); // 取消一章
+  check('預設外送 30% 以下 → 建議外送章節', (await txt(pg)).includes('外送與外帶') && (await txt(pg)).includes('依店況建議'));
+  await pg.click('label.chip:has-text("幾乎沒有")'); await pg.waitForTimeout(80); // 沒有外送 → 不加外送章
   check('切換業態不會清掉已填的客戶', await pg.inputValue('#n_client') === '阿明麵館');
   await pg.click('[data-create]'); await pg.waitForTimeout(250);
   let m = await pg.evaluate(() => window.__S.tables.sop_manuals[0]);
@@ -80,18 +84,17 @@ const SHOT = process.env.SHOT_DIR || require('os').tmpdir();
   check('儲存：改字、角色、稽核、排序、刪除、加章節', s0.length === 7 && s0[1].text === '店長 9:30 到店解除保全' && s0[1].role === '副店長' && s0[1].audit === true
     && m.sections[1].steps.slice(-1)[0].text === '冰箱除霜' && m.sections[8].name === '外送平台作業' && m.updated_by === 'boss@x.com', JSON.stringify(s0.slice(0, 2)));
   check('存好後沒有未存標記', !(await pg.innerText('.sticky')).includes('有修改還沒存') && (await txt(pg)).includes('已儲存'));
-  // Word 下載
-  const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('.sticky [data-word]')]);
+  // 預覽與 Word 下載
+  await pg.click('text=手冊預覽／列印'); await pg.waitForTimeout(150); t = await txt(pg);
+  check('預覽頁（封面、目錄、店況、章節表）', t.includes('目錄') && t.includes('9. 外送平台作業') && t.includes('品牌加辣餐飲顧問工作室') && t.includes('本店狀況與手冊設計重點') && t.includes('桌邊點餐') && !bad(t));
+  await pg.screenshot({ path: path.join(SHOT, 'sop-doc.png'), fullPage: false });
+  const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('[data-word]')]);
   const wf = await dl.path(); const wd = fs.readFileSync(wf, 'utf8');
   check('下載 Word', (await pg.evaluate(()=>1)) && wd.includes('煮麵計時') && wd.includes('<table border="1"') && wd.includes('★ 店長 9:30'), dl.suggestedFilename()+' '+wd.includes('煮麵計時')+wd.includes('<table border="1"')+wd.includes('★ 店長 9:30'));
+  await pg.click('text=← 回編輯'); await pg.waitForTimeout(100);
   await pg.click('[data-copytxt]'); await pg.waitForTimeout(100);
   const clip = await pg.evaluate(() => navigator.clipboard.readText());
-  check('複製文字', clip.includes('【1. 開店準備】') && clip.includes('★店長 9:30 到店解除保全｜標準：開店前 60 分鐘到店｜副店長'), clip.slice(0, 120));
-  // 預覽
-  await pg.click('text=預覽／列印'); await pg.waitForTimeout(150); t = await txt(pg);
-  check('預覽頁（封面、目錄、章節表）', t.includes('目錄') && t.includes('9. 外送平台作業') && t.includes('品牌加辣餐飲顧問工作室') && !bad(t));
-  await pg.screenshot({ path: path.join(SHOT, 'sop-doc.png'), fullPage: false });
-  await pg.click('text=← 回編輯'); await pg.waitForTimeout(100);
+  check('複製文字', clip.includes('【1. 開店準備】') && clip.includes('★ 店長 9:30 到店解除保全｜標準：開店前 60 分鐘到店｜副店長'), clip.slice(0, 120));
   // 交付 b1（無已完成稽核 → 取代）
   await pg.click('[data-pub]'); await pg.waitForTimeout(60); check('交付要按兩次', (await pg.innerText('[data-pub]')).includes('再按一次'));
   await pg.click('[data-pub]'); await pg.waitForTimeout(300);
@@ -116,9 +119,9 @@ const SHOT = process.env.SHOT_DIR || require('os').tmpdir();
   check('交付到有稽核紀錄的品牌 → 保留舊項目再加上手冊稽核點', b2.data.qscItems[0].id === 'q1' && b2.data.qscItems.length === na + 1 && b2.data.audits.length === 1 && b2.rev === 8, b2.data.qscItems.length);
   // 督導總覽
   await pg.click('text=督導總覽'); await pg.waitForTimeout(150); t = await txt(pg);
-  check('督導總覽統計', (await pg.$$eval('.stat b', b => b.map(x => x.textContent))).join() === '2,78,4,2,1', (await pg.$$eval('.stat b', b => b.map(x => x.textContent))).join());
+  check('督導總覽統計', (await pg.$$eval('.stat b', b => b.map(x => x.textContent))).join() === '2,78,0,2,1', (await pg.$$eval('.stat b', b => b.map(x => x.textContent))).join());
   const rows = await pg.$$eval('tbody tr', r => r.map(x => x.innerText));
-  check('督導總覽：逾期的排第一、分數比上次、趨勢、深連結', rows[0].includes('老店火鍋') && rows[0].includes('64') && rows[0].includes('-8') && rows[0].includes('30 天沒督導') && rows[0].includes('督導 0・自檢 1') && rows[1].includes('阿明麵館') && rows[1].includes('91'), rows.join(' / '));
+  check('督導總覽：逾期的排第一、分數比上次、趨勢、深連結', rows[0].includes('老店火鍋') && rows[0].includes('中山店') && rows[0].includes('64') && rows[0].includes('-8') && rows[0].includes('30 天沒督導') && rows[0].includes('督導 0・自檢 1') && rows[1].includes('阿明麵館') && rows[1].includes('91'), rows.join(' / '));
   check('巡店連結帶品牌', await pg.$eval('tbody tr a', a => a.href).then(h => h.endsWith('#qsc&b=b2')));
   check('有趨勢圖', await pg.$$eval('svg.spark', s => s.length) === 1);
   check('督導總覽沒有錯誤字樣', !bad(t));
@@ -140,5 +143,81 @@ const SHOT = process.env.SHOT_DIR || require('os').tmpdir();
   await mp.goto('https://sop.test/#audit'); await mp.waitForTimeout(250);
   check('手機：督導總覽沒有水平捲動', await mp.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   check('手機沒有頁面錯誤', !mp.errs.length, mp.errs.join(';'));
+  // ===== v2：店況問卷、健檢帶入、BOM 菜單、專業度、檢核表、訓練表、關鍵項 =====
+  {
+    const st = base(A, 'admin');
+    st.tables.checkup_leads = [{ id: 7, brand: '小王熱炒', biz_type: '中式餐館', stores: 3, total: 41, created_at: '2026-11-10T00:00:00Z', answers: { p1: 0, p2: 2, p3: 2, p4: 2, p5: 1, h1: 1, h2: 2, h3: 3, h4: 0, m3: 1 } }];
+    st.tables.coach_clients = [{ id: 5, name: '小王熱炒', biz_type: '中式餐館', stores: 3, brand_id: 'b1', lead_id: 7 }];
+    st.tables.bom_brands[0].data.ingredients = [{ id: 'i1', name: '牛五花', unit: '克' }, { id: 'i2', name: '高麗菜', unit: '克' }];
+    st.tables.bom_brands[0].data.semis = [{ id: 's1', name: '招牌醬', unit: '克' }];
+    st.tables.bom_brands[0].data.items = [{ id: 'm1', name: '沙茶牛肉', cat: '熱炒', price: 220, monthlySales: 300, lines: [{ ref: 'i:i1', qty: 120 }, { ref: 'i:i2', qty: 80 }, { ref: 's:s1', qty: 15 }] }, { id: 'm2', name: '炒高麗菜', price: 120, monthlySales: 500, lines: [{ ref: 'i:i2', qty: 250 }] }, { id: 'm3', name: '白飯', price: 15, lines: [] }];
+    const p = await open(br, st, null, '#new&client=5'); let t = await txt(p);
+    check('v2 從顧問客戶帶入：業態、店數、健檢低分題', await p.$eval('input[data-nt]:checked', e => e.value) === '中式熱炒／餐館' && await p.$eval('input[name=pf_stage]:checked', e => e.value) === '2–5 店' && t.includes('已帶入健檢結果') && await p.inputValue('#n_client') === '小王熱炒', t.slice(0, 400));
+    for (const c of ['櫃台點餐', '1–3 人', '中央廚房配送', '30% 以上', '油炸機', '有賣酒', '出餐慢', '開放加盟']) { await p.click(`label.chip:has-text("${c}")`); await p.waitForTimeout(40) }
+    t = await txt(p); check('v2 預覽數字會跟著店況變', /預覽：\d+ 章/.test(t) && t.includes('多店標準與督導') && t.includes('中央廚房配送與復熱'));
+    await p.click('[data-create]'); await p.waitForTimeout(250);
+    let m = await p.evaluate(() => window.__S.tables.sop_manuals.slice(-1)[0]); const S = n => m.sections.find(x => x.name === n), T = (n, x) => (S(n) || { steps: [] }).steps.find(y => y.text === x);
+    check('v2 章節依店況產生', m.sections[0].name === '本店優先改善' && ['中央廚房配送與復熱', '外送與外帶', '新人訓練與上線檢核', '多店標準與督導'].every(S) && m.coach_client_id === 5 && m.biz_type === '中式熱炒／餐館', m.sections.map(x => x.name).join());
+    check('v2 櫃台型：拿掉桌邊服務、加櫃台點餐', !T('外場服務流程', '迎賓') && !T('外場服務流程', '巡桌') && T('外場服務流程', '櫃台點餐') && T('外場服務流程', '櫃台點餐').why.includes('櫃台'));
+    check('v2 人少：零用金改拍照存證、加一人多工', T('收銀與現金管理', '開店點收零用金').std.includes('拍照') && T('開店準備', '一人多工分工'));
+    check('v2 設備與特性：炸油（關鍵項）、酒類', T('出餐品質標準', '炸油管理') && T('出餐品質標準', '炸油管理').crit && T('收銀與現金管理', '酒類販售'));
+    const f = S('本店優先改善').steps;
+    check('v2 痛點＋健檢 → 優先改善附 KPI 與原因', f.some(x => x.text === '尖峰出餐時間' && x.std.includes('12 分鐘') && x.why.includes('店況問卷')) && f.some(x => x.text === '每日開店試吃' && x.why.startsWith('健檢')) && f.some(x => x.text === '食安關鍵點每日檢查') && f.some(x => x.text === '巡店稽核追到完成') && f.some(x => x.text === '網路評價回覆'), f.map(x => x.text + '/' + x.why).join(' | '));
+    check('v2 加盟：加指定品項進貨', T('多店標準與督導', '指定品項進貨'));
+    check('v2 店況存檔', m.profile && m.profile.svc === '櫃台點餐' && m.profile.ck.length >= 4 && m.profile.lead === 7, JSON.stringify(m.profile));
+    t = await txt(p); check('v2 編輯頁：店況、專業度、為什麼', t.includes('店況') && t.includes('專業度檢查') && t.includes('為什麼有這條'));
+    // BOM 菜單 → 出餐標準卡
+    await p.click('[data-rec]'); await p.waitForTimeout(250);
+    t = await txt(p); check('v2 帶入 BOM 出餐標準卡', t.includes('已帶入 2 道菜') && await p.$$eval('[data-sf=name]', a => a.some(x => x.value === '出餐標準卡（份量）')), p.errs.join(';'));
+    await p.click('[data-save]'); await p.waitForTimeout(250);
+    m = await p.evaluate(() => window.__S.tables.sop_manuals.slice(-1)[0]); const rc = m.sections.find(x => x.key === 'recipe');
+    check('v2 出餐標準卡內容：依銷量排序、份量、售價', rc && rc.steps[0].text === '炒高麗菜' && rc.steps[1].std === '牛五花 120 克、高麗菜 80 克、招牌醬 15 克｜售價 220 元' && rc.steps[0].audit && m.sections.indexOf(rc) === m.sections.findIndex(x => x.key === 'serve') + 1, rc && JSON.stringify(rc.steps.slice(0, 2)));
+    // 專業度：清空一個稽核點的標準
+    const score = () => p.$eval('.card h2 .pill', e => +e.textContent.replace(/\D/g, ''));
+    const pc0 = await score();
+    await p.fill('.sec[data-si="1"] .st[data-ti="1"] [data-f=std]', ''); await p.click('[data-save]'); await p.waitForTimeout(250);
+    t = await txt(p); const pc1 = await score();
+    check('v2 專業度檢查抓到沒寫標準的稽核點', t.includes('沒有寫標準，稽核時無法判斷合不合格') && pc1 < pc0, pc0 + '→' + pc1);
+    await p.click('.issues li.bad .linkb'); await p.waitForTimeout(100);
+    check('v2 點問題會跳到那一條', await p.evaluate(() => document.activeElement && document.activeElement.dataset.f === 'std'));
+    // 改店況 → 補上建議步驟
+    await p.click('summary:has-text("修改店況")'); await p.click('label.chip:has-text("有生食")'); await p.waitForTimeout(80);
+    t = await txt(p); check('v2 改店況後出現補上建議', /依店況補上 \d+ 個建議步驟/.test(t) && (await p.$('details[open]')) !== null);
+    await p.click('[data-sug]'); await p.click('[data-save]'); await p.waitForTimeout(250);
+    m = await p.evaluate(() => window.__S.tables.sop_manuals.slice(-1)[0]);
+    check('v2 補上的步驟有原因、不重複', m.sections.some(x => x.steps.some(y => y.text === '生食管理' && y.why === '有供應生食')) && m.profile.extra.includes('有生食') && !(await txt(p)).includes('依店況補上'));
+    // 每日檢核表、新人訓練表
+    await p.click('.sticky >> text=每日檢核表'); await p.waitForTimeout(150); t = await txt(p);
+    check('v2 每日檢核表', t.includes('每日檢核表') && t.includes('店長簽名') && t.includes('開店準備') && !t.includes('出餐標準卡') && (await p.$$('table.ck th.d')).length >= 7 && !bad(t));
+    await p.screenshot({ path: path.join(SHOT, 'sop-check.png'), fullPage: false });
+    await p.click('a.btn:has-text("新人訓練表")'); await p.waitForTimeout(150); await p.selectOption('[data-trole]', '外場'); await p.waitForTimeout(120); t = await txt(p);
+    check('v2 新人訓練表依職務', t.includes('新人訓練表｜外場') && t.includes('上線核准') && t.includes('外送單核對') && !t.includes('一人多工分工') && !bad(t));
+    const [d2] = await Promise.all([p.waitForEvent('download'), p.click('[data-word]')]); const w2 = fs.readFileSync(await d2.path(), 'utf8');
+    check('v2 訓練表可下載 Word', w2.includes('新人訓練表') && w2.includes('外送單核對'));
+    await p.click('text=← 回編輯'); await p.waitForTimeout(100);
+    // 交付 → 關鍵項帶到稽核
+    await p.click('[data-pub]'); await p.click('[data-pub]'); await p.waitForTimeout(300);
+    const b1 = await p.evaluate(() => window.__S.tables.bom_brands[0]);
+    check('v2 交付：關鍵項帶進門市稽核與 SOP', b1.data.qscItems.some(i => i.text === '炸油管理' && i.crit === true) && b1.data.qscItems.some(i => i.crit === false) && b1.data.sop.sections.some(s => s.steps.some(x => x.crit)));
+    check('v2 沒有頁面錯誤', !p.errs.length, p.errs.join(';'));
+    await p.screenshot({ path: path.join(SHOT, 'sop-v2-edit.png'), fullPage: false });
+    // 從健檢名單帶入（不是顧問客戶）
+    await p.goto('https://sop.test/#new'); await p.waitForTimeout(200);
+    await p.selectOption('#n_src', 'l:7'); await p.waitForTimeout(100);
+    check('v2 從健檢名單帶入', await p.inputValue('#n_client') === '小王熱炒' && (await txt(p)).includes('已帶入健檢結果'));
+    await p.close();
+  }
+  { // 資料庫還沒有 profile 欄位：店況改存在備註，照樣能建、能讀
+    const st = base(A, 'admin'); st.noProfile = true;
+    const p = await open(br, st, null, '#new');
+    await p.click('label.chip:has-text("自助取餐")'); await p.fill('#n_client', '甲'); await p.click('[data-create]'); await p.waitForTimeout(300);
+    const m = await p.evaluate(() => window.__S.tables.sop_manuals[0]);
+    check('v2 沒有 profile 欄位也能建立（店況存在備註）', m && !('profile' in m) && m.note.includes('#店況:') && m.note.includes('自助取餐'), JSON.stringify(m && m.note));
+    const t = await txt(p); check('v2 備註欄不顯示店況 JSON', (await p.inputValue('#e_note')) === '' && t.includes('自助取餐'));
+    await p.fill('#e_note', '內部'); await p.click('[data-save]'); await p.waitForTimeout(250);
+    const m2 = await p.evaluate(() => window.__S.tables.sop_manuals[0]);
+    check('v2 沒有 profile 欄位也能儲存', m2.note.startsWith('內部') && m2.note.includes('自助取餐') && !p.errs.length, m2.note + p.errs.join(';'));
+    await p.close();
+  }
   await br.close(); console.log(fail ? `\n${fail} 項失敗` : '\n全部通過'); process.exit(fail ? 1 : 0);
 })();

@@ -72,12 +72,28 @@ a{color:var(--accent)}
 .sec>header input{flex:1;min-width:160px;font-weight:600}
 .sec>header .when{flex:0 1 180px;min-width:120px;font-weight:400}
 .sec>header select{width:auto}
-.st{display:grid;grid-template-columns:28px 1.6fr 1.3fr 96px 70px auto;gap:6px;align-items:start;padding:8px 12px;border-top:1px solid var(--line)}
+.st{display:grid;grid-template-columns:28px 1.6fr 1.3fr 96px 76px auto;gap:6px;align-items:start;padding:8px 12px;border-top:1px solid var(--line)}
 .st:first-of-type{border-top:0}
 .st .no{color:var(--mute);padding-top:8px;text-align:right}
 .st textarea{min-height:40px}
 .st .aud{display:flex;gap:4px;align-items:center;font-size:13px;color:var(--mute);padding-top:8px;margin:0}
 .st .ops{display:flex;gap:4px;flex-wrap:wrap}
+.st .flags{display:flex;flex-direction:column}.st .flags .aud{padding-top:4px}
+.st .why{grid-column:2/-1;font-size:12px;color:var(--accent);margin-top:-2px}
+.st.flashrow{background:var(--warn-bg);transition:background .3s}
+.pf{display:grid;gap:10px;margin:6px 0}.pfq b{display:block;font-size:14px;margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex!important;align-items:center;gap:5px;margin:0!important;border:1px solid var(--line);border-radius:999px;padding:4px 11px;background:var(--panel);color:var(--fg)!important;font-size:14px!important;cursor:pointer}
+.chip input{width:auto;margin:0}.chip.on{border-color:var(--accent);background:var(--accent-soft)}
+.types label.sug{border-style:dashed}
+.g2.noprint{align-items:start}
+.plist{margin:4px 0 8px;padding-left:18px;font-size:14px}
+details summary{cursor:pointer;color:var(--accent);margin:6px 0}
+.issues{margin:6px 0 0;padding-left:18px;font-size:14px}.issues li.bad{color:var(--bad)}.issues li.warn{color:var(--warn)}
+.linkb{border:0;background:none;padding:0;color:inherit;text-align:left;text-decoration:underline;cursor:pointer}
+.doc.form table.ck td,.doc.form table.ck th{font-size:13px}
+table.ck td.d,table.ck th.d{width:34px;text-align:center;border-left:1px solid var(--line)}
+table.ck th.d2{width:90px}
 .sticky{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
 .types{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .types label{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel);color:var(--fg);font-size:14px;margin:0;cursor:pointer}
@@ -86,17 +102,18 @@ a{color:var(--accent)}
 .doc h1{font-size:26px}.doc h2{font-size:19px;margin-top:22px;border-bottom:2px solid var(--accent);padding-bottom:4px}
 .doc table td{white-space:normal}.doc .cover{text-align:center;padding:40px 0 30px;border-bottom:1px solid var(--line);margin-bottom:16px}
 .spark{width:110px;height:30px}
-@media (max-width:640px){.sticky{position:static}.st{grid-template-columns:24px 1fr 1fr}.st textarea[data-f=text],.st .std{grid-column:2/-1}.st .role{grid-column:2}.st .aud{grid-column:3}.st .ops{grid-column:1/-1;justify-content:flex-end}}
+@media (max-width:640px){.sticky{position:static}.st{grid-template-columns:24px 1fr 1fr}.st textarea[data-f=text],.st .std{grid-column:2/-1}.st .role{grid-column:2}.st .aud{grid-column:3}.st .ops{grid-column:1/-1;justify-content:flex-end}.st .flags{grid-column:3;flex-direction:row;gap:10px}}
 @media print{.doc h2{break-after:avoid}.doc tr{break-inside:avoid}.doc .cover{break-after:page;padding-top:120px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top noprint"><div><h1>SOP 手冊與督導稽核</h1><p class="sub">依業態產出門市 SOP、交付到門市，並追蹤各店稽核分數｜顧問專用</p></div><div class="who" id="who"></div></div>
+  <div class="top noprint"><div><h1>SOP 手冊與督導稽核</h1><p class="sub">依業態與店況產出門市 SOP、每日檢核表與新人訓練表，交付到門市並追蹤各店稽核｜顧問專用</p></div><div class="who" id="who"></div></div>
   <div id="flash" class="noprint"></div>
   <div id="app"><p class="sub">讀取中…</p></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../../checkup/score.js"></script>
 <script>
 const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
@@ -109,7 +126,7 @@ const addDays=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*864e5).toISOString().
 const uid=()=>Math.random().toString(36).slice(2,9);
 
 /* ---------- SOP 範本：通用章節＋各業態加的步驟 ---------- */
-const ROLES=['店長','副店長','廚房','外場','收銀','吧台','全員'];
+const ROLES=['店長','副店長','廚房','外場','收銀','吧台','督導','全員'];
 const CATS=['品質','服務','清潔','管理','其他'];
 const BASE=[
  ['open','開店準備','開店前 60 分鐘','管理',[
@@ -213,23 +230,161 @@ const TYPES={
   prep:[['備料台整理','生熟食分區，備料加蓋','廚房',1]],
   serve:[['炸油管理','油溫照標準，炸油每天檢測酸價','廚房',1]],
   cash:[['收錢與拿食物分開','收錢的人不直接碰食物，或戴手套','收銀',1]],
-  clean:[['用水與排水','備足乾淨用水，污水不得直接排進水溝','全員',0]]}}
+  clean:[['用水與排水','備足乾淨用水，污水不得直接排進水溝','全員',0]]}},
+ '中式熱炒／餐館':{d:'大火快炒、油煙、合菜出菜節奏',add:{
+  prep:[['配菜盤標準','每道菜配菜照配菜卡秤重裝盤，冷藏備用不超過當班','廚房',1],['醬汁預調','常用醬汁照比例預調，標示日期，3 天內用完','廚房',0]],
+  serve:[['合菜出菜節奏','同桌第一道菜 10 分鐘內上，之後每 5–8 分鐘一道','廚房',1],['炒鍋火候與油溫','大火快炒照標準時間，回鍋油每天更換','廚房',0]],
+  clean:[['爐台與排煙罩','爐台每天收店除油，排煙罩每週清洗','廚房',1]]}},
+ '日式／韓式料理':{d:'生食管理、醃漬發酵、小菜補充',add:{
+  prep:[['生魚片與生食處理','專用刀具砧板，處理中保持 ≤5°C，切好 2 小時內出完','廚房',1],['醃漬小菜','泡菜與醃漬物標示製作日，照配方發酵時間','廚房',0]],
+  serve:[['壽司飯與米飯','醋飯溫度與比例照標準，保溫不超過 4 小時','廚房',1],['小菜補充','小菜吃完主動詢問補充（依品牌規定次數）','外場',0]],
+  safety:[['生食標示','菜單標示生食與醃漬品，提醒孕婦與兒童','外場',0]]}},
+ '烘焙／甜點':{d:'烘烤溫度、奶油蛋品冷藏、展示櫃效期',add:{
+  prep:[['秤料','原料全部用電子秤秤重，配方卡寫克數','廚房',1],['烘烤溫度與時間','照配方卡設定，出爐抽查中心熟度','廚房',1]],
+  serve:[['展示櫃溫度','冷藏展示櫃 ≤7°C，每 4 小時記錄','外場',1],['產品效期標示','每盤標示製作日；鮮奶油類當天售完或報廢','外場',1]],
+  clean:[['烤盤模具清潔','每天清洗烤盤與模具，乾燥後收納','廚房',0]]}}
 };
-function build(type,keys){
-  const T=TYPES[type]||TYPES['通用'], add=T.add||{};
-  return BASE.filter(s=>keys.includes(s[0])).map(([key,name,when,cat,steps])=>({id:uid(),key,name,when,cat,
-    steps:steps.concat(add[key]||[]).map(([text,std,role,a])=>({id:uid(),text,std,role,audit:!!a}))}));
+/* 健檢的業態 → SOP 範本 */
+const BIZMAP={'火鍋／鍋物':'火鍋','中式餐館':'中式熱炒／餐館','日式／韓式':'日式／韓式料理','西式／早午餐':'早午餐','小吃／麵食':'麵食／拉麵','飲料／咖啡／甜點':'手搖飲','燒肉／燒烤':'燒肉／燒烤'};
+const toType=b=>TYPES[b]?b:(BIZMAP[b]||'通用');
+
+/* ---------- 店況問卷 ---------- */
+const PF=[
+ ['svc','服務方式','one',['桌邊點餐','櫃台點餐','自助取餐','外帶外送為主']],
+ ['stage','規模','one',['單店','2–5 店','6 店以上','加盟體系']],
+ ['crew','每班人數','one',['1–3 人','4–8 人','9 人以上']],
+ ['staff','人力組成','one',['正職為主','兼職為主','家族經營']],
+ ['kitchen','廚房型態','one',['現場全製','中央廚房配送','半成品加熱組裝']],
+ ['deli','外送外帶占營收','one',['幾乎沒有','30% 以下','30% 以上']],
+ ['hours','營業時段','multi',['早餐','午餐','下午茶','晚餐','宵夜']],
+ ['equip','主要設備','multi',['油炸機','烤箱／蒸烤箱','製冰機','咖啡機','瓦斯爐具','洗碗機']],
+ ['extra','店的特性','multi',['有賣酒','有包廂或訂位','有生食','兒童客多']],
+ ['pain','目前最痛的問題','multi',['出餐慢','品質不一','食安疑慮','客訴多','新人多、流動高','收銀短溢','耗損高','環境髒亂']],
+ ['future','未來 1 年規劃','multi',['展店','開放加盟','建中央廚房','擴大外送','導入掃碼／自助點餐']]
+];
+const PDEF=()=>({svc:'桌邊點餐',stage:'單店',crew:'4–8 人',staff:'正職為主',kitchen:'現場全製',deli:'30% 以下',hours:['午餐','晚餐'],equip:[],extra:[],pain:[],future:[]});
+const prof=p=>Object.assign(PDEF(),p||{});
+const has=(p,k,v)=>(p[k]||[]).includes(v);
+const multiStore=p=>p.stage!=='單店'||has(p,'future','展店')||has(p,'future','開放加盟');
+const CRIT=/食安關鍵|冷藏冷凍溫度|食材驗收|生熟|病媒|員工健康|化學品|中心溫度|瓦斯|生食|解凍|復熱|炸油/;
+
+/* 依店況加的專屬章節 */
+const EXTRA=[
+ ['focus','本店優先改善','每天','管理',p=>(p.pain||[]).length||(p.ck||[]).length,'依店況問卷的痛點與健檢結果產生，附改善目標'],
+ ['ck','中央廚房配送與復熱','收貨、營業中','品質',p=>p.kitchen!=='現場全製'||has(p,'future','建中央廚房'),'廚房不是現場全製，或計畫建中央廚房'],
+ ['deli','外送與外帶','營業中','服務',p=>p.deli!=='幾乎沒有'||p.svc==='外帶外送為主'||has(p,'future','擴大外送'),'有外送外帶營收或計畫擴大外送'],
+ ['train','新人訓練與上線檢核','到職 30 天內','管理',p=>p.staff==='兼職為主'||has(p,'pain','新人多、流動高')||multiStore(p),'兼職多、流動高或要展店，需要固定的訓練流程'],
+ ['multi','多店標準與督導','每週、每月','管理',p=>multiStore(p),'多店或計畫展店／加盟，需要督導與版本管理']
+];
+const ORDER=['focus','open','prep','ck','serve','recipe','front','deli','cash','clean','safety','close','issue','train','multi'];
+
+/* 規則：條件成立就加步驟（s）、移除步驟（rm）或改標準（set）。why 會顯示在步驟下方，說明為什麼加 */
+const RULES=[
+ {sec:'front',if:p=>p.svc!=='桌邊點餐',rm:['迎賓','巡桌','上菜'],why:'櫃台／自助／外帶型態，不需要桌邊服務'},
+ {sec:'front',if:p=>p.svc==='櫃台點餐'||p.svc==='自助取餐',s:[['櫃台點餐','客人到櫃台 30 秒內招呼，複誦餐點與忌口，告知等候時間','收銀',1],['叫號取餐','叫號 1 分鐘沒人取要再叫一次，餐點放保溫區','外場',0]],why:'服務方式是櫃台或自助'},
+ {sec:'front',if:p=>p.svc==='自助取餐',s:[['取餐區與回收台巡檢','每 15 分鐘整理餐具、補餐具、清回收台','外場',1]],why:'服務方式是自助取餐'},
+ {sec:'front',if:p=>p.svc==='外帶外送為主',rm:['送客與翻桌'],why:'外帶外送為主，不需要翻桌'},
+ {sec:'front',if:p=>p.deli==='幾乎沒有'&&p.svc!=='外帶外送為主',rm:['外帶外送包裝'],why:'幾乎沒有外帶外送'},
+ {sec:'deli',if:()=>1,s:[['平台上線與接單','開店準時上線；接單提示音開到最大，30 秒內接單','收銀',1],['售完即時下架','品項售完 5 分鐘內在所有平台下架','收銀',1],['外送單核對','出餐前對單：品項、數量、備註、餐具醬料','外場',1],['包裝與封口','湯品雙層封口、冷熱分裝、貼防拆封條','外場',1],['交付騎手','核對單號後交付；備餐完成到騎手取餐不超過 5 分鐘','外場',0],['平台評價回覆','負評 24 小時內回覆並登記原因','店長',0]],why:'有外送外帶營收'},
+ {sec:'deli',if:p=>p.deli==='30% 以上'||has(p,'future','擴大外送'),s:[['尖峰外送備料','依平台前 4 週同時段單量預先備料','廚房',0],['外送毛利檢查','每月比對平台抽成後毛利，低於目標的品項調價或下架','店長',0]],why:'外送占比高或要擴大外送'},
+ {sec:'open',if:p=>p.crew==='1–3 人',s:[['一人多工分工','每個時段寫清楚誰兼收銀、誰兼出餐，開班口頭確認','店長',0]],why:'每班 1–3 人，要一人多工'},
+ {sec:'cash',if:p=>p.crew==='1–3 人',set:{'開店點收零用金':'固定金額，點收後拍照傳群組存證（人少無法雙人確認）'},why:'每班人少，改成拍照存證'},
+ {sec:'open',if:p=>p.crew==='9 人以上',s:[['分區負責人','晨會指定各區領班與支援順序','店長',0]],why:'每班 9 人以上，要分區管理'},
+ {sec:'front',if:p=>p.crew==='9 人以上'&&p.svc==='桌邊點餐',s:[['分區服務','外場分區，每區一位負責人；跨區支援由領班調度','外場',0]],why:'外場人多，要分區'},
+ {sec:'open',if:p=>p.staff==='兼職為主',s:[['兼職人員交接','每班上工先看交班紀錄並簽名，店長確認當班重點','店長',1]],why:'兼職為主，每班的人不一樣'},
+ {sec:'cash',if:p=>p.staff==='家族經營',s:[['權限與現金規則一致','家人也有明確職務；折扣、作廢、拿現金照同一套規則登記','店長',1]],why:'家族經營最常出現權責不清與現金混用'},
+ {sec:'close',if:p=>(p.hours||[]).length>=3||(has(p,'hours','早餐')&&has(p,'hours','晚餐')),s:[['中班交接','兩班交接時點現金、點備料、看交班紀錄，雙方簽名','店長',1]],why:'營業時段長，有兩個以上班別'},
+ {sec:'safety',if:p=>has(p,'hours','宵夜'),s:[['夜間安全','宵夜時段至少 2 人在店；現金提早入保險箱','店長',0]],why:'有宵夜時段'},
+ {sec:'serve',if:p=>has(p,'equip','油炸機'),s:[['炸油管理','油溫照標準；每天測極性物質 ≤25%，超標換油並記錄','廚房',1]],why:'有油炸設備'},
+ {sec:'clean',if:p=>has(p,'equip','烤箱／蒸烤箱'),s:[['烤箱清潔','每天收店清烤盤，每週除油除垢','廚房',0]],why:'有烤箱或蒸烤箱'},
+ {sec:'clean',if:p=>has(p,'equip','製冰機'),s:[['製冰機清潔','每週清洗、每月除垢；冰鏟不放在冰槽內','吧台',1]],why:'有製冰機'},
+ {sec:'clean',if:p=>has(p,'equip','咖啡機'),s:[['咖啡機沖洗','每天收店逆洗沖頭、清蒸汽管','吧台',1]],why:'有咖啡機'},
+ {sec:'safety',if:p=>has(p,'equip','瓦斯爐具'),s:[['瓦斯安全','開店檢查管線、收店關總開關；每月用肥皂水測漏','廚房',1]],why:'使用瓦斯爐具'},
+ {sec:'clean',if:p=>has(p,'equip','洗碗機'),s:[['洗碗機水溫','清洗 ≥60°C、沖洗 ≥80°C，每天記錄','廚房',1]],why:'有洗碗機'},
+ {sec:'cash',if:p=>has(p,'extra','有賣酒'),s:[['酒類販售','疑似未滿 18 歲要查證件；不賣給已酒醉的客人','收銀',1]],why:'有賣酒'},
+ {sec:'front',if:p=>has(p,'extra','有包廂或訂位'),s:[['訂位管理','前一天確認訂位；保留 15 分鐘；記錄人數與特殊需求','外場',0]],why:'有訂位或包廂'},
+ {sec:'safety',if:p=>has(p,'extra','有生食'),s:[['生食管理','生食 ≤5°C 保存，專用刀具砧板，當天用完；菜單標示生食提醒','廚房',1]],why:'有供應生食'},
+ {sec:'front',if:p=>has(p,'extra','兒童客多'),s:[['兒童安全','兒童椅與餐具每次消毒；熱湯熱鍋上桌提醒家長','外場',0]],why:'兒童客多'},
+ {sec:'front',if:p=>has(p,'future','導入掃碼／自助點餐'),s:[['掃碼點餐協助','新客第一次點餐主動協助；系統故障 5 分鐘內改人工點餐','外場',0]],why:'計畫導入掃碼或自助點餐'},
+ {sec:'ck',if:()=>1,s:[['收貨溫度與效期','冷藏 ≤7°C、冷凍 ≤−15°C；包裝標示品名、製造日、到期日','廚房',1],['依配送單核對','數量差異當場登記並回報總部','廚房',1],['解凍','冷藏解凍，不在室溫解凍；解凍後 24 小時內用完','廚房',1],['復熱標準','中心溫度 ≥75°C，照復熱時間卡','廚房',1],['分裝與保存','開封後標示時間，照總部規定時限使用','廚房',1]],why:'有中央廚房配送'},
+ {sec:'train',if:()=>1,s:[['報到第一天','說明服裝、衛生、打卡規定與安全須知，發 SOP 手冊','店長',0],['跟班學習','前 3 個班跟資深同事，照「新人訓練表」逐項學','店長',0],['上線檢核','訓練表全部實作合格、店長簽名後才能獨立上線','店長',1],['試用期考核','第 30 天依訓練表與出勤做考核面談','店長',0]],why:'需要固定的訓練流程'},
+ {sec:'multi',if:()=>1,s:[['督導巡店','每店每月 ≥1 次督導巡店、每週 1 次門市自檢；85 分以下 2 週內複查','督導',0],['門市日報','每天收店後回報營業額、來客數、客訴、缺貨','店長',1],['SOP 版本管理','總部改版後 7 天內完成門市宣導與簽名','店長',0],['跨店一致性','同一品項各店份量、擺盤照同一張標準照，督導抽查','督導',0]],why:'多店或計畫展店'},
+ {sec:'multi',if:p=>p.stage==='加盟體系'||has(p,'future','開放加盟'),s:[['指定品項進貨','總部指定的食材與包材只向總部或指定廠商進貨','店長',1],['重大缺失處理','食安關鍵項不合格，48 小時內複查並寫改善報告','督導',0]],why:'加盟體系或計畫開放加盟'},
+ {sec:'multi',if:p=>has(p,'future','展店'),s:[['新店開幕檢核','開幕前 7 天完成設備驗收、試營運與人員考核','督導',0]],why:'計畫展店'}
+];
+/* 痛點 → 本店優先改善（附 KPI） */
+const FOCUS={
+ '出餐慢':['尖峰出餐時間','尖峰時段點餐到出餐 ≤12 分鐘；每週抽 10 單記錄，達成率 ≥90%','店長',1],
+ '品質不一':['每日開店試吃','開店前店長試吃 2 道主力品項，份量誤差 ≤5%、擺盤照標準照','店長',1],
+ '食安疑慮':['食安關鍵點每日檢查','溫度紀錄、效期、生熟分開每天 100% 完成；稽核關鍵項不能有不符合','店長',1],
+ '客訴多':['客訴每週檢討','每週列出前 3 大客訴原因與改善行動；客訴件數每月比上月少 30%','店長',1],
+ '新人多、流動高':['新人上線檢核','訓練表 100% 簽核才獨立上線；新人 3 個月內離職率 ≤20%','店長',1],
+ '收銀短溢':['每班現金差額','每班差額 ≤100 元，超過寫原因並由店長覆核；每月超標 ≤2 次','店長',1],
+ '耗損高':['每日耗損登記','收店前登記報廢與招待（BOM 中心「耗損登記」）；耗損 ≤營業額 3%','廚房',1],
+ '環境髒亂':['定時清潔簽核','用餐區與廁所每小時巡檢簽名；稽核清潔類平均 ≥85 分','外場',1]
+};
+/* 健檢低分題 → 痛點或改善步驟 */
+const CKMAP={p1:'品質不一',p5:'食安疑慮',h2:'新人多、流動高',p3:'耗損高',p4:'耗損高',
+ h4:['巡店稽核追到完成','每週至少 1 次門市自檢；缺失寫負責人與期限，逾期 0 件','店長',1],
+ m3:['網路評價回覆','Google 與外送平台評論 48 小時內回覆；每週看 1 次評分','店長',0],
+ i4:['交辦事項追蹤','交辦寫在交班紀錄並追到完成，不只靠 LINE 群組','店長',0],
+ h3:['依營業額排班','依前 4 週同時段營業額排班，人事費率目標 ≤28%','店長',0]};
+const mk=([text,std,role,a],why,rid)=>({id:uid(),text,std,role,audit:!!a,crit:!!a&&CRIT.test(text),why:why||'',rid:rid||''});
+function painsOf(p){ const out=(p.pain||[]).map(x=>({x,why:'店況問卷：'+x}));
+  (p.ck||[]).forEach(g=>{ const m=CKMAP[g.id]; if(typeof m==='string'&&!out.some(o=>o.x===m)) out.push({x:m,why:'健檢：'+g.text}) }); return out }
+function ruleSteps(key,p){ const out=[];
+  if(key==='focus'){ painsOf(p).forEach(o=>FOCUS[o.x]&&out.push(mk(FOCUS[o.x],o.why,'f:'+o.x)));
+    (p.ck||[]).forEach(g=>{ const m=CKMAP[g.id]; if(Array.isArray(m)) out.push(mk(m,'健檢：'+g.text,'c:'+g.id)) }); return out }
+  RULES.forEach((r,i)=>{ if(r.sec===key&&r.s&&r.if(p)) r.s.forEach((s,j)=>out.push(mk(s,r.why,'r'+i+'.'+j))) }); return out }
+function extrasFor(p){ return EXTRA.filter(e=>e[4](p)) }
+function applyMods(sec,p){ RULES.forEach(r=>{ if(r.sec!==sec.key||!r.if(p)) return;
+  if(r.rm) sec.steps=sec.steps.filter(t=>!r.rm.includes(t.text));
+  if(r.set) sec.steps.forEach(t=>{ if(r.set[t.text]){ t.std=r.set[t.text]; t.why=r.why } }) }) }
+function addUnique(sec,steps){ steps.forEach(s=>{ if(!sec.steps.some(t=>t.rid===s.rid&&s.rid||t.text===s.text)) sec.steps.push(s) }) }
+function build(type,keys,p){
+  p=prof(p); const T=TYPES[type]||TYPES['通用'], add=T.add||{}, out=[];
+  BASE.filter(s=>keys.includes(s[0])).forEach(([key,name,when,cat,steps])=>{ const sec={id:uid(),key,name,when,cat,steps:steps.map(s=>mk(s))};
+    (add[key]||[]).forEach(s=>sec.steps.push(mk(s,type+'業態重點'))); applyMods(sec,p); addUnique(sec,ruleSteps(key,p)); out.push(sec) });
+  extrasFor(p).filter(e=>keys.includes(e[0])).forEach(([key,name,when,cat])=>{ const sec={id:uid(),key,name,when,cat,steps:ruleSteps(key,p)}; if(sec.steps.length) out.push(sec) });
+  return sortSecs(out);
 }
+const sortSecs=a=>a.slice().sort((x,y)=>{ const i=k=>{ const n=ORDER.indexOf(k); return n<0?ORDER.length-2:n }; return i(x.key)-i(y.key) });
+/* 既有手冊依店況補上缺的建議步驟（不動已改過的內容） */
+function suggest(m){ const p=prof(m.profile), add=[];
+  (m.sections||[]).forEach(sec=>{ ruleSteps(sec.key,p).forEach(s=>{ if(!sec.steps.some(t=>(s.rid&&t.rid===s.rid)||t.text===s.text)) add.push({sec,s}) }) });
+  extrasFor(p).forEach(([key,name,when,cat])=>{ if(!(m.sections||[]).some(s=>s.key===key)){ const steps=ruleSteps(key,p); if(steps.length) add.push({newSec:{id:uid(),key,name,when,cat,steps:[]},steps}) } });
+  return add }
+/* BOM 配方 → 出餐標準卡 */
+function recipeSec(data){ const ing={}, semi={}; (data.ingredients||[]).forEach(i=>ing[i.id]=i); (data.semis||[]).forEach(s=>semi[s.id]=s);
+  const items=(data.items||[]).filter(i=>i&&i.name&&(i.lines||[]).length).sort((a,b)=>(b.monthlySales||0)-(a.monthlySales||0)).slice(0,40);
+  if(!items.length) return null;
+  const nm=l=>{ const [k,id]=String(l.ref||'').split(':'), o=k==='i'?ing[id]:semi[id]; return o?o.name+' '+(+l.qty||0)+' '+(o.unit||'克'):'' };
+  return {id:uid(),key:'recipe',name:'出餐標準卡（份量）',when:'每次出餐',cat:'品質',steps:items.map((it,i)=>({id:uid(),text:it.name+(it.cat?'（'+it.cat+'）':''),std:(it.lines||[]).map(nm).filter(Boolean).join('、')+(it.price?'｜售價 '+it.price+' 元':''),role:'廚房',audit:i<5,crit:false,why:i<5?'BOM 配方；月銷量前 5 名列入份量抽查':'BOM 配方',rid:'m:'+it.id}))} }
+/* 專業度檢查 */
+const MEAS=/\d|每|沒有|無|不得|不能|全部|標示|分開|簽名|一致|照/;
+function proCheck(m){ const out=[]; let n=0; const seen={};
+  (m.sections||[]).forEach((s,si)=>{ const st=s.steps||[]; if(!st.some(t=>t.audit)&&s.key!=='recipe') out.push({si,ti:null,lv:'warn',t:`「${s.name}」沒有任何稽核點，督導巡店檢查不到這一章`});
+    st.forEach((t,ti)=>{ n++; const tx=String(t.text||'').trim(), sd=String(t.std||'').trim();
+      if(!tx) out.push({si,ti,lv:'bad',t:'有一條步驟沒寫內容'});
+      else if(seen[tx]) out.push({si,ti,lv:'warn',t:`「${tx}」重複出現`}); seen[tx]=1;
+      if(tx&&!sd) out.push({si,ti,lv:t.audit?'bad':'warn',t:`「${tx}」沒有寫標準${t.audit?'，稽核時無法判斷合不合格':''}`});
+      else if(t.audit&&!MEAS.test(sd)) out.push({si,ti,lv:'warn',t:`「${tx}」的標準不夠具體，建議寫數字（溫度、時間、份量、頻率）`}) }) });
+  if(!(m.sections||[]).some(s=>(s.steps||[]).some(t=>t.crit))) out.push({si:null,ti:null,lv:'warn',t:'沒有標示任何「關鍵項」。食安相關的稽核點建議勾關鍵，不合格時總分最高 59 分'});
+  const bad=out.filter(x=>x.lv==='bad').length, warn=out.length-bad;
+  return {list:out,score:Math.max(0,Math.round(100-(bad*8+warn*3)*20/Math.max(n,10)))} }
 
 /* ---------- 狀態 ---------- */
-let me=null, ok=false, D={manuals:[],brands:[],audits:[]}, M=null, dirty=false, flash='', flashBad=false, armed=null, busy=false, nf={type:'通用',keys:BASE.map(s=>s[0])};
+const nfBlank=()=>({type:'通用',keys:BASE.map(s=>s[0]),skip:[],p:PDEF(),src:'',client:'',brand:'',title:'',coach:null});
+let me=null, ok=false, D={manuals:[],brands:[],audits:[],clients:[],leads:[]}, M=null, dirty=false, flash='', flashBad=false, armed=null, busy=false, nf=nfBlank(), srcDone='', noProfileCol=false, trainRole='全部', pfOpen=false;
 function say(t,bad){flash=t;flashBad=!!bad;$('#flash').innerHTML=t?`<div class="msg ${bad?'bad':''}">${esc(t)}</div>`:''}
 async function q(p,what){const r=await p; if(r.error){say((what||'存檔')+'失敗：'+r.error.message+'。請重新整理後再試一次，還是不行就把這段訊息傳給 Claude。',true); throw r.error} return r.data}
 const route=()=>{const h=location.hash.slice(1), o={}; h.split('&').forEach(p=>{const [k,v]=p.split('='); if(k) o[k]=v===undefined?true:decodeURIComponent(v)}); return o};
-const go=h=>{ if(location.hash==='#'+h||(!h&&!location.hash)) render(); else location.hash=h };
 const brandName=id=>{const b=D.brands.find(x=>x.id===id); return b?b.name:''};
-const nAudit=m=>(m.sections||[]).reduce((s,x)=>s+(x.steps||[]).filter(t=>t.audit).length,0);
-const nSteps=m=>(m.sections||[]).reduce((s,x)=>s+(x.steps||[]).length,0);
+const allSteps=m=>(m.sections||[]).flatMap(x=>x.steps||[]);
+const nAudit=m=>allSteps(m).filter(t=>t.audit).length;
+const nCrit=m=>allSteps(m).filter(t=>t.audit&&t.crit).length;
+const nSteps=m=>allSteps(m).length;
+const nWhy=m=>allSteps(m).filter(t=>t.why).length;
 
 async function load(){
   const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; ok=false;
@@ -241,10 +396,38 @@ async function loadData(){
   const r=await Promise.all([
     sbc.from('sop_manuals').select('*').order('updated_at',{ascending:false}),
     sbc.from('bom_brands').select('id,name').order('name'),
-    sbc.from('qsc_audits').select('*').order('audit_date',{ascending:false})
+    sbc.from('qsc_audits').select('*').order('audit_date',{ascending:false}),
+    sbc.from('coach_clients').select('id,name,biz_type,stores,brand_id,lead_id').order('updated_at',{ascending:false}),
+    sbc.from('checkup_leads').select('id,brand,biz_type,stores,answers,total,created_at').order('created_at',{ascending:false}).limit(200)
   ]);
-  D.missing=!!r[0].error; D.manuals=r[0].data||[]; D.brands=r[1].data||[]; D.audits=r[2].error?[]:(r[2].data||[]);
+  D.missing=!!r[0].error; D.manuals=(r[0].data||[]).map(fix); D.brands=r[1].data||[]; D.audits=r[2].error?[]:(r[2].data||[]);
+  D.clients=r[3].error?[]:(r[3].data||[]); D.leads=r[4].error?[]:(r[4].data||[]);
 }
+
+/* ---------- 從顧問客戶／健檢帶入 ---------- */
+const stageOf=n=>!n||n<=1?'單店':n<=5?'2–5 店':'6 店以上';
+function gapsOf(lead){ const a=(lead&&lead.answers)||{}, out=[], C=window.Checkup;
+  if(!C) return out; C.DIMS.forEach(d=>d.qs.forEach(([id,text])=>{ const v=Number(a[id]); if(CKMAP[id]&&a[id]!==undefined&&a[id]!==''&&v<=1) out.push({id,text,v}) })); return out }
+function applySrc(v){ keepNew(); nf.src=v; if(!v){ nf.p.ck=[]; nf.coach=null; return }
+  const [k,id]=v.split(':'), n=+id; let c=null, l=null;
+  if(k==='c'){ c=D.clients.find(x=>x.id===n); l=c&&c.lead_id?D.leads.find(x=>x.id===c.lead_id):null }
+  else l=D.leads.find(x=>x.id===n);
+  if(!c&&!l) return;
+  const biz=(c&&c.biz_type)||(l&&l.biz_type), stores=(c&&c.stores)||(l&&l.stores);
+  if(biz) nf.type=toType(biz); if(stores) nf.p.stage=stageOf(stores);
+  nf.client=(c&&c.name)||(l&&l.brand)||nf.client; if(c&&c.brand_id&&D.brands.some(b=>b.id===c.brand_id)) nf.brand=c.brand_id;
+  nf.coach=c?c.id:null; nf.p.ck=gapsOf(l); nf.p.lead=l?l.id:null;
+}
+function srcNote(){ const p=nf.p, g=p.ck||[];
+  if(!nf.src) return '';
+  if(!p.lead) return '<p class="note">這位客戶沒有健檢紀錄，痛點請在下面勾選。</p>';
+  return g.length?`<div class="msg">已帶入健檢結果：${g.length} 題低分（${g.map(x=>esc(x.text)).join('；')}）。會自動放進「本店優先改善」。</div>`:'<p class="note">健檢沒有明顯低分題。</p>' }
+
+/* ---------- 店況問卷 ---------- */
+function pform(p){ return `<div class="pf">${PF.map(([k,l,t,opts])=>`<div class="pfq"><b>${esc(l)}</b><div class="chips">${opts.map(o=>{ const on=t==='one'?p[k]===o:has(p,k,o);
+    return `<label class="chip ${on?'on':''}"><input type="${t==='one'?'radio':'checkbox'}" name="pf_${k}" data-pf="${k}" data-pft="${t}" value="${esc(o)}" ${on?'checked':''}>${esc(o)}</label>` }).join('')}</div></div>`).join('')}</div>` }
+function profText(p){ p=prof(p); const L=(k,n)=>(p[k]||[]).length?n+'：'+p[k].join('、'):'';
+  return [`${p.svc}・${p.stage}・每班 ${p.crew}・${p.staff}・${p.kitchen}・外送外帶 ${p.deli}`,L('hours','時段'),L('equip','設備'),L('extra','特性'),L('pain','痛點'),L('future','未來規劃'),(p.ck||[]).length?'健檢低分：'+p.ck.map(g=>g.text).join('；'):''].filter(Boolean) }
 
 /* ---------- 畫面 ---------- */
 function render(){
@@ -253,10 +436,10 @@ function render(){
   if(!ok){$('#app').innerHTML=`<div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><div class="row"><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`;return}
   if(D.missing){$('#app').innerHTML=`<div class="card"><h2>資料表還沒建立</h2><p class="sub">SOP 手冊的資料表尚未安裝到資料庫，請 Claude 幫你執行安裝。</p></div>`;return}
   const r=route(); let h;
-  if(r.new) h=vNew();
+  if(r.new){ const k=r.client?'c:'+r.client:r.lead?'l:'+r.lead:''; if(k&&srcDone!==k){ srcDone=k; applySrc(k) } h=vNew() }
   else if(r.audit) h=vAudit();
   else if(r.m){ const m=D.manuals.find(x=>x.id===+r.m); if(!m) h=`<div class="card"><h2>找不到這本手冊</h2><div class="row"><a class="btn" href="#">回手冊清單</a></div></div>`;
-    else { if(!M||M.id!==m.id){ M=JSON.parse(JSON.stringify(m)); dirty=false } h=r.v==='doc'?vDoc(M):vEdit(M) } }
+    else { if(!M||M.id!==m.id){ M=JSON.parse(JSON.stringify(m)); M.profile=prof(M.profile); dirty=false } h=r.v?vDoc(M,r.v):vEdit(M) } }
   else h=vHome();
   $('#app').innerHTML=tabs(r)+h;
 }
@@ -266,40 +449,54 @@ function vHome(){
   const ms=D.manuals, dl=ms.filter(m=>m.status==='已交付').length;
   const st=(n,l)=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`;
   let h=`<div class="stats">${st(ms.length,'本手冊')}${st(dl,'已交付門市')}${st(ms.filter(m=>m.status!=='已交付').length,'草稿')}${st(ms.reduce((s,m)=>s+nAudit(m),0),'稽核點（全部手冊）')}</div>`;
-  if(!ms.length) return h+`<div class="card"><h2>還沒有 SOP 手冊</h2><p class="sub">選業態，系統會產出開店、備料、出餐、外場、收銀、清潔、食安、收店、客訴九大章節，之後可以逐條修改。</p><div class="row"><a class="btn pri" href="#new">＋ 新增第一本手冊</a></div></div>`;
-  return h+`<div class="card"><div class="scroll"><table><thead><tr><th>手冊</th><th>業態</th><th>客戶／品牌</th><th class="n">步驟</th><th class="n">稽核點</th><th>狀態</th><th>更新</th><th></th></tr></thead><tbody>${ms.map(m=>`<tr><td><a href="#m=${m.id}">${esc(m.title)}</a></td><td>${esc(m.biz_type)}</td><td>${esc(m.client_name||'')}${m.brand_id?`<div class="note">BOM 品牌：${esc(brandName(m.brand_id)||m.brand_id)}</div>`:''}</td><td class="n">${nSteps(m)}</td><td class="n">${nAudit(m)}</td><td><span class="pill ${m.status==='已交付'?'good':'mute'}">${esc(m.status)}${m.status==='已交付'?' v'+m.version:''}</span></td><td>${esc(String(m.updated_at||'').slice(0,10))}</td><td><a class="btn" href="#m=${m.id}">編輯</a></td></tr>`).join('')}</tbody></table></div></div>`;
+  if(!ms.length) return h+`<div class="card"><h2>還沒有 SOP 手冊</h2><p class="sub">選業態、填一份 1 分鐘的店況問卷，系統會依這家店的服務方式、規模、人力、設備、痛點和未來規劃產出手冊，之後可以逐條修改。</p><div class="row"><a class="btn pri" href="#new">＋ 新增第一本手冊</a></div></div>`;
+  return h+`<div class="card"><div class="scroll"><table><thead><tr><th>手冊</th><th>業態</th><th>客戶／品牌</th><th class="n">步驟</th><th class="n">稽核點</th><th class="n">專業度</th><th>狀態</th><th>更新</th><th></th></tr></thead><tbody>${ms.map(m=>{ const pc=proCheck(m).score; return `<tr><td><a href="#m=${m.id}">${esc(m.title)}</a></td><td>${esc(m.biz_type)}</td><td>${esc(m.client_name||'')}${m.brand_id?`<div class="note">BOM 品牌：${esc(brandName(m.brand_id)||m.brand_id)}</div>`:''}</td><td class="n">${nSteps(m)}</td><td class="n">${nAudit(m)}</td><td class="n"><span class="pill ${pc>=85?'good':pc>=70?'warn':'bad'}">${pc}</span></td><td><span class="pill ${m.status==='已交付'?'good':'mute'}">${esc(m.status)}${m.status==='已交付'?' v'+m.version:''}</span></td><td>${esc(String(m.updated_at||'').slice(0,10))}</td><td><a class="btn" href="#m=${m.id}">編輯</a></td></tr>` }).join('')}</tbody></table></div></div>`;
 }
 
+function newKeys(){ return nf.keys.concat(extrasFor(prof(nf.p)).map(e=>e[0]).filter(k=>!nf.skip.includes(k))) }
 function vNew(){
-  const T=nf.type;
-  return `<div class="card"><h2>新增 SOP 手冊</h2><p class="sub">選業態後會帶入該業態的重點步驟；建好後每一條都可以改。</p>
-  <h3>1. 業態</h3><div class="types">${Object.keys(TYPES).map(k=>`<label class="${k===T?'on':''}"><input type="radio" name="nt" value="${esc(k)}" ${k===T?'checked':''} data-nt><span><b>${esc(k)}</b><br><span class="note">${esc(TYPES[k].d)}</span></span></label>`).join('')}</div>
-  <h3>2. 客戶</h3><div class="g2"><div><label for="n_client">客戶名稱</label><input id="n_client" placeholder="例：阿明麵館" value="${esc(nf.client||'')}"></div>
+  const T=nf.type, p=prof(nf.p), ex=extrasFor(p), keys=newKeys(), prev=build(T,keys,p), aud=prev.reduce((s,x)=>s+x.steps.filter(t=>t.audit).length,0), why=prev.reduce((s,x)=>s+x.steps.filter(t=>t.why).length,0);
+  const opts=D.clients.map(c=>`<option value="c:${c.id}" ${nf.src==='c:'+c.id?'selected':''}>顧問客戶：${esc(c.name)}</option>`).join('')+D.leads.map(l=>`<option value="l:${l.id}" ${nf.src==='l:'+l.id?'selected':''}>健檢名單：${esc(l.brand||'未填店名')}（${esc(l.biz_type||'')}，${l.total??'—'} 分，${esc(String(l.created_at||'').slice(0,10))}）</option>`).join('');
+  return `<div class="card"><h2>新增 SOP 手冊</h2><p class="sub">業態決定基本內容；店況問卷決定這家店要加什麼、拿掉什麼。每一條加進來的步驟都會註明原因，建好後都可以改。</p>
+  <h3>1. 客戶</h3>${D.clients.length||D.leads.length?`<label for="n_src">從顧問客戶或健檢名單帶入（會帶入業態、店數、健檢低分題）</label><select id="n_src" data-src><option value="">不帶入，自己填</option>${opts}</select>${srcNote()}`:''}
+  <div class="g2"><div><label for="n_client">客戶名稱</label><input id="n_client" placeholder="例：阿明麵館" value="${esc(nf.client||'')}"></div>
   <div><label for="n_brand">對應 BOM 品牌（交付到門市用，可以之後再選）</label><select id="n_brand"><option value="">先不選</option>${D.brands.map(b=>`<option value="${esc(b.id)}" ${nf.brand===b.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div></div>
   <label for="n_title">手冊名稱</label><input id="n_title" placeholder="留白會用「客戶名稱 門市 SOP 手冊」" value="${esc(nf.title||'')}">
-  <h3>3. 章節</h3><div class="types">${BASE.map(s=>`<label class="${nf.keys.includes(s[0])?'on':''}"><input type="checkbox" value="${s[0]}" ${nf.keys.includes(s[0])?'checked':''} data-nk><span>${esc(s[1])}<br><span class="note">${esc(s[2])}</span></span></label>`).join('')}</div>
+  <h3>2. 業態</h3><div class="types">${Object.keys(TYPES).map(k=>`<label class="${k===T?'on':''}"><input type="radio" name="nt" value="${esc(k)}" ${k===T?'checked':''} data-nt><span><b>${esc(k)}</b><br><span class="note">${esc(TYPES[k].d)}</span></span></label>`).join('')}</div>
+  <h3>3. 店況問卷</h3><p class="note">依實際狀況勾選，大約 1 分鐘。</p>${pform(p)}
+  <h3>4. 章節</h3><div class="types">${BASE.map(s=>`<label class="${nf.keys.includes(s[0])?'on':''}"><input type="checkbox" value="${s[0]}" ${nf.keys.includes(s[0])?'checked':''} data-nk><span>${esc(s[1])}<br><span class="note">${esc(s[2])}</span></span></label>`).join('')}
+   ${ex.map(e=>`<label class="${nf.skip.includes(e[0])?'':'on'} sug"><input type="checkbox" value="${e[0]}" ${nf.skip.includes(e[0])?'':'checked'} data-nx><span><b>${esc(e[1])}</b> <span class="pill good">依店況建議</span><br><span class="note">${esc(e[5])}</span></span></label>`).join('')}</div>
+  <div class="msg">預覽：${prev.length} 章、${prev.reduce((s,x)=>s+x.steps.length,0)} 個步驟、${aud} 個稽核點，其中 ${why} 條是依業態與店況加的。</div>
   <div class="row"><button class="pri" data-create ${busy?'disabled':''}>建立手冊</button><a class="btn" href="#">取消</a></div>
   ${D.manuals.length?`<p class="note">也可以打開既有手冊，按「複製一份」給新客戶改用。</p>`:''}</div>`;
 }
 
 function stepRow(s,si,ti,n){
-  return `<div class="st" data-si="${si}" data-ti="${ti}"><span class="no">${ti+1}</span>
+  return `<div class="st" id="st-${si}-${ti}" data-si="${si}" data-ti="${ti}"><span class="no">${ti+1}</span>
    <textarea data-f="text" aria-label="步驟" placeholder="要做什麼">${esc(s.text)}</textarea>
    <textarea data-f="std" class="std" aria-label="標準" placeholder="做到什麼程度（標準、數字）">${esc(s.std)}</textarea>
    <select data-f="role" class="role" aria-label="負責">${ROLES.concat(ROLES.includes(s.role)||!s.role?[]:[s.role]).map(r=>`<option ${r===s.role?'selected':''}>${esc(r)}</option>`).join('')}</select>
-   <label class="aud"><input type="checkbox" data-f="audit" ${s.audit?'checked':''}> 稽核</label>
-   <span class="ops"><button class="sm" data-mv="${si}|${ti}|-1" ${ti?'':'disabled'} aria-label="上移">↑</button><button class="sm" data-mv="${si}|${ti}|1" ${ti<n-1?'':'disabled'} aria-label="下移">↓</button><button class="sm ${armed==='t'+si+'|'+ti?'armed':''}" data-dt="${si}|${ti}">${armed==='t'+si+'|'+ti?'確定刪除':'刪除'}</button></span></div>`;
+   <span class="flags"><label class="aud"><input type="checkbox" data-f="audit" ${s.audit?'checked':''}> 稽核</label><label class="aud" title="關鍵項不合格，總分最高 59 分"><input type="checkbox" data-f="crit" ${s.crit?'checked':''} ${s.audit?'':'disabled'}> 關鍵</label></span>
+   <span class="ops"><button class="sm" data-mv="${si}|${ti}|-1" ${ti?'':'disabled'} aria-label="上移">↑</button><button class="sm" data-mv="${si}|${ti}|1" ${ti<n-1?'':'disabled'} aria-label="下移">↓</button><button class="sm ${armed==='t'+si+'|'+ti?'armed':''}" data-dt="${si}|${ti}">${armed==='t'+si+'|'+ti?'確定刪除':'刪除'}</button></span>
+   ${s.why?`<span class="why">為什麼有這條：${esc(s.why)}</span>`:''}</div>`;
 }
 function vEdit(m){
-  const secs=m.sections||[], bn=brandName(m.brand_id), aud=nAudit(m);
+  const secs=m.sections||[], bn=brandName(m.brand_id), aud=nAudit(m), pc=proCheck(m), sg=suggest(m), nsg=sg.reduce((s,x)=>s+(x.s?1:x.steps.length),0), hasRec=secs.some(s=>s.key==='recipe');
   return `<div class="sticky noprint"><div class="row" style="margin:0;justify-content:space-between"><div><b>${esc(m.title)}</b> <span class="pill ${m.status==='已交付'?'good':'mute'}">${esc(m.status)}${m.status==='已交付'?' v'+m.version:''}</span> ${dirty?'<span class="pill warn">有修改還沒存</span>':''}</div>
-   <div class="row" style="margin:0"><button class="pri" data-save ${busy?'disabled':''}>儲存</button><a class="btn" href="#m=${m.id}&v=doc">預覽／列印</a><button data-word>下載 Word</button><button data-copytxt>複製文字</button></div></div></div>
+   <div class="row" style="margin:0"><button class="pri" data-save ${busy?'disabled':''}>儲存</button><a class="btn" href="#m=${m.id}&v=doc">手冊預覽／列印</a><a class="btn" href="#m=${m.id}&v=check">每日檢核表</a><a class="btn" href="#m=${m.id}&v=train">新人訓練表</a><button data-copytxt>複製文字</button></div></div></div>
   <div class="card"><div class="g2"><div><label for="e_title">手冊名稱</label><input id="e_title" data-m="title" value="${esc(m.title)}"></div><div><label for="e_client">客戶名稱</label><input id="e_client" data-m="client_name" value="${esc(m.client_name||'')}"></div>
    <div><label for="e_biz">業態</label><select id="e_biz" data-m="biz_type">${Object.keys(TYPES).concat(TYPES[m.biz_type]?[]:[m.biz_type]).map(k=>`<option ${k===m.biz_type?'selected':''}>${esc(k)}</option>`).join('')}</select></div>
    <div><label for="e_brand">對應 BOM 品牌</label><select id="e_brand" data-m="brand_id"><option value="">還沒對應</option>${D.brands.map(b=>`<option value="${esc(b.id)}" ${m.brand_id===b.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div></div>
    <label for="e_note">內部備註（不會交付）</label><input id="e_note" data-m="note" value="${esc(m.note||'')}"></div>
+  <div class="g2 noprint"><div class="card"><h2>店況</h2><ul class="plist">${profText(m.profile).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    <details ${pfOpen?'open':''} data-pfd><summary>修改店況</summary>${pform(m.profile)}</details>
+    ${nsg?`<div class="row"><button class="pri" data-sug>依店況補上 ${nsg} 個建議步驟</button></div><p class="note">只會新增缺的步驟，不會動你改過的內容。</p>`:'<p class="note">手冊已涵蓋目前店況的建議步驟。</p>'}
+    ${m.brand_id?`<div class="row"><button data-rec ${busy?'disabled':''}>${hasRec?'重新帶入':'帶入'} BOM 菜單出餐標準卡</button></div><p class="note">從 BOM 品牌的品項配方產生每道菜的份量標準，月銷量前 5 名列入稽核抽查。</p>`:''}</div>
+   <div class="card"><h2>專業度檢查 <span class="pill ${pc.score>=85?'good':pc.score>=70?'warn':'bad'}">${pc.score} 分</span></h2>
+    <p class="note">${nSteps(m)} 個步驟、${aud} 個稽核點、${nCrit(m)} 個關鍵項；${nWhy(m)} 條依業態與店況加入。</p>
+    ${pc.list.length?`<ul class="issues">${pc.list.slice(0,12).map(x=>`<li class="${x.lv}">${x.si!=null?`<button class="linkb" data-jump="${x.si}|${x.ti??''}">${esc(x.t)}</button>`:esc(x.t)}</li>`).join('')}</ul>${pc.list.length>12?`<p class="note">另外還有 ${pc.list.length-12} 項。</p>`:''}`:'<p class="msg">每個稽核點都有具體標準，可以交付。</p>'}</div></div>
   <div class="card"><h2>交付到門市</h2>
-   <p class="sub">交付後，業主在 BOM 中心的「SOP 手冊」頁看得到這本手冊；勾「稽核」的 ${aud} 個步驟會加進該品牌的「門市稽核」項目，門市自檢和你巡店都用同一份。</p>
+   <p class="sub">交付後，業主在 BOM 中心的「SOP 手冊」頁看得到這本手冊，可以依職務篩選；勾「稽核」的 ${aud} 個步驟會加進該品牌的「門市稽核」，其中 ${nCrit(m)} 個關鍵項不合格時總分最高 59 分。</p>
    ${m.brand_id?`<div class="row"><button class="pri ${armed==='pub'?'armed':''}" data-pub ${busy?'disabled':''}>${armed==='pub'?'再按一次確認交付到「'+esc(bn||m.brand_id)+'」':'交付到「'+esc(bn||m.brand_id)+'」'}</button><a class="btn" href="${BOM}#sop&b=${encodeURIComponent(m.brand_id)}" target="_blank" rel="noopener">看門市畫面</a><a class="btn" href="${BOM}#qsc&b=${encodeURIComponent(m.brand_id)}" target="_blank" rel="noopener">去巡店稽核</a></div>${m.published_at?`<p class="note">上次交付：${esc(String(m.published_at).slice(0,16).replace('T',' '))}（第 ${m.version} 版）。改完再交付一次，門市就會看到新版。</p>`:''}`
      :`<p class="msg">先在上面「對應 BOM 品牌」選這位客戶的品牌，才能交付。還沒有品牌的話，到 <a href="${BOM}#brands" target="_blank" rel="noopener">BOM 中心品牌管理</a> 建一個。</p>`}
   </div>
@@ -310,108 +507,157 @@ function vEdit(m){
   <div class="row noprint"><button data-adds>＋ 加一個章節</button><button data-dup>複製一份（給別的客戶用）</button><button class="${armed==='m'?'armed':''}" data-delm>${armed==='m'?'確定刪除這本手冊':'刪除手冊'}</button></div>`;
 }
 
-function docHtml(m,forWord){
-  const secs=m.sections||[], d=today();
-  const tb=forWord?' border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%"':'';
-  return `<div class="cover"><p class="note">品牌加辣餐飲顧問工作室</p><h1>${esc(m.title)}</h1><p>${esc(m.client_name||'')}　${esc(m.biz_type)}</p><p class="note">第 ${m.version||1} 版｜${d}</p></div>
-  <h2>目錄</h2><ol>${secs.map(s=>`<li>${esc(s.name)}${s.when?`（${esc(s.when)}）`:''}</li>`).join('')}</ol>
-  <p class="note">★ 為門市稽核重點，督導巡店與門市自檢都會檢查。</p>
-  ${secs.map((s,i)=>`<h2>${i+1}. ${esc(s.name)}</h2>${s.when?`<p class="note">時機：${esc(s.when)}</p>`:''}<table${tb}><thead><tr><th>#</th><th>步驟</th><th>標準</th><th>負責</th></tr></thead><tbody>${(s.steps||[]).map((t,j)=>`<tr><td>${j+1}</td><td>${t.audit?'★ ':''}${esc(t.text)}</td><td>${esc(t.std)}</td><td>${esc(t.role)}</td></tr>`).join('')}</tbody></table>`).join('')}`;
+/* ---------- 產出：手冊、每日檢核表、新人訓練表 ---------- */
+const tbA=w=>w?' border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%"':'';
+const mark=t=>(t.audit?'★ ':'')+(t.crit?'⚠ ':'');
+function cover(m,sub){ return `<div class="cover"><p class="note">品牌加辣餐飲顧問工作室</p><h1>${esc(m.title)}</h1><p>${esc(sub)}</p><p>${esc(m.client_name||'')}　${esc(m.biz_type)}</p><p class="note">第 ${m.version||1} 版｜${today()}</p></div>` }
+function docHtml(m,w){
+  const secs=m.sections||[], foc=secs.find(s=>s.key==='focus');
+  return cover(m,'門市標準作業手冊')+`<h2>目錄</h2><ol>${secs.map(s=>`<li>${esc(s.name)}${s.when?`（${esc(s.when)}）`:''}</li>`).join('')}</ol>
+  <h2>本店狀況與手冊設計重點</h2><ul>${profText(m.profile).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+  ${foc&&foc.steps.length?`<p>這本手冊優先處理：${foc.steps.map(t=>esc(t.text)).join('、')}。改善目標寫在「${esc(foc.name)}」一章。</p>`:''}
+  <p class="note">★ 為門市稽核重點，督導巡店與門市自檢都會檢查。⚠ 為關鍵項（食安與安全），不合格時稽核總分最高 59 分。</p>
+  ${secs.map((s,i)=>`<h2>${i+1}. ${esc(s.name)}</h2>${s.when?`<p class="note">時機：${esc(s.when)}</p>`:''}<table${tbA(w)}><thead><tr><th>#</th><th>步驟</th><th>標準</th><th>負責</th></tr></thead><tbody>${(s.steps||[]).map((t,j)=>`<tr><td>${j+1}</td><td>${mark(t)}${esc(t.text)}</td><td>${esc(t.std)}</td><td>${esc(t.role)}</td></tr>`).join('')}</tbody></table>`).join('')}`;
 }
-function vDoc(m){ return `<div class="row noprint" style="margin-bottom:10px"><a class="btn" href="#m=${m.id}">← 回編輯</a><button class="pri" data-print>列印／存成 PDF</button><button data-word>下載 Word</button>${dirty?'<span class="pill warn">有修改還沒存</span>':''}</div><div class="card doc">${docHtml(m)}</div>` }
-function docText(m){ return `${m.title}\n${m.client_name||''} ${m.biz_type}｜第 ${m.version||1} 版\n★ = 稽核重點\n\n`+(m.sections||[]).map((s,i)=>`【${i+1}. ${s.name}】${s.when?'（'+s.when+'）':''}\n`+(s.steps||[]).map((t,j)=>`${j+1}. ${t.audit?'★':''}${t.text}${t.std?'｜標準：'+t.std:''}${t.role?'｜'+t.role:''}`).join('\n')).join('\n\n') }
+const CHECK_KEYS=['focus','open','ck','deli','clean','safety','close'];
+function checkHtml(m,w){ const days=['一','二','三','四','五','六','日'];
+  const secs=(m.sections||[]).filter(s=>CHECK_KEYS.includes(s.key)).sort((a,b)=>CHECK_KEYS.indexOf(a.key)-CHECK_KEYS.indexOf(b.key));
+  return `<h1>${esc(m.client_name||m.title)} 每日檢核表</h1><p>週次：＿＿＿＿＿　門市：＿＿＿＿＿　每天完成打 ✓，異常打 ✗ 並寫在交班紀錄。</p>
+  ${secs.map(s=>`<h2>${esc(s.name)}${s.when?`（${esc(s.when)}）`:''}</h2><table class="ck"${tbA(w)}><thead><tr><th>項目</th><th>標準</th><th>負責</th>${days.map(d=>`<th class="d">${d}</th>`).join('')}</tr></thead><tbody>${(s.steps||[]).map(t=>`<tr><td>${mark(t)}${esc(t.text)}</td><td>${esc(t.std)}</td><td>${esc(t.role)}</td>${days.map(()=>'<td class="d"></td>').join('')}</tr>`).join('')}</tbody></table>`).join('')}
+  <table class="ck"${tbA(w)}><tbody><tr><td><b>店長簽名</b></td>${days.map(d=>`<td class="d">${d}<br><br></td>`).join('')}</tr></tbody></table>`;
+}
+function trainRoles(m){ return ['全部'].concat(ROLES.filter(r=>r!=='全員'&&allSteps(m).some(t=>t.role===r))) }
+function trainHtml(m,role,w){ const secs=(m.sections||[]).map(s=>({s,st:(s.steps||[]).filter(t=>role==='全部'||t.role===role||t.role==='全員')})).filter(x=>x.st.length&&x.s.key!=='multi');
+  return `<h1>${esc(m.client_name||m.title)} 新人訓練表${role!=='全部'?'｜'+esc(role):''}</h1><p>新人姓名：＿＿＿＿＿　到職日：＿＿＿＿＿　帶訓人：＿＿＿＿＿</p><p class="note">每一項由帶訓人講解、示範，新人實作合格後簽名。全部合格、店長簽名後才能獨立上線。★ 是稽核重點，⚠ 是關鍵項，一定要會。</p>
+  ${secs.map(({s,st})=>`<h2>${esc(s.name)}</h2><table class="ck"${tbA(w)}><thead><tr><th>項目</th><th>標準</th><th class="d2">講解日期</th><th class="d2">實作合格</th><th class="d2">帶訓人簽名</th></tr></thead><tbody>${st.map(t=>`<tr><td>${mark(t)}${esc(t.text)}</td><td>${esc(t.std)}</td><td></td><td></td><td></td></tr>`).join('')}</tbody></table>`).join('')}
+  <table class="ck"${tbA(w)}><tbody><tr><td><b>上線核准</b>　店長簽名：＿＿＿＿＿　日期：＿＿＿＿＿</td></tr></tbody></table>`;
+}
+function outHtml(m,v,w){ return v==='check'?checkHtml(m,w):v==='train'?trainHtml(m,trainRole,w):docHtml(m,w) }
+const OUTS=[['doc','SOP 手冊'],['check','每日檢核表'],['train','新人訓練表']];
+function vDoc(m,v){ if(!OUTS.some(o=>o[0]===v)) v='doc';
+  return `<div class="row noprint" style="margin-bottom:10px"><a class="btn" href="#m=${m.id}">← 回編輯</a>${OUTS.map(o=>`<a class="btn ${o[0]===v?'pri':''}" href="#m=${m.id}&v=${o[0]}">${o[1]}</a>`).join('')}</div>
+  <div class="row noprint" style="margin-bottom:10px">${v==='train'?`<label style="margin:0">職務 <select data-trole style="width:auto">${trainRoles(m).map(r=>`<option ${r===trainRole?'selected':''}>${esc(r)}</option>`).join('')}</select></label>`:''}<button class="pri" data-print>列印／存成 PDF</button><button data-word="${v}">下載 Word</button>${dirty?'<span class="pill warn">有修改還沒存</span>':''}</div>
+  <div class="card doc ${v!=='doc'?'form':''}">${outHtml(m,v)}</div>` }
+function docText(m){ return `${m.title}\n${m.client_name||''} ${m.biz_type}｜第 ${m.version||1} 版\n★ = 稽核重點　⚠ = 關鍵項\n\n`+(m.sections||[]).map((s,i)=>`【${i+1}. ${s.name}】${s.when?'（'+s.when+'）':''}\n`+(s.steps||[]).map((t,j)=>`${j+1}. ${mark(t)}${t.text}${t.std?'｜標準：'+t.std:''}${t.role?'｜'+t.role:''}`).join('\n')).join('\n\n') }
 
-/* ---------- 督導總覽 ---------- */
+/* ---------- 督導總覽（每家店一列） ---------- */
 function spark(v){ if(v.length<2) return ''; const W=110,H=30, X=i=>4+i*(W-8)/(v.length-1), Y=s=>H-3-(Math.max(40,Math.min(100,s))-40)/60*(H-6);
   return `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="分數趨勢 ${v.join('、')}"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${v.map((s,i)=>X(i)+','+Y(s)).join(' ')}"/>${v.map((s,i)=>`<circle cx="${X(i)}" cy="${Y(s)}" r="2.5" fill="var(--accent)"/>`).join('')}</svg>` }
 const lvl=s=>s==null?'mute':s>=85?'good':s>=70?'warn':'bad';
 function vAudit(){
-  const t=today(), d30=addDays(t,-30), by={};
-  D.audits.forEach(a=>{ (by[a.brand_id]=by[a.brand_id]||[]).push(a) });
-  const rows=D.brands.map(b=>{ const as=(by[b.id]||[]).slice().sort((x,y)=>x.audit_date<y.audit_date?1:-1);
-    const open=as.reduce((s,a)=>s+(a.open_count||0),0), over=as.reduce((s,a)=>s+(a.overdue_count||0),0);
-    const last=as[0], prev=as[1], sup=as.filter(a=>a.kind==='supervisor'&&a.audit_date>=d30).length, self=as.filter(a=>a.kind!=='supervisor'&&a.audit_date>=d30).length;
-    const lastSup=as.find(a=>a.kind==='supervisor');
-    return {b,as,last,prev,open,over,sup,self,lastSup,stale:!lastSup||lastSup.audit_date<d30} }).filter(r=>r.as.length||D.manuals.some(m=>m.brand_id===r.b.id));
-  rows.sort((x,y)=>(y.over-x.over)||((x.last?x.last.score:101)-(y.last?y.last.score:101)));
+  const t=today(), d30=addDays(t,-30), d7=addDays(t,-7), by={};
+  D.audits.forEach(a=>{ const k=a.brand_id+'|'+(a.store||''); (by[k]=by[k]||[]).push(a) });
+  const rows=Object.keys(by).map(k=>{ const as=by[k].slice().sort((x,y)=>x.audit_date<y.audit_date?1:-1), b=D.brands.find(x=>x.id===as[0].brand_id)||{id:as[0].brand_id,name:as[0].brand_id};
+    const last=as[0], prev=as[1], lastSup=as.find(a=>a.kind==='supervisor'), lastSelf=as.find(a=>a.kind!=='supervisor');
+    return {b,store:as[0].store||'',as,last,prev,open:last.open_count||0,over:as.reduce((s,a)=>Math.max(s,a.overdue_count||0),0),crit:last.crit_fail||0,
+      sup:as.filter(a=>a.kind==='supervisor'&&a.audit_date>=d30).length,self:as.filter(a=>a.kind!=='supervisor'&&a.audit_date>=d30).length,stale:!lastSup||lastSup.audit_date<d30,selfStale:!lastSelf||lastSelf.audit_date<d7} });
+  D.brands.filter(b=>!D.audits.some(a=>a.brand_id===b.id)&&D.manuals.some(m=>m.brand_id===b.id&&m.status==='已交付')).forEach(b=>rows.push({b,store:'',as:[],last:null,open:0,over:0,crit:0,sup:0,self:0,stale:true,selfStale:true}));
+  rows.sort((x,y)=>(y.crit-x.crit)||(y.over-x.over)||((x.last?x.last.score:101)-(y.last?y.last.score:101)));
   const sc=rows.filter(r=>r.last&&r.last.score!=null).map(r=>r.last.score), avg=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length):null;
   const st=(n,l,a)=>`<div class="stat ${a&&n?'alert':''}"><b>${n??'—'}</b><span>${l}</span></div>`;
-  let h=`<div class="stats">${st(rows.length,'追蹤中的品牌')}${st(avg,'最近一次平均分')}${st(rows.reduce((s,r)=>s+r.open,0),'待改善項目')}${st(rows.reduce((s,r)=>s+r.over,0),'已逾期',1)}${st(rows.filter(r=>r.stale).length,'30 天沒督導巡店',1)}</div>`;
-  if(!rows.length) return h+`<div class="card"><h2>還沒有稽核紀錄</h2><p class="sub">在 BOM 中心的「門市稽核」完成一次稽核（督導巡店或門市自檢），這裡就會出現各品牌的分數、待改善與趨勢。</p><div class="row"><a class="btn pri" href="${BOM}#qsc">去 BOM 中心稽核</a></div></div>`;
-  return h+`<div class="card"><div class="scroll"><table><thead><tr><th>品牌</th><th>最近一次</th><th class="n">分數</th><th class="n">比上次</th><th>趨勢</th><th class="n">待改善</th><th class="n">逾期</th><th>近 30 天</th><th></th></tr></thead><tbody>${rows.map(r=>{const L=r.last, df=L&&r.prev&&L.score!=null&&r.prev.score!=null?L.score-r.prev.score:null;
-    return `<tr><td><b>${esc(r.b.name)}</b>${r.stale?'<div><span class="pill warn">30 天沒督導</span></div>':''}</td><td>${L?esc(L.audit_date)+'<div class="note">'+(L.kind==='supervisor'?'督導巡店':'門市自檢')+(L.store?'・'+esc(L.store):'')+'</div>':'<span class="note">還沒稽核</span>'}</td>
+  let h=`<div class="stats">${st(rows.length,'追蹤中的門市')}${st(avg,'最近一次平均分')}${st(rows.filter(r=>r.crit).length,'關鍵項不合格',1)}${st(rows.reduce((s,r)=>s+r.over,0),'改善已逾期',1)}${st(rows.filter(r=>r.stale).length,'30 天沒督導巡店',1)}</div>`;
+  if(!rows.length) return h+`<div class="card"><h2>還沒有稽核紀錄</h2><p class="sub">在 BOM 中心的「門市稽核」完成一次稽核（督導巡店或門市自檢），這裡就會出現各門市的分數、待改善與趨勢。</p><div class="row"><a class="btn pri" href="${BOM}#qsc">去 BOM 中心稽核</a></div></div>`;
+  return h+`<div class="card"><div class="scroll"><table><thead><tr><th>品牌／門市</th><th>最近一次</th><th class="n">分數</th><th class="n">比上次</th><th>趨勢</th><th class="n">待改善</th><th class="n">逾期</th><th>近 30 天</th><th></th></tr></thead><tbody>${rows.map(r=>{const L=r.last, df=L&&r.prev&&L.score!=null&&r.prev.score!=null?L.score-r.prev.score:null;
+    return `<tr><td><b>${esc(r.b.name)}</b>${r.store?`<div class="note">${esc(r.store)}</div>`:''}<div>${r.crit?`<span class="pill bad">關鍵項不合格 ${r.crit}</span> `:''}${r.stale?'<span class="pill warn">30 天沒督導</span> ':''}${L&&r.selfStale?'<span class="pill mute">7 天沒自檢</span>':''}</div></td><td>${L?esc(L.audit_date)+'<div class="note">'+(L.kind==='supervisor'?'督導巡店':'門市自檢')+'</div>':'<span class="note">還沒稽核</span>'}</td>
      <td class="n">${L&&L.score!=null?`<span class="pill ${lvl(L.score)}">${L.score}</span>`:'—'}</td><td class="n">${df==null?'—':(df>0?'+':'')+df}</td><td>${spark(r.as.slice(0,8).reverse().map(a=>a.score).filter(s=>s!=null))}</td>
      <td class="n">${r.open}</td><td class="n">${r.over?`<span class="pill bad">${r.over}</span>`:'0'}</td><td>督導 ${r.sup}・自檢 ${r.self}</td><td><a class="btn" href="${BOM}#qsc&b=${encodeURIComponent(r.b.id)}" target="_blank" rel="noopener">巡店／看缺失</a></td></tr>`}).join('')}</tbody></table></div>
-   <p class="note">分數 85 以上綠、70–84 黃、70 以下紅。資料來自 BOM 中心「門市稽核」，督導和門市自檢完成時自動同步。</p></div>`;
+   <p class="note">建議頻率：督導每店每月至少巡店 1 次、門市每週自檢 1 次；85 分以下 2 週內複查。分數 85 以上綠、70–84 黃、70 以下紅；有關鍵項不合格時總分最高 59 分。資料來自 BOM 中心「門市稽核」。</p></div>`;
 }
 
 /* ---------- 互動 ---------- */
-function readStep(el){ const r=el.closest('.st'); if(!r) return; const s=M.sections[+r.dataset.si].steps[+r.dataset.ti], f=el.dataset.f; s[f]=f==='audit'?el.checked:el.value; markDirty() }
+function readStep(el){ const r=el.closest('.st'); if(!r) return; const s=M.sections[+r.dataset.si].steps[+r.dataset.ti], f=el.dataset.f; if(f==='audit'||f==='crit'){ s[f]=el.checked; if(f==='audit'&&!el.checked) s.crit=false } else s[f]=el.value; markDirty(); if(f==='audit'){ const c=r.querySelector('[data-f=crit]'); if(c){ c.disabled=!el.checked; if(!el.checked) c.checked=false } } }
 function markDirty(){ if(!dirty){ dirty=true; const t=document.querySelector('.sticky b'); if(t&&!document.querySelector('.sticky .pill.warn')) t.insertAdjacentHTML('afterend',' <span class="pill warn">有修改還沒存</span>') } }
-document.addEventListener('input',e=>{ const el=e.target; if(!M) return;
+function readPf(el){ const tgt=route().new?nf.p:M&&M.profile; if(!tgt) return; const k=el.dataset.pf;
+  if(el.dataset.pft==='one') tgt[k]=el.value; else { const a=new Set(tgt[k]||[]); el.checked?a.add(el.value):a.delete(el.value); tgt[k]=PF.find(x=>x[0]===k)[3].filter(v=>a.has(v)) }
+  if(route().new){ keepNew(); render() } else { pfOpen=true; markDirty(); const y=scrollY; render(); scrollTo(0,y) } }
+document.addEventListener('input',e=>{ const el=e.target; if(!M||el.dataset.pf) return;
   if(el.dataset.f){ readStep(el); return }
   if(el.dataset.sf){ const s=M.sections[+el.closest('.sec').dataset.si]; s[el.dataset.sf]=el.value; markDirty(); return }
   if(el.dataset.m){ M[el.dataset.m]=el.value||(el.dataset.m==='brand_id'?null:''); markDirty() } });
 document.addEventListener('change',e=>{ const el=e.target;
+  if(el.dataset.pf){ readPf(el); return }
+  if('src' in el.dataset){ applySrc(el.value); render(); return }
   if('nt' in el.dataset){ keepNew(); nf.type=el.value; render(); return }
   if('nk' in el.dataset){ keepNew(); nf.keys=[...document.querySelectorAll('[data-nk]:checked')].map(x=>x.value); render(); return }
+  if('nx' in el.dataset){ keepNew(); nf.skip=el.checked?nf.skip.filter(k=>k!==el.value):nf.skip.concat(el.value); render(); return }
+  if('trole' in el.dataset){ trainRole=el.value; render(); return }
   if(!M) return;
   if(el.dataset.f){ readStep(el); return }
   if(el.dataset.sf){ M.sections[+el.closest('.sec').dataset.si][el.dataset.sf]=el.value; markDirty(); return }
   if(el.dataset.m){ M[el.dataset.m]=el.value||(el.dataset.m==='brand_id'?null:''); markDirty(); if(el.dataset.m==='brand_id') render() } });
-function keepNew(){ nf.client=($('#n_client')||{}).value||''; nf.brand=($('#n_brand')||{}).value||''; nf.title=($('#n_title')||{}).value||'' }
+function keepNew(){ if(!$('#n_client')) return; nf.client=$('#n_client').value||''; nf.brand=($('#n_brand')||{}).value||''; nf.title=($('#n_title')||{}).value||'' }
 function arm(k){ armed=k; render(); setTimeout(()=>{ if(armed===k){ armed=null; render() } },4000) }
 async function act(f){ if(busy) return; busy=true; render(); try{ await f() }catch(x){} busy=false; render() }
+/* 資料庫還沒有 profile 欄位時，店況改存在 note 後面，不讓存檔失敗 */
+const PTAG='\n#店況:';
+function withProfile(row,p){ if(!noProfileCol) return Object.assign({},row,{profile:p}); return Object.assign({},row,{note:String(row.note||'').split(PTAG)[0]+PTAG+JSON.stringify(p)}) }
+function readProfile(r){ if(r.profile&&Object.keys(r.profile).length) return r.profile; const i=String(r.note||'').indexOf(PTAG); if(i>=0){ try{ return JSON.parse(r.note.slice(i+PTAG.length)) }catch(x){} } return null }
+async function tryWrite(mkq,row,p,what){ let r=await mkq(withProfile(row,p)); if(r.error&&/profile/.test(r.error.message||'')&&!noProfileCol){ noProfileCol=true; r=await mkq(withProfile(row,p)) } if(r.error){ say(what+'失敗：'+r.error.message+'。請重新整理後再試一次，還是不行就把這段訊息傳給 Claude。',true); throw r.error } return r.data }
+function fix(r){ if(!r) return r; r.profile=readProfile(r); if(r.note) r.note=String(r.note).split(PTAG)[0]; return r }
 async function saveM(){
   const row={title:M.title.trim()||'未命名手冊',biz_type:M.biz_type,client_name:M.client_name||null,brand_id:M.brand_id||null,sections:M.sections,note:M.note||null,updated_at:new Date().toISOString(),updated_by:me.email};
-  const r=await q(sbc.from('sop_manuals').update(row).eq('id',M.id).eq('updated_at',D.manuals.find(x=>x.id===M.id).updated_at).select(),'儲存');
+  const r=await tryWrite(x=>sbc.from('sop_manuals').update(x).eq('id',M.id).eq('updated_at',D.manuals.find(x=>x.id===M.id).updated_at).select(),row,M.profile,'儲存');
   if(!r||!r.length){ say('這本手冊剛剛在別的視窗被改過，沒有覆蓋。請複製你的修改後重新整理。',true); throw new Error('conflict') }
-  const i=D.manuals.findIndex(x=>x.id===M.id); D.manuals[i]=r[0]; M=JSON.parse(JSON.stringify(r[0])); dirty=false }
-function dlWord(m){
-  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(m.title)}</title><style>body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;font-size:11pt}h1{font-size:20pt}h2{font-size:14pt;color:#0f6b5c;margin-top:18pt}th{background:#dcefea;text-align:left}td,th{vertical-align:top}.note{color:#5d6a65}.cover{text-align:center;page-break-after:always}</style></head><body>${docHtml(m,true)}</body></html>`;
-  const u=URL.createObjectURL(new Blob(['﻿',html],{type:'application/msword'})), a=document.createElement('a'); a.href=u; a.download=(m.title||'SOP手冊').replace(/[\\/:*?"<>|]/g,'_')+'_v'+(m.version||1)+'.doc'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
+  const i=D.manuals.findIndex(x=>x.id===M.id); D.manuals[i]=fix(r[0]); M=JSON.parse(JSON.stringify(D.manuals[i])); M.profile=prof(M.profile); dirty=false }
+function dlWord(m,v){
+  const name=(v==='check'?'每日檢核表':v==='train'?'新人訓練表'+(trainRole!=='全部'?'_'+trainRole:''):'SOP手冊');
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(m.title)}</title><style>body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;font-size:11pt}h1{font-size:18pt}h2{font-size:13pt;color:#0f6b5c;margin-top:14pt}th{background:#dcefea;text-align:left}td,th{vertical-align:top}.note{color:#5d6a65}.cover{text-align:center;page-break-after:always}td.d,th.d{width:28pt;text-align:center}</style></head><body>${outHtml(m,v,true)}</body></html>`;
+  const u=URL.createObjectURL(new Blob(['﻿',html],{type:'application/msword'})), a=document.createElement('a'); a.href=u; a.download=((m.client_name||m.title||'SOP')+'_'+name).replace(/[\\/:*?"<>|]/g,'_')+'_v'+(m.version||1)+'.doc'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
   say('已下載 Word 檔，可以直接用 Word 打開修改後給客戶。') }
 async function publish(){
   if(dirty) await saveM();
-  const items=[]; M.sections.forEach(s=>(s.steps||[]).forEach(t=>{ if(t.audit&&String(t.text||'').trim()) items.push({id:'sop-'+t.id,cat:s.cat||'其他',text:t.text.trim(),std:t.std||'',sop:s.name}) }));
+  const items=[]; M.sections.forEach(s=>(s.steps||[]).forEach(t=>{ if(t.audit&&String(t.text||'').trim()) items.push({id:'sop-'+t.id,cat:s.cat||'其他',text:t.text.trim(),std:t.std||'',sop:s.name,crit:!!t.crit}) }));
   const ver=(M.status==='已交付'?(M.version||1)+1:(M.version||1)), at=new Date().toISOString();
   let mode='';
   for(let tries=0;tries<2;tries++){
     const b=await q(sbc.from('bom_brands').select('id,name,data,rev').eq('id',M.brand_id).maybeSingle(),'讀取品牌');
     if(!b){ say('找不到這個 BOM 品牌，請重新選擇對應品牌。',true); return }
-    const data=b.data||{}; data.sop={id:M.id,title:M.title,biz:M.biz_type,ver,at,sections:M.sections.map(s=>({name:s.name,when:s.when||'',steps:(s.steps||[]).map(t=>({text:t.text,std:t.std||'',role:t.role||'',audit:!!t.audit}))}))};
+    const data=b.data||{}; data.sop={id:M.id,title:M.title,biz:M.biz_type,ver,at,sections:M.sections.map(s=>({name:s.name,when:s.when||'',steps:(s.steps||[]).map(t=>({text:t.text,std:t.std||'',role:t.role||'',audit:!!t.audit,crit:!!t.crit}))}))};
     const hasDone=(data.audits||[]).some(a=>a.done);
     if(!data.qscItems||!hasDone){ data.qscItems=items; mode='replace' }
     else { const cur=data.qscItems; items.forEach(it=>{ const x=cur.find(c=>c.id===it.id); if(x) Object.assign(x,it); else cur.push(it) }); mode='merge' }
     const r=await q(sbc.from('bom_brands').update({data,rev:b.rev+1,edited_on_site:true}).eq('id',b.id).eq('rev',b.rev).select('id,rev'),'交付');
     if(r&&r.length){
       const u=await q(sbc.from('sop_manuals').update({status:'已交付',version:ver,published_at:at,updated_at:at,updated_by:me.email}).eq('id',M.id).select(),'更新手冊狀態');
-      const i=D.manuals.findIndex(x=>x.id===M.id); D.manuals[i]=u[0]; M=JSON.parse(JSON.stringify(u[0])); dirty=false;
+      const i=D.manuals.findIndex(x=>x.id===M.id); D.manuals[i]=fix(u[0]); M=JSON.parse(JSON.stringify(D.manuals[i])); M.profile=prof(M.profile); dirty=false;
       say(`已交付第 ${ver} 版到「${b.name}」。門市在 BOM 中心「SOP 手冊」就看得到；`+(mode==='replace'?`門市稽核項目已換成手冊的 ${items.length} 個稽核點。`:`手冊的 ${items.length} 個稽核點已加進門市稽核（原本的項目和紀錄都保留）。`)); return }
   }
   say('品牌資料剛好有人在修改，交付沒有完成。請等幾秒再按一次。',true);
 }
+async function importRecipes(){
+  const b=await q(sbc.from('bom_brands').select('id,name,data').eq('id',M.brand_id).maybeSingle(),'讀取 BOM 菜單');
+  const sec=b&&recipeSec(b.data||{});
+  if(!sec){ say('這個 BOM 品牌還沒有建立品項配方，先到 BOM 中心「品項配方」建好再帶入。',true); return }
+  const i=M.sections.findIndex(s=>s.key==='recipe');
+  if(i>=0){ const old=M.sections[i]; sec.id=old.id; sec.name=old.name; sec.steps.forEach(s=>{ const o=old.steps.find(t=>t.rid===s.rid); if(o){ s.id=o.id; s.audit=o.audit; s.crit=o.crit; s.role=o.role } }); M.sections[i]=sec }
+  else M.sections=sortSecs(M.sections.concat(sec));
+  markDirty(); say(`已帶入 ${sec.steps.length} 道菜的出餐標準卡（份量來自 BOM 配方）。確認後按「儲存」。`) }
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button,[data-out]'); if(!b) return; const d=b.dataset;
   if('out' in d){await sbc.auth.signOut(); location.href=PORTAL; return}
-  if('create' in d){ keepNew(); if(!nf.keys.length){ say('至少要選一個章節。',true); return }
-    const title=nf.title.trim()||((nf.client.trim()?nf.client.trim()+' ':'')+'門市 SOP 手冊');
-    return act(async()=>{ const r=await q(sbc.from('sop_manuals').insert({title,biz_type:nf.type,client_name:nf.client.trim()||null,brand_id:nf.brand||null,coach_client_id:+route().client||null,sections:build(nf.type,nf.keys),updated_by:me.email}).select().single(),'建立手冊');
-      D.manuals.unshift(r); nf={type:'通用',keys:BASE.map(s=>s[0])}; M=null; say(`已建立「${title}」，共 ${nSteps(r)} 個步驟、${nAudit(r)} 個稽核點。逐條看過、改成客戶的做法後按「儲存」。`); location.hash='m='+r.id }) }
+  if('create' in d){ keepNew(); if(!nf.keys.length){ say('至少要選一個基本章節。',true); return }
+    const title=nf.title.trim()||((nf.client.trim()?nf.client.trim()+' ':'')+'門市 SOP 手冊'), p=prof(nf.p);
+    return act(async()=>{ const row={title,biz_type:nf.type,client_name:nf.client.trim()||null,brand_id:nf.brand||null,coach_client_id:nf.coach||+route().client||null,sections:build(nf.type,newKeys(),p),updated_by:me.email};
+      const r=fix(await tryWrite(x=>sbc.from('sop_manuals').insert(x).select().single(),row,p,'建立手冊'));
+      D.manuals.unshift(r); nf=nfBlank(); srcDone=route().client?'c:'+route().client:''; M=null; say(`已建立「${title}」，共 ${nSteps(r)} 個步驟、${nAudit(r)} 個稽核點，${nWhy(r)} 條依業態與店況加入。逐條看過、改成客戶的做法後按「儲存」。`); location.hash='m='+r.id }) }
   if(!M) return;
   if('save' in d) return act(async()=>{ await saveM(); say('已儲存。') });
   if('print' in d){ window.print(); return }
-  if('word' in d){ dlWord(M); return }
+  if('word' in d){ dlWord(M,d.word||'doc'); return }
+  if('jump' in d){ const [si,ti]=d.jump.split('|'), el=document.getElementById(ti!==''?`st-${si}-${ti}`:'')||document.querySelector(`.sec[data-si="${si}"]`); if(el){ el.scrollIntoView({block:'center'}); el.classList.add('flashrow'); setTimeout(()=>el.classList.remove('flashrow'),1600); const t=el.querySelector('textarea[data-f=std]')||el.querySelector('input'); t&&t.focus({preventScroll:true}) } return }
+  if('sug' in d){ const sg=suggest(M); let n=0; sg.forEach(x=>{ if(x.s){ x.sec.steps.push(x.s); n++ } else { x.newSec.steps=x.steps; M.sections.push(x.newSec); n+=x.steps.length } }); M.sections=sortSecs(M.sections); markDirty(); say(`已補上 ${n} 個建議步驟（標示「為什麼有這條」）。確認後按「儲存」。`); render(); return }
+  if('rec' in d) return act(importRecipes);
   if('copytxt' in d){ try{ await navigator.clipboard.writeText(docText(M)); say('已複製全文，可以貼到 LINE 或文件。') }catch(x){ say('瀏覽器不讓複製，請改用「下載 Word」。',true) } return }
   if('pub' in d){ if(armed!=='pub') return arm('pub'); armed=null; return act(publish) }
-  if('addt' in d){ M.sections[+d.addt].steps.push({id:uid(),text:'',std:'',role:'全員',audit:false}); markDirty(); render(); const r=document.querySelectorAll(`.sec[data-si="${d.addt}"] .st textarea[data-f=text]`); r.length&&r[r.length-1].focus(); return }
+  if('addt' in d){ M.sections[+d.addt].steps.push({id:uid(),text:'',std:'',role:'全員',audit:false,crit:false}); markDirty(); render(); const r=document.querySelectorAll(`.sec[data-si="${d.addt}"] .st textarea[data-f=text]`); r.length&&r[r.length-1].focus(); return }
   if('mv' in d){ const [si,ti,k]=d.mv.split('|').map(Number), a=M.sections[si].steps; [a[ti],a[ti+k]]=[a[ti+k],a[ti]]; markDirty(); render(); return }
   if('dt' in d){ if(armed!=='t'+d.dt) return arm('t'+d.dt); armed=null; const [si,ti]=d.dt.split('|').map(Number); M.sections[si].steps.splice(ti,1); markDirty(); render(); return }
   if('smv' in d){ const [si,k]=d.smv.split('|').map(Number), a=M.sections; [a[si],a[si+k]]=[a[si+k],a[si]]; markDirty(); render(); return }
   if('ds' in d){ if(armed!=='s'+d.ds) return arm('s'+d.ds); armed=null; M.sections.splice(+d.ds,1); markDirty(); render(); return }
-  if('adds' in d){ M.sections.push({id:uid(),key:'custom',name:'新章節',when:'',cat:'其他',steps:[{id:uid(),text:'',std:'',role:'全員',audit:false}]}); markDirty(); render(); return }
-  if('dup' in d) return act(async()=>{ const r=await q(sbc.from('sop_manuals').insert({title:M.title+'（複本）',biz_type:M.biz_type,client_name:null,brand_id:null,sections:JSON.parse(JSON.stringify(M.sections).replace(/"id":"[a-z0-9]+"/g,()=>'"id":"'+uid()+'"')),updated_by:me.email}).select().single(),'複製');
-    D.manuals.unshift(r); M=null; dirty=false; say('已複製一份。改客戶名稱、對應品牌後就能交付。'); location.hash='m='+r.id });
+  if('adds' in d){ M.sections.push({id:uid(),key:'custom',name:'新章節',when:'',cat:'其他',steps:[{id:uid(),text:'',std:'',role:'全員',audit:false,crit:false}]}); markDirty(); render(); return }
+  if('dup' in d) return act(async()=>{ const row={title:M.title+'（複本）',biz_type:M.biz_type,client_name:null,brand_id:null,sections:JSON.parse(JSON.stringify(M.sections).replace(/"id":"[a-z0-9]+"/g,()=>'"id":"'+uid()+'"')),updated_by:me.email};
+    const r=fix(await tryWrite(x=>sbc.from('sop_manuals').insert(x).select().single(),row,M.profile,'複製'));
+    D.manuals.unshift(r); M=null; dirty=false; say('已複製一份。改客戶名稱、店況和對應品牌後就能交付。'); location.hash='m='+r.id });
   if('delm' in d){ if(armed!=='m') return arm('m'); armed=null; return act(async()=>{ await q(sbc.from('sop_manuals').delete().eq('id',M.id),'刪除'); D.manuals=D.manuals.filter(x=>x.id!==M.id); M=null; dirty=false; say('已刪除手冊（已交付到門市的內容不受影響）。'); location.hash='' }) }
 });
 window.addEventListener('hashchange',()=>{ const r=route(); if(M&&dirty&&String(r.m)!==String(M.id)){ say('上一本手冊有修改沒有存，已放棄那些修改。',true); M=null; dirty=false } else { say(flash&&!flashBad?flash:''); flash='' } armed=null; render(); scrollTo(0,0) });
