@@ -72,6 +72,7 @@ td.c,th.c{text-align:center}
 .tree>li{padding:0}.tree>li::before,.tree>li::after{display:none}
 .node{display:inline-block;min-width:110px;max-width:170px;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:8px;padding:6px 8px;font-size:13px;line-height:1.4;cursor:pointer;text-align:center;color:inherit;font-family:inherit}
 .node b{display:block;font-size:14px}.node .p{color:var(--mute)}.node .f{display:block;margin-top:3px;font-size:11px;color:var(--mute)}
+.node.later{border-style:dashed;opacity:.75}.node .ph{display:block;margin-top:3px;font-size:11px;color:var(--warn);font-weight:600}
 .node.root{border-top-color:var(--warn)}.node.store{border-top-color:var(--mute)}.node.flag{border-color:var(--bad);border-top-color:var(--bad)}
 @media (max-width:700px){
   .tree{display:block;width:auto}.tree ul{display:block;padding:0 0 0 18px}
@@ -194,8 +195,15 @@ const RACIN={R:'負責執行',A:'最後拍板（只能一人）',C:'事前要問
 const STORE_KPI=[['營收目標達成率','≥100%','月',30],['人事費用率','≤28%','月',20],['理論與實際食材成本差異','≤1.5%','月',15],['QSC 稽核分數','≥85 分','月',20],['員工留任率','≥85%','季',10],['客訴件數','≤2 件／萬客','月',5]];
 const TOP_KPI=[['年度營收目標達成率','≥100%','月',30],['稅前淨利率','≥10%','月',30],['展店計畫達成','依年度計畫','季',20],['關鍵主管留任率','≥90%','年',20]];
 
+/* 分階段補人：範本裡每個職位「開到第幾店時要有專人」，之前由上層兼。依連鎖業常見順序：先管數字與營運，再補品質、人資行銷，最後中廚與展店 */
+const PHASE={1:{gm:1,store:1,ops:3,fin:3,rd:4,sup:5,fran:6,hr:6,mkt:6,ck:7,dev:8},
+ 2:{gm:1,store:1,ops:1,sup:11,rd:11,scm:11,ck:11,fin:11,hr:11,mkt:11,dev:11,fran:11,area:12,plan:15,cost:15,train:15,crm:20,it:20},
+ 3:{audit:31,legal:31,qa:31}};
+const atOf=p=>Math.max(1,+p.at||1), later=p=>atOf(p)>(+cur.stores||1);
 /* 階段範本：建議組織。p＝上層（用 key），f＝負責職能，n＝人數，st＝門市職位 */
-function tpl(s,fr){
+function tpl(s,fr){ const P=tpl0(s,fr), now=+cur.stores||1; P.forEach(p=>{ if(p.st) p.n=now;
+    const at=s===0?1:Math.max((PHASE[s]||{})[p.id]||(PHASE[2]||{})[p.id]||(s===3?31:s===2?11:4),1); p.at=at<=now?1:at }); return P }
+function tpl0(s,fr){
   const P=[]; const add=(k,t,p,f,o={})=>P.push(Object.assign({id:k,title:t,person:'',parent:p,funcs:f,n:1,extra:'',kpis:[]},o));
   if(s===0){
     add('boss','老闆／負責人',null,['ops','plan']);
@@ -357,8 +365,8 @@ function tDiag(){
 function nodeHtml(org,p,a,edit){
   const fl=a&&a.flagIds&&a.flagIds.has(p.id);
   const fn=(p.funcs||[]).map(k=>FX[k]?FX[k].n.replace(/（.*?）/,''):'').filter(Boolean).join('・');
-  const inner=`<b>${esc(p.title)}${p.n>1?` ×${+p.n}`:''}</b>${p.person?`<span class="p">${esc(p.person)}</span>`:''}${fn?`<span class="f">${esc(fn)}</span>`:''}`;
-  const cls=`node ${!p.parent?'root':''} ${p.st?'store':''} ${fl?'flag':''}`;
+  const lt=cur&&later(p), inner=`<b>${esc(p.title)}${p.n>1?` ×${+p.n}`:''}</b>${p.person?`<span class="p">${esc(p.person)}</span>`:''}${fn?`<span class="f">${esc(fn)}</span>`:''}${lt?`<span class="ph">開到第 ${atOf(p)} 店再補</span>`:''}`;
+  const cls=`node ${!p.parent?'root':''} ${p.st?'store':''} ${fl?'flag':''} ${lt?'later':''}`;
   const el=edit?`<button type="button" class="${cls}" data-edit="${esc(p.id)}">${inner}</button>`:`<div class="${cls}">${inner}</div>`;
   const ch=kids(org,p.id);
   return `<li>${el}${ch.length?`<ul>${ch.map(c=>nodeHtml(org,c,a,edit)).join('')}</ul>`:''}</li>`;
@@ -381,11 +389,20 @@ function tOrg(which){
   <p class="note">點任何一格就能改職稱、人名、上層、負責職能。紅框＝一人身兼多職或負荷過重。${which==='asis'?'先照業主口述畫出「實際上」誰管誰、誰做什麼，不是名片上的職稱。':''}</p>
   ${treeHtml(org,true)}
   <div class="row noprint"><button class="pri" data-addpos="${which}">＋ 加職位</button>${which==='tobe'?`<button data-reset-tobe class="${armed==='tobe'?'armed':''}">${armed==='tobe'?'再按一次：清掉重選範本':'重新選範本'}</button>`:''}</div></div>
-  ${which==='tobe'?compareHtml():''}
+  ${which==='tobe'?phaseHtml(org)+compareHtml():''}
   ${a.flags.length?`<div class="card"><h2>結構警訊</h2>${a.flags.map(f=>`<div class="chk"><span class="pill ${f[0]}">${f[0]==='bad'?'嚴重':'注意'}</span> ${esc(f[1])}</div>`).join('')}</div>`:''}
   <div class="card"><h2>職位清單</h2><div class="scroll"><table><thead><tr><th>職位</th><th>人</th><th>上層</th><th>負責職能</th></tr></thead><tbody>${org.positions.map(p=>`<tr><td><button type="button" class="sm" data-edit="${esc(p.id)}">${esc(p.title)}</button>${p.n>1?` ×${+p.n}`:''}</td><td>${esc(p.person||'—')}</td><td>${esc((org.positions.find(x=>x.id===p.parent)||{}).title||'—')}</td><td>${esc((p.funcs||[]).map(k=>FX[k]?FX[k].n:k).join('、')||(p.st?'門市營運':'—'))}</td></tr>`).join('')}</tbody></table></div>
   <div class="row"><label style="margin:0;flex:1 1 100%" for="note_${which}">${which==='asis'?'現況說明（會放進報告）':'設計理由（會放進報告）'}</label><textarea id="note_${which}" data-note="${which}">${esc(d.notes[which]||'')}</textarea></div></div>`;
 }
+function phaseHtml(org){ if(!org) return ''; const now=+cur.stores||1, hq=org.positions.filter(p=>!p.st), L=hq.filter(later);
+  if(!L.length) return '';
+  const byId=id=>org.positions.find(x=>x.id===id)||{}, cover=p=>{let x=byId(p.parent),g=0; while(x.id&&later(x)&&g++<9) x=byId(x.parent); return x.title||'老闆'};
+  const nowL=hq.filter(p=>!later(p)), groups=[...new Set(L.map(atOf))].sort((a,b)=>a-b);
+  return `<div class="card"><h2>分階段補人計畫</h2><p class="note">建議組織是照目標規模畫的，不用一次請齊。目前 ${now} 店，先把下面「現在」的職位落實（可由現有人員兼任或升任），其他照店數逐步補，補人前由上層兼著做。</p>
+  <div class="scroll"><table><thead><tr><th>時機</th><th>職位</th><th>補人前由誰兼</th></tr></thead><tbody>
+  <tr><td><b>現在（${now} 店）</b></td><td>${nowL.map(p=>esc(p.title)).join('、')}</td><td class="note">—</td></tr>
+  ${groups.map(g=>{const ps=L.filter(p=>atOf(p)===g); return `<tr><td>開到第 ${g} 店</td><td>${ps.map(p=>esc(p.title)).join('、')}</td><td>${[...new Set(ps.map(cover))].map(esc).join('、')}</td></tr>`}).join('')}
+  </tbody></table></div><p class="note">現在要有 ${nowL.length} 個總部職位、之後再補 ${L.length} 個。點組織圖上的職位可以改「第幾店再補」。</p></div>` }
 function compareHtml(){
   const a=analyse(P().asis,P().override), b=analyse(P().tobe,{});
   const rows=a.rows.map(r=>{const t=b.rows.find(x=>x.f.k===r.f.k)||{have:0}; return `<tr><td>${esc(r.f.n)}</td><td>${HAVE[r.have]}</td><td>${HAVE[t.have]}</td><td>${HAVE[r.need]}</td><td class="c">${t.have>=r.need?'<span class="pill good">補齊</span>':`<span class="pill warn">仍缺</span>`}</td></tr>`}).join('');
@@ -398,6 +415,7 @@ function posDialog(which,id){
   $('#dlg').innerHTML=`<h2>${p.id?'編輯職位':'新增職位'}</h2>
   <div class="g2"><div><label for="d_title">職稱</label><input id="d_title" value="${esc(p.title)}" placeholder="例：營運經理"></div><div><label for="d_person">目前由誰擔任（可空白）</label><input id="d_person" value="${esc(p.person)}" placeholder="例：王小明"></div></div>
   <div class="g2"><div><label for="d_parent">向誰報告</label><select id="d_parent"><option value="">（最上層）</option>${opts}</select></div><div><label for="d_n">人數</label><input id="d_n" type="number" min="1" value="${+p.n||1}"></div></div>
+  ${which==='tobe'?`<div class="g2"><div><label for="d_at">開到第幾店再補專人（現在就要填 1）</label><input id="d_at" type="number" min="1" value="${atOf(p)}"></div></div>`:''}
   <label class="chk"><input type="checkbox" id="d_st"${p.st?' checked':''}>這是門市職位（店長、副店長等）</label>
   <label>負責的總部職能（實際在做的才勾）</label>${areas.map(ar=>`<div class="note" style="margin-top:6px">${esc(ar)}</div><div class="fl">${FUNCS.filter(f=>f.a===ar).map(f=>`<label class="chk"><input type="checkbox" data-df="${f.k}"${(p.funcs||[]).includes(f.k)?' checked':''}>${esc(f.n)}</label>`).join('')}</div>`).join('')}
   <label for="d_extra">其他職責（一行一項，會加進部門職責）</label><textarea id="d_extra">${esc(p.extra||'')}</textarea>
@@ -468,7 +486,7 @@ function tKpi(){
     <div class="row"><button class="sm" data-kadd="${esc(p.id)}">＋ 加一項</button><button class="sm" data-ksug="${esc(p.id)}">${k.length?'重新帶入建議':'帶入建議'}</button></div></div>`}).join('')}`;
 }
 function roadmap(a){
-  const g=a.gaps, top=g.slice(0,3).map(r=>r.f.n).join('、');
+  const g=a.gaps, t=P().tobe, nowF=t?new Set(t.positions.filter(p=>!later(p)).flatMap(p=>p.funcs||[])):null, top=g.filter(r=>!nowF||nowF.has(r.f.k)).slice(0,3).map(r=>r.f.n).join('、');
   const steps=[
     ['第 1 個月：定權責',[`公布新組織圖與職務說明書`,`照 RACI 表訂「核決權限表」，老闆先放手執行類工作`,`建立固定週會（營運）＋月會（經營）與決議追蹤表`]],
     ['第 2 個月：補關鍵人',[top?`優先補齊：${top}`:'確認每項職能都有負責人',`兼任者訂出時間分配與交接期限`,`主管 KPI 試行一個月，只看不考核`]],
@@ -486,7 +504,7 @@ function tRep(){
   ${a.flags.length?`<h3>主要問題</h3><ol>${a.flags.map(f=>`<li>${esc(f[1])}</li>`).join('')}</ol>`:''}
   ${a.gaps.length?`<h3>職能缺口（依急迫排序）</h3><table><thead><tr><th>職能</th><th>現況</th><th>這階段需要</th></tr></thead><tbody>${a.gaps.map(r=>`<tr><td>${esc(r.f.n)}</td><td>${HAVE[r.have]}</td><td>${HAVE[r.need]}</td></tr>`).join('')}</tbody></table>`:''}
   <h2>二、現況組織</h2>${treeHtml(d.asis,false)}${d.notes.asis?`<p style="white-space:pre-wrap">${esc(d.notes.asis)}</p>`:''}
-  ${d.tobe?`<h2>三、建議組織</h2>${treeHtml(d.tobe,false)}${d.notes.tobe?`<p style="white-space:pre-wrap">${esc(d.notes.tobe)}</p>`:''}`:''}
+  ${d.tobe?`<h2>三、建議組織</h2>${treeHtml(d.tobe,false)}${phaseHtml(d.tobe)}${d.notes.tobe?`<p style="white-space:pre-wrap">${esc(d.notes.tobe)}</p>`:''}`:''}
   <h2>${d.tobe?'四':'三'}、部門職責</h2><table><thead><tr><th>職位</th><th>職責</th></tr></thead><tbody>${org.positions.filter(p=>!p.st&&((p.funcs||[]).length||p.extra)).map(p=>`<tr><td>${esc(p.title)}</td><td>${(p.funcs||[]).filter(k=>FX[k]).flatMap(k=>FX[k].du.filter((t,i)=>!d.dutyOff[p.id+'|'+k+'|'+i])).concat((p.extra||'').split('\n').map(s=>s.trim()).filter(Boolean)).map(esc).join('、')}</td></tr>`).join('')}</tbody></table>
   ${ck?`<h2>${d.tobe?'五':'四'}、權責分工（RACI）</h2><p class="note">${Object.entries(RACIN).map(([k,v])=>`${k}＝${v}`).join('；')}</p><div class="scroll"><table class="rt"><thead><tr><th>工作</th>${cols.map(p=>`<th class="c">${esc(p.title)}</th>`).join('')}</tr></thead><tbody>${tasks.map(t=>`<tr><td>${esc(t.n)}</td>${cols.map(p=>`<td class="c">${esc((d.raci[t.k]||{})[p.id]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:''}
   <h2>${d.tobe?'六':'五'}、主管 KPI</h2>${org.positions.filter(p=>(p.kpis||[]).length).map(p=>`<h3>${esc(p.title)}</h3><table><thead><tr><th>指標</th><th>目標</th><th>頻率</th><th>權重</th></tr></thead><tbody>${p.kpis.map(x=>`<tr><td>${esc(x.n)}</td><td>${esc(x.t)}</td><td>${esc(x.f)}</td><td>${+x.w||0}%</td></tr>`).join('')}</tbody></table>`).join('')||'<p class="note">（尚未設定）</p>'}
@@ -561,7 +579,7 @@ document.addEventListener('click',e=>{
     let p=org.positions.find(x=>x.id===id); if(!p){ p={id:uid(),kpis:[]}; org.positions.push(p) }
     let parent=val('d_parent')||null; let x=parent, guard=0; while(x&&guard++<99){ if(x===p.id){ parent=p.parent||null; say('不能把職位接到自己底下，已保留原本的上層。',true); break } x=(org.positions.find(y=>y.id===x)||{}).parent }
     if(!parent&&org.positions.some(y=>y!==p&&!y.parent)){ parent=root(org)!==p?root(org).id:null }
-    Object.assign(p,{title,person:val('d_person'),parent,n:Math.max(1,+val('d_n')||1),st:$('#d_st').checked,extra:$('#d_extra').value,funcs:[...document.querySelectorAll('[data-df]:checked')].map(c=>c.dataset.df)});
+    Object.assign(p,{title,person:val('d_person'),parent,n:Math.max(1,+val('d_n')||1),st:$('#d_st').checked,extra:$('#d_extra').value,funcs:[...document.querySelectorAll('[data-df]:checked')].map(c=>c.dataset.df)}); if($('#d_at')) p.at=Math.max(1,+val('d_at')||1);
     armed=null; $('#dlg').close(); touch(true); return }
   if(d.delpos){ const [w,id]=d.delpos.split('|'); if(armed!=='del'+id){ armed='del'+id; return posDialog(w,id) }
     const org=D[w], p=org.positions.find(x=>x.id===id); org.positions.forEach(x=>{ if(x.parent===id) x.parent=p.parent }); org.positions=org.positions.filter(x=>x.id!==id); armed=null; $('#dlg').close(); touch(true); return }
