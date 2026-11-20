@@ -100,7 +100,7 @@ a.btn.ghost,button.ghost{background:transparent;border-color:transparent;color:v
 .gt{display:flex;align-items:center;gap:10px;margin:0 0 10px}
 .gt .num{width:26px;height:26px;border-radius:8px;background:var(--gc);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
 .gt h3{margin:0;font-size:16px}.gt span{color:var(--mute);font-size:13px}
-.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
 .app{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s}
 .app:hover{transform:translateY(-3px);box-shadow:var(--kit-shadow-up);border-color:color-mix(in srgb,var(--gc) 45%,var(--line))}
 .app .hd{display:flex;gap:12px;align-items:center}
@@ -133,7 +133,7 @@ a.btn.ghost,button.ghost{background:transparent;border-color:transparent;color:v
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:6px 0 0}.kv span{color:var(--mute)}
 
 /* ---- 手機與小螢幕 ---- */
-@media (max-width:1180px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.two{grid-template-columns:1fr}}
+@media (max-width:1180px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.two{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:900px){
   .shell{grid-template-columns:1fr}
   .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 16px;gap:6px}
@@ -143,6 +143,94 @@ a.btn.ghost,button.ghost{background:transparent;border-color:transparent;color:v
   .pipe{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:560px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.hero h1{font-size:22px}.pipe{grid-template-columns:1fr}.step{grid-template-columns:36px minmax(0,1fr)}.step .act{grid-column:2}}
+
+/* ==== 2026-11-19 手機順暢度＋彈跳視窗＋動畫 ==== */
+button,a.btn{min-height:38px}
+.hero .qa .btn,.hero .qa button{min-height:40px}
+.stat{transition:transform .2s var(--kit-ease,ease),box-shadow .2s}
+.stat:hover{box-shadow:var(--kit-shadow)}
+.todo li a{transition:background .15s,transform .15s}
+.todo li a:hover{transform:translateX(3px)}
+.todo li a .go{margin-left:auto;align-self:center;color:var(--mute);opacity:0;transition:opacity .15s,transform .15s}
+.todo li a:hover .go{opacity:1;transform:translateX(2px)}
+.cc{transition:border-color .15s,transform .15s,box-shadow .15s}
+.cc:hover{transform:translateY(-1px);box-shadow:var(--kit-shadow)}
+/* 進場：只在第一次載入時依序浮現 */
+.enter .stat,.enter .card,.enter .app,.enter .gt{animation:up .45s var(--kit-ease,ease) both;animation-delay:calc(var(--i,0)*45ms)}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+#tools .apps .app{animation:pop .3s var(--kit-ease,ease) both;animation-delay:calc(var(--i,0)*30ms)}
+@keyframes pop{from{opacity:0;transform:scale(.97)}}
+.flow{scroll-behavior:smooth}
+/* 彈跳視窗（桌機置中、手機由下往上） */
+.sheet-wrap{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:16px}
+.sheet-wrap .scrim{position:absolute;z-index:0}
+.sheet{position:relative;z-index:1;width:min(460px,100%);max-height:86vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,.25);padding:20px 20px 18px;animation:zoom .26s var(--kit-ease,ease)}
+@keyframes zoom{from{opacity:0;transform:translateY(8px) scale(.96)}}
+.sheet.out{animation:zoomout .18s ease-in forwards}.sheet-wrap.out .scrim{animation:fadeout .18s forwards}
+@keyframes zoomout{to{opacity:0;transform:translateY(8px) scale(.97)}}@keyframes fadeout{to{opacity:0}}
+.sheet h2{margin:0 0 4px;font-size:18px}.sheet .x{position:absolute;top:12px;right:12px;min-height:34px;width:34px;padding:0;border-radius:50%}
+.sheet .grab{display:none}
+.menu{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.menu a,.menu button{width:100%;justify-content:flex-start;text-align:left;padding:11px 12px;border-radius:12px;white-space:normal;gap:12px;min-height:52px}
+.menu .mi{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:13px;background:color-mix(in srgb,var(--gc,var(--accent)) 14%,transparent);color:var(--gc,var(--accent))}
+.menu b{display:block;font-size:14.5px}.menu small{display:block;color:var(--mute);font-size:12.5px;font-weight:400}
+.linkbox{display:flex;gap:8px;margin:12px 0 4px}.linkbox input{flex:1;min-width:0;font:inherit;font-size:13px;background:var(--field);border:1px solid var(--line);border-radius:9px;padding:8px 10px;color:inherit}
+.srcs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.srcs button{font-size:13px;padding:5px 12px;min-height:34px;border-radius:999px}
+.sheet .foot2{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+/* 手機底部分頁列（桌機隱藏） */
+.tabbar,.topbar,.fab,.hero .avatar{display:none}
+@media (max-width:900px){
+  .side{display:none}
+  .shell{grid-template-columns:minmax(0,1fr)}.main{min-width:0}
+  html,body{overflow-x:clip}
+  .topbar{display:flex;position:sticky;top:0;z-index:50;align-items:center;gap:10px;padding:10px 16px calc(10px);padding-top:calc(10px + env(safe-area-inset-top));background:color-mix(in srgb,var(--side) 96%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);color:#fff}
+  .topbar .lm{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#e2552b,#f2a93b);display:grid;place-items:center;font-weight:800}
+  .topbar b{font-size:16px;flex:1}
+  .topbar button{min-height:36px;width:36px;padding:0;border-radius:50%;background:rgba(255,255,255,.12);border:0;color:#fff;font-weight:700}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .tabbar button{flex-direction:column;gap:2px;min-height:52px;background:transparent;border:0;color:var(--mute);font-size:11px;padding:4px 0;border-radius:12px;position:relative}
+  .tabbar button svg{width:22px;height:22px;transition:transform .2s var(--kit-ease,ease)}
+  .tabbar button.on{color:var(--accent);font-weight:600}.tabbar button.on svg{transform:translateY(-1px) scale(1.08)}
+  .tabbar button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--accent);animation:pop .25s}
+  .tabbar .cnt{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:#e0533f;color:#fff;font-size:11px;line-height:18px;padding:0 5px;font-weight:700}
+  .tabbar .plus{width:48px;height:48px;min-height:48px;margin:-18px auto 0;border-radius:16px;background:var(--accent);color:var(--on-accent);box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 45%,transparent);display:grid;place-items:center;font-size:26px;font-weight:400}
+  .main{padding:16px 16px calc(96px + env(safe-area-inset-bottom))}
+  .hero{margin-bottom:14px;position:relative;padding-right:48px}.hero .avatar{display:grid;place-items:center;position:absolute;right:0;top:2px;width:40px;height:40px;min-height:40px;padding:0;border-radius:50%;background:var(--accent-soft);color:var(--accent);border:0;font-weight:800}.hero h1{font-size:21px}.hero p{font-size:13px}.hero .qa{display:none}
+  .stats{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -16px 16px;scroll-padding-inline:16px;padding:2px 16px 6px;scrollbar-width:none}
+  .stats::-webkit-scrollbar,.flow::-webkit-scrollbar,.pipe::-webkit-scrollbar{display:none}
+  .stat{flex:0 0 38%;scroll-snap-align:start;padding:12px 12px}.stat b{font-size:24px}.stat span{font-size:12px;white-space:nowrap}
+  .card{padding:16px;border-radius:16px}
+  .todo li a{padding:12px 8px;min-height:56px}.todo li a .go{opacity:1}
+  .pipe{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -16px;scroll-padding-inline:16px;padding:0 16px 4px;scrollbar-width:none}
+  .col{flex:0 0 78%;scroll-snap-align:start}
+  .cc{padding:11px 12px;min-height:56px}
+  .swipe{display:block;font-size:12px;color:var(--mute);margin:8px 0 0;text-align:center}
+  .flow{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px 14px;padding:0 16px 4px;scrollbar-width:none}
+  .flow button{flex:none;min-height:36px}
+  .apps{grid-template-columns:1fr;gap:10px}
+  .app{padding:14px;border-radius:16px}.app:hover{transform:none}
+  .app p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .app.open p{-webkit-line-clamp:unset;display:block}
+  .app .go{display:grid;grid-template-columns:1fr 1fr;gap:8px}.app .go>:only-child,.app .go>:first-child:nth-last-child(odd){grid-column:1/-1}
+  .app .go .btn,.app .go button{min-height:44px;width:100%}
+  .chips{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px;padding:0 14px 2px;scrollbar-width:none}.chips a{flex:none;padding:4px 11px}
+  /* 客戶檔案：手機改成由下往上的抽屜 */
+  .drawer{top:auto;left:0;width:100%;height:92vh;border-radius:20px 20px 0 0;animation:sheetup .34s var(--kit-ease,ease)}
+  .drawer .dh{border-radius:20px 20px 0 0;padding-top:24px;position:relative}
+  .drawer .dh::before{content:"";position:absolute;top:8px;left:50%;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:var(--line)}
+  .drawer.out{animation:sheetdown .22s ease-in forwards}
+  .db{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+  .step .act a{min-height:40px}
+  .sheet-wrap{place-items:end center;padding:0}
+  .sheet{width:100%;max-height:88vh;border-radius:20px 20px 0 0;padding:22px 16px calc(18px + env(safe-area-inset-bottom));animation:sheetup .3s var(--kit-ease,ease)}
+  .sheet.out{animation:sheetdown .2s ease-in forwards}
+  .sheet .grab{display:block;width:40px;height:5px;border-radius:3px;background:var(--line);margin:-12px auto 10px}
+  .kit-toasts{bottom:calc(84px + env(safe-area-inset-bottom));right:16px;left:16px;align-items:stretch}
+}
+@media (min-width:901px){.swipe{display:none}}
+@keyframes sheetup{from{transform:translateY(100%)}to{transform:none}}
+@keyframes sheetdown{to{transform:translateY(100%)}}
+@media (prefers-reduced-motion: reduce){*,*::before{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -192,7 +280,7 @@ const GROUPS=[
 ];
 const STAGE_COLS=[['名單','健檢名單'],['洽談中','洽談中'],['輔導中','輔導中'],['暫停','暫停／結案']];
 
-let me=null, ok=false, D=null, filt='all', view='home';
+let me=null, ok=false, D=null, filt='all', view='home', first=true;
 const day=864e5, todayStr=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
 const ago=d=>Math.floor((Date.now()-new Date(d))/day);
 async function rows(qb){ try{ const r=await qb; return r.error?null:(r.data||[]) }catch(_){ return null } }
@@ -271,13 +359,13 @@ function side(st,td){
    <button type="button" class="nv" data-jump="clients">${ICO.users}客戶旅程<span class="cnt">${D.clients.filter(c=>c.stage!=='結案').length}</span></button>
    <button type="button" class="nv" data-jump="tools">${ICO.grid}工具箱</button>
    <div class="gnav"><div class="nav-h">顧問流程</div>${gn}</div>
-   <div class="foot">${esc(me.email)}<div class="row"><a class="btn" href="${PORTAL}">業主入口</a><button type="button" data-out>登出</button></div></div></aside>`;
+   <div class="foot">${esc(me.email)}<div class="row"><a class="btn" href="${PORTAL}">業主入口</a><button type="button" data-sheet="out">登出</button></div></div></aside>`;
 }
 function hero(){
   const h=new Date(Date.now()+8*3600e3).getUTCHours(), g=h<11?'早安':h<14?'午安':h<18?'午安':'晚安';
   const d=new Date(Date.now()+8*3600e3), wd='日一二三四五六'[d.getUTCDay()];
-  return `<header class="hero" id="top"><div><h1>${g}，今天也辛苦了</h1><p>${d.getUTCMonth()+1} 月 ${d.getUTCDate()} 日（週${wd}）｜顧問專用，業主看不到這一頁</p></div>
-   <div class="qa"><button type="button" data-copy="${esc(BOM+'checkup/')}">分享健檢連結</button><a class="btn" href="${C}coach/#todo">全部待辦</a><a class="btn pri" href="${C}coach/#new">＋ 新增輔導客戶</a></div></header>`;
+  return `<header class="hero" id="top"><button type="button" class="avatar kit-calm" data-sheet="me" aria-label="帳號">${esc((me.email||'?').slice(0,1).toUpperCase())}</button><div><h1>${g}，今天也辛苦了</h1><p>${d.getUTCMonth()+1} 月 ${d.getUTCDate()} 日（週${wd}）｜顧問專用，業主看不到這一頁</p></div>
+   <div class="qa"><a class="btn" href="${C}coach/#todo">全部待辦</a><button type="button" data-sheet="share">分享健檢連結</button><button type="button" class="pri" data-sheet="add">＋ 新增</button></div></header>`;
 }
 function stats(){
   const st=leadStats(), t=todayStr();
@@ -291,7 +379,7 @@ function stats(){
 function todoCard(list){
   const top=list.slice(0,8);
   return `<section class="card" id="todo"><div class="sh"><h2>今日要做</h2><span class="pill ${list.length?'bad':'good'}">${list.length?list.length+' 項':'全部完成'}</span></div>
-   ${top.length?`<ul class="todo">${top.map(x=>`<li><a href="${esc(x.u)}"><span class="tk ${x.k}">${esc(x.ic)}</span><span><b>${esc(x.t)}</b><small>${esc(x.s)}</small></span></a></li>`).join('')}</ul>${list.length>8?`<p class="more">還有 ${list.length-8} 項，到營運輔導「全部待辦」或名單管理看。</p>`:''}`
+   ${top.length?`<ul class="todo">${top.map(x=>`<li><a href="${esc(x.u)}"><span class="tk ${x.k}">${esc(x.ic)}</span><span><b>${esc(x.t)}</b><small>${esc(x.s)}</small></span><span class="go" aria-hidden="true">›</span></a></li>`).join('')}</ul>${list.length>8?`<p class="more">還有 ${list.length-8} 項，到營運輔導「全部待辦」或名單管理看。</p>`:''}`
    :`<div class="empty"><span class="big">✓</span>今天沒有逾期的事，可以專心做提案。</div>`}</section>`;
 }
 function dots(c){
@@ -304,11 +392,11 @@ function pipe(){
   const card=(k,x)=>k==='名單'?`<button type="button" class="cc" data-open="l=${x.id}"><b>${esc(x.brand||x.contact_name||'未命名')}</b><small>健檢 ${x.total??'-'} 分｜${esc(x.status)}｜${ago(x.created_at)} 天前</small></button>`
     :`<button type="button" class="cc" data-open="c=${x.id}"><b>${esc(x.name)}</b><small>${esc([x.biz_type,x.stores?x.stores+' 店':'',x.stage==='結案'?'已結案':''].filter(Boolean).join('｜')||'—')}</small>${dots(x)}</button>`;
   return `<section class="card" id="clients"><div class="sh"><h2>客戶旅程</h2><span class="note" style="margin:0">點客戶看他在每個工具的進度</span></div>
-   <div class="pipe">${STAGE_COLS.map(([k,l])=>{const xs=cols[k]; return `<div class="col"><h3>${l}<span class="n">${xs.length}</span></h3>${xs.slice(0,6).map(x=>card(k,x)).join('')||'<p class="more">（沒有）</p>'}${xs.length>6?`<p class="more">還有 ${xs.length-6} 位</p>`:''}</div>`}).join('')}</div></section>`;
+   <div class="pipe">${STAGE_COLS.map(([k,l])=>{const xs=cols[k]; return `<div class="col"><h3>${l}<span class="n">${xs.length}</span></h3>${xs.slice(0,6).map(x=>card(k,x)).join('')||'<p class="more">（沒有）</p>'}${xs.length>6?`<p class="more">還有 ${xs.length-6} 位</p>`:''}</div>`}).join('')}</div><span class="swipe">← 左右滑動看各階段 →</span></section>`;
 }
 function appCard(x,g){
   const go=x.go.map((b,i)=>`<a class="btn ${i?'':'pri'}" href="${esc(b[1])}"${/^https:\/\/(claude\.ai|docs\.google)/.test(b[1])?' target="_blank" rel="noopener"':''}>${esc(b[0])}</a>`).join('')
-    +(x.copy?`<button type="button" data-copy="${esc(x.copy)}">複製連結給業主</button>`:'');
+    +(x.copy?`<button type="button" data-sheet="share">分享給業主</button>`:'');
   const chips=x.chips?`<div class="chips">${x.chips.map(c=>`<a href="${esc(BOM+'#'+c[1])}">${esc(c[0])}</a>`).join('')}</div>`:'';
   const st=leadStats(), badge=x.stat&&st&&st.todo?`<span class="pill ${st.late?'bad':'warn'}" style="margin-left:auto">${st.todo} 筆新名單</span>`:'';
   return `<article class="app" style="--gc:var(--${g.k})"><div class="hd"><div class="ic" aria-hidden="true">${esc(x.ic)}</div><div><h4>${esc(x.name)}</h4><div class="where">${esc(x.where)}</div></div>${badge}</div><p>${esc(x.desc)}</p>${chips}<div class="go">${go}</div></article>`;
@@ -361,7 +449,7 @@ function drawer(){
   if(!body){ if(el) el.remove(); document.body.style.overflow=''; return }
   if(!el){el=document.createElement('div');el.id='drawer';document.body.appendChild(el)}
   el.innerHTML=`<div class="scrim" data-close></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="客戶檔案">${body}</aside>`;
-  document.body.style.overflow='hidden';
+  document.body.style.overflow='hidden'; swipeClose(el.querySelector('.drawer'),closeDrawer);
 }
 
 function render(){
@@ -369,7 +457,8 @@ function render(){
   if(!me){ root.innerHTML=`<div class="main" style="max-width:520px;margin:40px auto"><div class="card"><h2>請先登入</h2><p class="sub">顧問工作台和業主入口用同一組帳號，登入一次兩邊都能用。</p><a class="btn pri" href="${PORTAL}">到入口登入</a></div></div>`; return }
   if(!ok){ root.innerHTML=`<div class="main" style="max-width:560px;margin:40px auto"><div class="card"><h2>這一頁只開放顧問使用</h2><p class="sub">你的帳號可以使用的系統都在業主入口。</p><a class="btn pri" href="${PORTAL}">回業主入口</a></div></div>`; return }
   const td=todos();
-  root.innerHTML=`<div class="shell">${side(leadStats(),td.length)}<main class="main" id="app">${hero()}${stats()}<div class="two">${todoCard(td)}${pipe()}</div>${tools()}</main></div>`;
+  root.innerHTML=`<div class="shell${first?' enter':''}">${side(leadStats(),td.length)}${topbar()}<main class="main" id="app">${hero()}${stats()}<div class="two">${todoCard(td)}${pipe()}</div>${tools()}</main></div>${tabbar(td.length)}`;
+  stagger(root); first=false; spy();
   if(window.Kit) Kit.countUp(root);
   drawer();
 }
@@ -379,14 +468,87 @@ document.addEventListener('click',async e=>{
   if(e.target.closest('[data-out]')){ await sbc.auth.signOut(); location.href=PORTAL; return }
   const o=e.target.closest('[data-open]'); if(o){ location.hash=o.dataset.open; return }
   if(e.target.closest('[data-close]')){ location.hash=''; return }
-  const f=e.target.closest('[data-filt]'); if(f){ filt=f.dataset.filt; const t=$('#tools'); t.outerHTML=tools(); return }
+  const f=e.target.closest('[data-filt]'); if(f){ filt=f.dataset.filt; const t=$('#tools'); t.outerHTML=tools(); stagger($('#tools'),'.app'); f.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); return }
   const j=e.target.closest('[data-jump]');
   if(j){ const k=j.dataset.jump; if(/^g\d$/.test(k)&&filt!=='all'&&filt!==k){filt='all'; $('#tools').outerHTML=tools()}
     const t=document.getElementById(k); if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
     document.querySelectorAll('.side .nv').forEach(b=>b.classList.toggle('on',b===j));
     if(k==='todo'||k==='clients'){const el=document.getElementById(k); el.animate&&el.animate([{boxShadow:'0 0 0 3px var(--accent)'},{boxShadow:'0 0 0 0 transparent'}],{duration:900})} }
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('#drawer')) location.hash='' });
+
+/* ---------- 手機頂列、底部分頁、彈跳視窗、動畫 ---------- */
+function topbar(){ return '' }
+function tabbar(td){
+  const t=(k,ic,l,extra='')=>`<button type="button" data-jump="${k}" data-tab="${k}"${k==='top'?' class="on"':''}>${ic}<span>${l}</span>${extra}</button>`;
+  return `<nav class="tabbar kit-calm" aria-label="快速切換">${t('top',ICO.home,'總覽')}${t('todo',ICO.check,'要做',td?`<span class="cnt">${td>99?'99+':td}</span>`:'')}<button type="button" data-sheet="add" aria-label="新增"><span class="plus">＋</span></button>${t('clients',ICO.users,'客戶')}${t('tools',ICO.grid,'工具')}</nav>`;
+}
+function stagger(root,sel){ (root||document).querySelectorAll(sel||'.stat,.card,.gt,.app').forEach((el,i)=>el.style.setProperty('--i',Math.min(i,14))) }
+let spyObs=null;
+function spy(){
+  if(spyObs) spyObs.disconnect(); if(!('IntersectionObserver' in window)) return;
+  const ids=['top','todo','clients','tools'], seen={};
+  spyObs=new IntersectionObserver(es=>{ es.forEach(e=>seen[e.target.id]=e.isIntersecting);
+    const cur=ids.slice().reverse().find(k=>seen[k])||'top';
+    document.querySelectorAll('.tabbar [data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===cur)) },{rootMargin:'-35% 0px -55% 0px'});
+  ids.forEach(k=>{const el=document.getElementById(k); if(el) spyObs.observe(el)});
+}
+const SRC=[['一般','',''],['FB','s01_fb'],['IG','s01_ig'],['Threads','s01_threads'],['官網','s01_web']];
+let shareSrc='';
+const shareUrl=()=>BOM+'checkup/'+(shareSrc?'?src='+shareSrc:'');
+function sheetBody(k){
+  const mi=(ic,gc,t,s)=>`<span class="mi" style="--gc:var(--${gc})">${ic}</span><span><b>${t}</b><small>${s}</small></span>`;
+  if(k==='add') return `<h2>要新增什麼？</h2><p class="note" style="margin:0">選好後會直接打開新增畫面。</p><ul class="menu">
+    <li><a class="btn" href="${C}coach/#new">${mi('導','g3','輔導客戶','新客戶主檔，之後各工具都從這裡帶入')}</a></li>
+    <li><a class="btn" href="${C}org/#t=new">${mi('組','g4','組織與權責診斷','多店或準備展店的客戶')}</a></li>
+    <li><a class="btn" href="${C}franchise/#new">${mi('盟','g4','加盟體系方案','準備度健檢、條件與回本試算')}</a></li>
+    <li><a class="btn" href="${C}sop/#new">${mi('SOP','g4','SOP 手冊','選業態產出門市 SOP')}</a></li>
+    <li><a class="btn" href="${BOM}site/">${mi('址','g2','立地評估','輸入店面地址開始評估')}</a></li>
+    <li><button type="button" data-sheet="share">${mi('檢','g1','分享健檢給業主','複製連結或用 LINE 傳')}</button></li></ul>`;
+  if(k==='share') return `<h2>分享經營健檢</h2><p class="note" style="margin:0">選來源，名單管理就看得出業主從哪裡來。</p>
+    <div class="srcs" role="group" aria-label="來源">${SRC.map(([l,v])=>`<button type="button" data-src="${v}" class="${shareSrc===v?'pri':''}">${l}</button>`).join('')}</div>
+    <div class="linkbox"><input id="shareUrl" readonly value="${esc(shareUrl())}" aria-label="健檢連結"><button type="button" class="pri" data-copy-share>複製</button></div>
+    <div class="foot2"><a class="btn" href="${esc(shareUrl())}" target="_blank" rel="noopener">預覽健檢頁</a><a class="btn pri" id="lineShare" href="https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl())}" target="_blank" rel="noopener">用 LINE 傳送</a></div>`;
+  if(k==='me') return `<h2>帳號</h2><p class="note" style="margin:0 0 12px;word-break:break-all">${esc(me.email)}</p><ul class="menu">
+    <li><a class="btn" href="${PORTAL}">${mi('入','g5','業主入口','切換到業主看到的畫面與總覽')}</a></li>
+    <li><button type="button" data-sheet="out">${mi('出','g5','登出','這台裝置會登出工作台與業主入口')}</button></li></ul>`;
+  if(k==='out') return `<h2>確定要登出嗎？</h2><p class="note">這台裝置上的顧問工作台和業主入口會一起登出。</p><div class="foot2"><button type="button" data-close-sheet>取消</button><button type="button" class="pri" data-out>登出</button></div>`;
+  return '';
+}
+function openSheet(k){
+  let w=$('#sheet'); const body=sheetBody(k); if(!body) return;
+  if(!w){ w=document.createElement('div'); w.id='sheet'; w.className='sheet-wrap'; document.body.appendChild(w);
+    w.innerHTML=`<div class="scrim" data-close-sheet></div><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div><button type="button" class="ghost x kit-calm" data-close-sheet aria-label="關閉">✕</button><div class="sb"></div></div>`;
+    document.body.style.overflow='hidden'; swipeClose(w.querySelector('.sheet'),closeSheet) }
+  else { const sh=w.querySelector('.sheet'); sh.style.animation='none'; sh.offsetHeight; sh.style.animation='' }
+  w.dataset.k=k; w.querySelector('.sb').innerHTML=body;
+  const f=w.querySelector('.sb a,.sb button'); if(f) f.focus({preventScroll:true});
+}
+function closeSheet(){
+  const w=$('#sheet'); if(!w||w.classList.contains('out')) return;
+  w.classList.add('out'); w.querySelector('.sheet').classList.add('out');
+  setTimeout(()=>{ w.remove(); if(!$('#drawer')) document.body.style.overflow='' },190);
+}
+function swipeClose(el,done){
+  let y0=null,dy=0;
+  el.addEventListener('touchstart',e=>{ if(el.scrollTop>0&&!e.target.closest('.dh,.grab')) return; y0=e.touches[0].clientY; dy=0; el.style.transition='none' },{passive:true});
+  el.addEventListener('touchmove',e=>{ if(y0==null) return; dy=Math.max(0,e.touches[0].clientY-y0); el.style.transform=dy?`translateY(${dy}px)`:'' },{passive:true});
+  el.addEventListener('touchend',()=>{ if(y0==null) return; el.style.transition='transform .2s'; if(dy>110) done(); else el.style.transform=''; y0=null });
+}
+function closeDrawer(){
+  const d=$('#drawer aside'); if(!d||d.classList.contains('out')){ location.hash=''; return }
+  d.classList.add('out'); const s=$('#drawer .scrim'); if(s) s.style.animation='fadeout .2s forwards';
+  setTimeout(()=>{ history.replaceState(null,'',location.pathname+location.search); drawer() },200);
+}
+document.addEventListener('click',async e=>{
+  const s=e.target.closest('[data-sheet]'); if(s){ e.preventDefault(); e.stopImmediatePropagation(); openSheet(s.dataset.sheet); return }
+  if(e.target.closest('[data-close-sheet]')){ e.stopImmediatePropagation(); closeSheet(); return }
+  const src=e.target.closest('[data-src]'); if(src){ e.stopImmediatePropagation(); shareSrc=src.dataset.src; openSheet('share'); return }
+  if(e.target.closest('[data-copy-share]')){ e.stopImmediatePropagation(); const u=shareUrl();
+    try{ await navigator.clipboard.writeText(u); toast('已複製健檢連結，可以直接貼給業主。','ok'); closeSheet() }catch(_){ const i=$('#shareUrl'); i.select(); toast('瀏覽器不讓自動複製，連結已選取，請長按複製。','bad') } return }
+  if(e.target.closest('[data-close]')||e.target.closest('.drawer .x')){ e.preventDefault(); e.stopImmediatePropagation(); closeDrawer(); return }
+  const app=e.target.closest('.app'); if(app&&!e.target.closest('a,button')&&matchMedia('(max-width:900px)').matches){ app.classList.toggle('open') }
+},true);
+document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if($('#sheet')) closeSheet(); else if($('#drawer')) closeDrawer() });
 window.addEventListener('hashchange',()=>{ if(D) drawer() });
 sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
 load();
