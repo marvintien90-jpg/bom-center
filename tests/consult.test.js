@@ -67,7 +67,7 @@ const toastText = pg => pg.$$eval('.kit-toast', e => e.map(x => x.textContent).j
     pg = await open(br, { user: A, tables: data() }, vw, 'consult/');
     await pg.waitForTimeout(700);
     t = await clean(pg, 'workbench ' + W);
-    const want = ['今日要做', '客戶旅程', '工具箱', '經營健檢', '名單管理＋顧問作業包', '餐飲立地評估', 'BOM 運算中心（顧問工具）', '菜單四象限', '損益分析中心', '營運輔導', '品牌案件工作台', '文件與簡報管理', '招募考核範本包', '總部組織與權責診斷', '加盟體系', 'SOP 手冊與督導稽核', '業主入口（總覽）', '訂閱與會員管理', '人資與勞基法中心', '2 筆新名單', '新名單待聯絡', '該追蹤（逾期）', '累計成交', '聯絡健檢名單：老王滷味', '追蹤：陳家火鍋', '冷藏庫溫度紀錄', '該訪視了：阿明牛肉麵', '稽核改善逾期：阿明牛肉麵', '好食便當'];
+    const want = ['今日要做', '客戶旅程', '工具箱', '經營健檢', '名單管理＋顧問作業包', '餐飲立地評估', 'BOM 運算中心（顧問工具）', '菜單四象限', '損益分析中心', '營運輔導', '品牌案件工作台', '文件與簡報管理', '招募考核範本包', '總部組織與權責診斷', '加盟體系', 'SOP 手冊與督導稽核', '餐策雲 DineOS（業主總覽）', '訂閱與會員管理', '人資與勞基法中心', '2 筆新名單', '新名單待聯絡', '該追蹤（逾期）', '累計成交', '聯絡健檢名單：老王滷味', '追蹤：陳家火鍋', '冷藏庫溫度紀錄', '該訪視了：阿明牛肉麵', '稽核改善逾期：阿明牛肉麵', '好食便當'];
     const miss = want.filter(w => !t.includes(w)); log(!miss.length, 'workbench content', W, miss.join());
     const m0 = new Date(new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 7) + '-01T00:00:00+08:00'), exp = data().checkup_leads.filter(l => new Date(l.created_at) >= m0).length;
     const s = await pg.$$eval('.stat b', b => b.map(x => x.dataset.count + '=' + x.textContent));
@@ -149,7 +149,7 @@ const toastText = pg => pg.$$eval('.kit-toast', e => e.map(x => x.textContent).j
   await pg.screenshot({ path: path.join(__dirname, 'consult-coach-toast.png') });
   await clean(pg, 'coach with kit'); await pg.close();
 
-  // 業主入口（含共用元件）
+  // 餐策雲 DineOS（含共用元件）
   const U1 = { id: 'u1', email: 'o@x.com', email_confirmed_at: '2026-11-01' };
   const own = { user: U1, tables: { bom_profiles: [{ user_id: 'u1', role: 'client', status: 'active', expires_on: '2099-01-01' }], pl_profiles: [{ user_id: 'u1', role: 'owner', status: 'pending' }], sub_subscriptions: [{ user_id: 'u1', company: '好吃餐飲', plan: 'pro', stores: 2, status: 'active', period_end: '2099-01-01' }] } };
   for (const w of [{ width: 1440, height: 900 }, { width: 375, height: 800 }]) {

@@ -358,8 +358,8 @@ function heat(v){ if(v==null) return ''; const a=Math.min(1,Math.abs(v)/15); ret
 function route(){ const p=new URLSearchParams(location.hash.slice(1)); return {c:+p.get('c')||null,v:p.get('v')||'home'} }
 function render(){
   $('#who').innerHTML=me?`${esc(me.email)}<br><a href="${C}">顧問工作台</a>　<a href="#" data-out>登出</a>`:'';
-  if(!me){ $('#app').innerHTML=`<div class="card"><h2>請先登入</h2><p>這是顧問專用頁面，請從業主入口登入顧問帳號。</p><a class="btn pri" href="${PORTAL}">前往登入</a></div>`; return }
-  if(!ok){ $('#app').innerHTML=`<div class="card"><h2>只開放顧問使用</h2><p>你的帳號沒有顧問權限。</p><a class="btn" href="${PORTAL}">回業主入口</a></div>`; return }
+  if(!me){ $('#app').innerHTML=`<div class="card"><h2>請先登入</h2><p>這是顧問專用頁面，請從餐策雲 DineOS登入顧問帳號。</p><a class="btn pri" href="${PORTAL}">前往登入</a></div>`; return }
+  if(!ok){ $('#app').innerHTML=`<div class="card"><h2>只開放顧問使用</h2><p>你的帳號沒有顧問權限。</p><a class="btn" href="${PORTAL}">回餐策雲 DineOS</a></div>`; return }
   if(D.missing){ $('#app').innerHTML=`<div class="card"><h2>讀不到輔導客戶</h2><p>營運輔導的資料表還沒建立，或網路中斷。請重新整理；還是不行就告訴 Claude。</p></div>`; return }
   const r=route();
   if(!r.c){ $('#app').innerHTML=vList(); return }

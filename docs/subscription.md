@@ -58,3 +58,12 @@ node health_deck.test.mjs /tmp # 健檢簡報指標與產檔
 node member.test.js            # 會員中心四種畫面、電腦與手機
 node run.js /abs/index.html    # 原本的主站測試
 ```
+
+## 餐策雲 DineOS 與系統模組授權（2026-11-20）
+
+- 業主入口正式名稱改為「餐策雲 DineOS」（`portal/`）。入口是唯一改密碼的地方（`portal/#account`），各系統的「我的帳號」只放連結；忘記密碼的信一律導回入口。
+- 模組代號：`bom` BOM 運算中心、`pl` 損益分析中心、`hr` 人資與勞基法中心。資料庫更新檔 `supabase/migrations/20261120_modules.sql`。
+- 方案包含哪些模組存在 `sub_plans.modules`（預設：基本版 bom、pl；進階版與顧問會員 bom、pl、hr），訂閱中心「設定與價格」可勾選調整。
+- 顧問個別加開存在 `sub_module_grants`（入口的業主總覽有「加開人資」按鈕），給沒有訂閱或要額外開通的業主。
+- 判斷函式：`sub_my_modules()`（目前登入者）、`bom_private.has_module(模組)`（資料庫規則用）。人資中心進入時檢查 `hr`，`hr_settings`、`hr_employees` 的新增與修改也要有 `hr`。
+- **新系統上線前**：先跟 Marvin 確認哪些方案包含、要不要訂閱，再把它加進 `portal/index.html` 的 `SYSTEMS`（gate 用 `module`）與 `sub_plans.modules`。

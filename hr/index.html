@@ -129,14 +129,23 @@ async function boot(){
   if(me) await fetchContent();
   route();
 }
-// 權限：管理員，或 BOM／損益中心任一帳號有效且未過期（與統一入口 rule:'any' 相同）。內容為站內靜態檔。
+// 權限（2026-11-20 起）：人資中心要有「hr」模組才能用＝管理員、訂閱方案包含人資（進階版、顧問會員）且訂閱有效，或顧問另外加開。
+// 伺服器端 sub_my_modules() 判斷；資料庫也擋寫入（bom_private.has_module）。函式還沒裝好時，用訂閱資料在畫面上判斷。
 const todayTW=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
-const valid=p=>!!p&&p.status==='active'&&(p.role==='admin'||!p.expires_on||p.expires_on>=todayTW());
+const DEFAULT_HR_PLANS=['pro','member'];
+async function hasHr(){
+  const r=await sbc.rpc('sub_my_modules');
+  if(!r.error&&Array.isArray(r.data)) return r.data.some(m=>m.module==='hr');
+  const [b,s]=await Promise.all([sbc.from('bom_profiles').select('role,status').eq('user_id',me.id).maybeSingle(),sbc.from('sub_subscriptions').select('*').eq('user_id',me.id).maybeSingle()]);
+  if(b.data&&b.data.role==='admin'&&b.data.status==='active') return true;
+  const x=s.data; if(!x) return false;
+  const until=x.status==='comp'?'9999-12-31':x.status==='expired'?'':x.status==='trial'?x.trial_ends_on:(x.period_end||x.trial_ends_on);
+  return DEFAULT_HR_PLANS.includes(x.plan)&&!!until&&until>=todayTW();
+}
 async function fetchContent(){
   err='';
   try{
-    const [b,p]=await Promise.all([sbc.from('bom_profiles').select('role,status,expires_on').eq('user_id',me.id).maybeSingle(),sbc.from('pl_profiles').select('role,status,expires_on').eq('user_id',me.id).maybeSingle()]);
-    if(!valid(b.data)&&!valid(p.data)){err='NO_ACCESS';return}
+    if(!(await hasHr())){err='NO_ACCESS';return}
     const v='?v=20261117';
     const [L,T,K,Q,B,I]=await Promise.all(['laws','templates','cases','qa','biz','insurance'].map(f=>import('./content/'+f+'.js'+v)));
     C={checked:L.LAWS_CHECKED,laws:L.LAWS,notes:L.NOTES,cats:T.TEMPLATE_CATS,templates:T.TEMPLATES,cases:K.CASES,qa:Q.QA,qaCats:Q.QA_CATS,biz:B.BIZ,guides:B.GUIDES,topics:B.TOPICS,ins:I};
@@ -185,7 +194,7 @@ function bindChips(root){
 const TABS=[['home','首頁'],['qa','常見錯誤'],['case','案例引導'],['tpl','範本'],['emp','員工名單'],['calc','計算工具'],['law','法規查詢'],['set','公司設定']];
 function shell(tab,body){
   const dl=document.getElementById('dlg'); if(dl){try{dl.close()}catch(e){} dl.remove()}
-  $('#top').innerHTML=me?`<a class="btn" href="${BASE}portal/">回入口</a><button id="out">登出</button>`:'';
+  $('#top').innerHTML=me?`<a class="btn" href="${BASE}portal/">回餐策雲</a><button id="out">登出</button>`:'';
   if(me) $('#out').onclick=async()=>{await sbc.auth.signOut();try{sessionStorage.clear()}catch(e){};me=null;C=null;location.hash='';route()};
   $('#app').innerHTML=`<nav class="tabs noprint" aria-label="功能">${TABS.map(([k,n])=>`<a href="#${k}" class="${tab===k?'on':''}">${n}</a>`).join('')}</nav>${body}`;
   bindChips($('#app'));
@@ -217,7 +226,7 @@ ${fg?'':'<label for="pw">密碼</label><input id="pw" type="password" required a
 <p class="note">還沒有帳號？到 <a href="${BASE}member/">會員中心</a> 註冊或聯絡顧問開通。</p></div>`;
   $('#sw').onclick=()=>{mode=fg?'login':'forgot';flash='';viewLogin()};
   $('#lf').onsubmit=async e=>{e.preventDefault(); const em=$('#em').value.trim();
-    if(fg){const {error}=await sbc.auth.resetPasswordForEmail(em,{redirectTo:BASE+'member/'}); flash=error?'寄送失敗，請稍後再試。':'已寄出重設密碼信，請到信箱收信。'; return viewLogin()}
+    if(fg){const {error}=await sbc.auth.resetPasswordForEmail(em,{redirectTo:BASE+'portal/'}); flash=error?'寄送失敗，請稍後再試。':'已寄出重設密碼信，請到信箱收信。'; return viewLogin()}
     const {data,error}=await sbc.auth.signInWithPassword({email:em,password:$('#pw').value});
     if(error){flash=/Invalid login/i.test(error.message)?'Email 或密碼不正確。':'登入失敗：'+error.message.slice(0,60);return viewLogin()}
     flash=''; me=data.user; await fetchContent(); route();
@@ -225,7 +234,7 @@ ${fg?'':'<label for="pw">密碼</label><input id="pw" type="password" required a
 }
 function viewNoAccess(){
   $('#top').innerHTML=`<button id="out">登出</button>`; $('#out').onclick=async()=>{await sbc.auth.signOut();me=null;err='';route()};
-  $('#app').innerHTML=`<div class="card"><h2>這個帳號還沒開通</h2><p>人資與勞基法中心開放給 BOM 運算中心或損益分析中心的有效帳號（試用、訂閱、顧問開通都可以）。</p><div class="row"><a class="btn pri" href="${BASE}member/">到會員中心開始試用</a><a class="btn" href="${BASE}portal/">回入口</a></div></div>`;
+  $('#app').innerHTML=`<div class="card"><h2>人資與勞基法中心需要訂閱</h2><p>這個系統包含在<b>進階版</b>與<b>顧問會員</b>方案裡，訂閱有效（含試用期）就能使用；已和顧問簽約的業主，也可以請顧問幫你加開。</p><div class="row"><a class="btn pri" href="${BASE}member/">看方案、開始試用</a><a class="btn" href="${BASE}portal/">回餐策雲</a></div></div>`;
 }
 
 function viewHome(){
