@@ -112,7 +112,8 @@
   .kit-side-off .shell{grid-template-columns:minmax(0,1fr)!important}
   .kit-side-off .shell>.side,.kit-side-off .shell>#side{display:none!important}
 }
-@media (max-width:900px){.kit-nav .kn-side{display:none}}
+@media (max-width:900px){.kit-nav .kn-side{display:none}
+  .kit-nav-on .shell.open>#side{z-index:60}.kit-nav-on .shell.open>#scrim{z-index:55}}
 @media (max-width:640px){
   .kit-nav .kn{gap:4px;padding:0 8px}
   .kit-nav .kn-b{padding:0 8px}
