@@ -418,7 +418,7 @@ function tReady(p,rd){
     ${rd.rec?`<p style="margin:10px 0 0">建議模式：<b>${esc(rd.rec)}</b>${rd.fatal.length?`（關鍵題沒做到：${rd.fatal.map(esc).join('、')}）`:''}</p>`:''}
     <p class="note">75% 以上且關鍵題都有做到才建議開放加盟；50–74% 先補強，可用委託加盟試 1–2 家。</p></div>`;
   const gaps=rd.gaps.length?`<div class="card"><h2>要補強的地方（${rd.gaps.length}）</h2>${rd.gaps.map(g=>`<div class="item"><b>${esc(g.t)}</b> ${g.crit?pill('bad','關鍵'):''}${pill(g.v===0?'bad':'warn',g.v===0?'沒有':'部分')}<div class="meta">${esc(GAP[g.k]||'')}</div></div>`).join('')}
-   ${p.coach_client_id?`<p class="note">可以把這些項目開成營運輔導待辦：<a href="${COACH}#c=${p.coach_client_id}&t=actions">到營運輔導</a></p>`:''}</div>`:'';
+   ${p.coach_client_id?`<div class="row noprint"><button class="pri" data-toacts="${p.id}">把 ${rd.gaps.length} 項開成營運輔導待辦</button><a class="note" href="${COACH}#c=${p.coach_client_id}&t=actions">到營運輔導看待辦 →</a></div><p class="note">關鍵項排前面、每 3 週到期一項；已經開過的不會重複。</p>`:`<p class="note">在「設定」連結營運輔導客戶後，可以一鍵把這些項目開成輔導待辦。</p>`}</div>`:'';
   const ev=P(p).evid||{}, evn=Object.keys(ev).length;
   return `<div class="two"><div class="card"><h2>加盟準備度健檢</h2><p class="sub">和業主一起逐題回答，答完右邊會給結論與補強清單。</p>
    <div class="row noprint" style="margin:0 0 6px"><button class="sm" data-evid="${p.id}">依系統資料帶入（損益、SOP、稽核、組織、BOM）</button><span class="note">只填還沒答的題，會註明依據</span></div>${qs}</div><div>${res}${gaps}</div></div>`;
@@ -751,6 +751,14 @@ document.addEventListener('change',e=>{
 function dueFor(s,sales){const r=s.royalty_mode==='fixed'?(+s.royalty_value||0):(sales||0)*(+s.royalty_value||0)/100; return {royalty:Math.round(r),mkt:Math.round((sales||0)*(+s.mkt_pct||0)/100)}}
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.toacts) return act(async()=>{const p=D.plans.find(x=>x.id===+d.toacts), cid=p&&p.coach_client_id; if(!cid) return;
+    const gs=readiness(p).gaps, ex=await sbc.from('coach_actions').select('title').eq('client_id',cid);
+    if(ex.error){say('讀不到營運輔導待辦：'+ex.error.message,true);return}
+    const have=new Set((ex.data||[]).map(x=>x.title)), day=n=>{const t=new Date(Date.now()+n*864e5); return t.toISOString().slice(0,10)};
+    const rows=gs.map(g=>({g,title:'加盟準備｜'+(GAP[g.k]||g.t).split('。')[0]})).filter(x=>!have.has(x.title)).map((x,i)=>({client_id:cid,title:x.title,side:'業主',priority:x.g.crit?'高':'中',due_on:day(21*(i+1)),status:'待辦',share:true}));
+    if(!rows.length){say('這些項目都已經在營運輔導待辦裡了。');return}
+    const r=await sbc.from('coach_actions').insert(rows); if(r.error){say('開待辦失敗：'+r.error.message,true);return}
+    say(`已開 ${rows.length} 項營運輔導待辦${gs.length>rows.length?`（${gs.length-rows.length} 項之前開過）`:''}，到營運輔導就看得到。`); render()});
   if('out' in d){await sbc.auth.signOut(); location.href=PORTAL; return}
   if('print' in d){window.print(); return}
   if(d.rview){rview=d.rview; render(); return}
