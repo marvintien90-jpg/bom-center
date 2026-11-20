@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>業主入口｜品牌加辣餐飲顧問工作室</title>
+<title>餐策雲 DineOS｜餐飲經營管理系統</title>
 <link rel="stylesheet" href="../consult/kit/kit.css" data-kit>
 <style>
 :root{
@@ -105,6 +105,23 @@ tbody tr{transition:background .15s}tbody tr:hover{background:var(--field)}
   .main{padding:20px 16px 56px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .subbar{grid-template-columns:auto minmax(0,1fr)}.subbar .go{grid-column:1/-1}
 }
+.link{border:0!important;background:none!important;color:var(--accent)!important}
+button.sm{font-size:12px;padding:4px 10px}
+.mods{display:flex;gap:6px;flex-wrap:wrap}
+.mod{display:inline-flex;align-items:center;gap:4px;border-radius:8px;padding:2px 9px;font-size:12.5px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.mod.ok{background:var(--good-bg);color:var(--good)}.mod.wait{background:var(--warn-bg);color:var(--warn)}.mod.no{background:var(--field);color:var(--mute);border-color:var(--line);font-weight:400}
+.mods-h{font-size:12px;color:var(--mute);margin:14px 0 6px;letter-spacing:.04em}
+.subcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin:0 0 24px}
+.sc-h{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center}
+.sc-h .ic{width:44px;height:44px;border-radius:13px;background:color-mix(in srgb,var(--c4) 14%,transparent);color:var(--c4);display:grid;place-items:center;font-weight:800}
+.sc-h b{font-size:16px}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 0}
+.facts div{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.facts dt{font-size:12px;color:var(--mute)}.facts dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.acct{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.ro{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere}
+table.owners td{vertical-align:top}table.matrix td,table.matrix th{text-align:center}table.matrix th:first-child{text-align:left}
+@media (max-width:900px){.sc-h{grid-template-columns:auto minmax(0,1fr)}.sc-h>.btn{grid-column:1/-1}.facts{grid-template-columns:1fr}.acct{grid-template-columns:1fr;gap:6px}}
 @media (max-width:560px){.feat{grid-template-columns:1fr}h1{font-size:22px}}
 </style>
 </head>
@@ -114,20 +131,30 @@ tbody tr{transition:background .15s}tbody tr:hover{background:var(--field)}
 <script>
 const SUPA_URL='https://thxqncpkkzmpktwuvzvz.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHFuY3Bra3ptcGt0d3V2enZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MTMyODcsImV4cCI6MjEwNjk4OTI4N30.cDjeuOxx2UZLrOWYcNhqy4dO2cdznscJ7CWr0DZGZ2g';
-const BOM='https://marvintien90-jpg.github.io/bom-center/', PL='https://marvintien90-jpg.github.io/pl-center/', MEMBER=BOM+'member/';
+const BOM='https://marvintien90-jpg.github.io/bom-center/', PL='https://marvintien90-jpg.github.io/pl-center/', MEMBER=BOM+'member/', PORTAL=BOM+'portal/';
+const NAME='餐策雲', NAME_EN='DineOS';
 const sbc=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const addDays=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*864e5).toISOString().slice(0,10);
 const SUB={trial:['試用中','good'],active:['訂閱中','good'],past_due:['扣款失敗，寬限中','warn'],canceled:['已取消續訂','warn'],expired:['已到期','bad'],comp:['免費招待','good']};
 const PLAN={basic:'基本版',pro:'進階版',member:'顧問會員'};
-/* 其他系統卡片：加一筆就會出現在入口。rule：'any' = BOM 或損益中心任一個可使用（含管理員）就能進入。
-   例：{ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢與案例引導。',url:BOM+'hr/',rule:'any'} */
-const EXTRA=[{ic:'人',name:'人資與勞基法中心',desc:'人資範本、勞基法查詢與案例引導。',url:BOM+'hr/',rule:'any'},{ic:'址',name:'餐飲立地評估（顧問專用）',desc:'顧問評估店面：商圈客群、人流、直接／替代競爭、租金與損益。',url:BOM+'site/',rule:'admin'}];
+/* 系統模組（業主可用的系統）。新系統上線前要先跟 Marvin 確認：哪些方案包含它、要不要訂閱才能用。
+   gate：'bom'／'pl'＝看該系統自己的帳號開通；'module'＝看訂閱方案的模組（sub_plans.modules）或顧問加開（sub_module_grants）；'admin'＝只限顧問。 */
+const SYSTEMS=[
+  {key:'bom',ic:'B',name:'BOM 運算中心',short:'BOM',desc:'食材成本、配方 BOM、叫貨與庫存。',url:BOM,gate:'bom',c:'--c1'},
+  {key:'pl',ic:'損',name:'損益分析中心',short:'損益',desc:'每月損益、成本結構與門市比較。',url:PL,gate:'pl',c:'--c2'},
+  {key:'hr',ic:'人',name:'人資與勞基法中心',short:'人資',desc:'人資範本、勞基法查詢、員工名單與勞健保試算。',url:BOM+'hr/',gate:'module',c:'--c3'},
+  {key:'site',ic:'址',name:'餐飲立地評估（顧問專用）',short:'立地',desc:'顧問評估店面：商圈客群、人流、競爭、租金與損益。',url:BOM+'site/',gate:'admin',c:'--c5'}];
+const OWNER_MODS=SYSTEMS.filter(x=>x.gate!=='admin');
+const GRANTABLE=SYSTEMS.filter(x=>x.gate==='module');
+const DEFAULT_MODS={basic:['bom','pl'],pro:['bom','pl','hr'],member:['bom','pl','hr']};
 
-let me=null, bom=null, pl=null, sub=null, isAdmin=false, all=null, mode='login', msg='', bad=false;
+let me=null, bom=null, pl=null, sub=null, plans=[], cfg={}, myGrants=[], myMods=null, isAdmin=false, all=null, allGrants=[];
+let mode='login', msg='', bad=false, recovering=false, ownerQ='';
 
-/* 授權狀態：ok 可進入；pending 等待開通；off 已到期或停用；none 沒有這個系統的帳號 */
+/* 帳號開通狀態：ok 可進入；pending 等待開通；off 已到期或停用；none 沒有 */
 function access(p, needConfirm){
   if(!p) return {k:'none'};
   if(p.role==='admin'&&p.status==='active') return {k:'ok',admin:true};
@@ -137,127 +164,199 @@ function access(p, needConfirm){
   if(needConfirm&&me&&!me.email_confirmed_at) return {k:'pending',why:'請先到信箱點驗證信'};
   return {k:'ok',until:p.expires_on||null};
 }
-const pillOf=a=>a.k==='ok'?`<span class="pill good">${a.admin?'管理員':'可使用'+(a.until?'・到 '+esc(a.until):'')}</span>`:a.k==='pending'?`<span class="pill warn">${esc(a.why||'等待開通')}</span>`:a.k==='off'?`<span class="pill bad">${esc(a.why)}</span>`:'<span class="pill mute">未開通</span>';
+/* 訂閱可用到哪天（與資料庫 sub_private.access_until 相同）：null＝不限期，''＝已不能用 */
+function subUntil(s){
+  if(!s) return '';
+  if(s.status==='comp') return null;
+  if(s.status==='expired') return '';
+  if(s.status==='trial') return s.trial_ends_on||'';
+  if(s.status==='canceled') return s.period_end||s.trial_ends_on||'';
+  const d=s.period_end||s.trial_ends_on; return d?addDays(d,+(cfg.grace_days||0)):'';
+}
+const subValid=s=>!!s&&(s.status==='comp'||(subUntil(s)||'')>=today());
+const planMods=code=>{const p=plans.find(x=>x.code===code); return (p&&Array.isArray(p.modules))?p.modules:(DEFAULT_MODS[code]||['bom','pl'])};
+function modsFor(s,grants,adm){
+  const m={};
+  if(adm){ OWNER_MODS.forEach(x=>m[x.key]={src:'admin',until:null}); return m }
+  if(subValid(s)) planMods(s.plan).forEach(k=>m[k]={src:'sub',until:subUntil(s)});
+  (grants||[]).forEach(g=>{ if((!g.until||g.until>=today())&&!m[g.module]) m[g.module]={src:'grant',until:g.until||null} });
+  return m;
+}
+/* 某個系統對某個人的狀態 */
+function sysAccess(x,r){
+  if(x.gate==='admin') return r.admin?{k:'ok',admin:true}:{k:'none'};
+  if(x.gate==='bom') return access(r.bom,false);
+  if(x.gate==='pl') return access(r.pl,r.self);
+  const m=r.mods[x.key];
+  if(m) return {k:'ok',admin:m.src==='admin',until:m.until||null,src:m.src};
+  return {k:'none',why:'需要訂閱'};
+}
+const SRC={sub:'訂閱方案',grant:'顧問加開',admin:'管理員'};
+const pillOf=a=>a.k==='ok'?`<span class="pill good">${a.admin?'管理員':'可使用'+(a.until?'・到 '+esc(a.until):'')}</span>`:a.k==='pending'?`<span class="pill warn">${esc(a.why||'等待開通')}</span>`:a.k==='off'?`<span class="pill bad">${esc(a.why)}</span>`:`<span class="pill mute">${esc(a.why||'未開通')}</span>`;
 
+const safe=async p=>{try{const r=await p; return r.error?{data:null,error:r.error}:r}catch(e){return {data:null,error:e}}};
 async function load(){
-  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; bom=pl=sub=all=null; isAdmin=false;
+  const {data:{session}}=await sbc.auth.getSession(); me=session&&session.user||null; bom=pl=sub=all=myMods=null; myGrants=[]; isAdmin=false;
   if(me){
-    const [b,p,s]=await Promise.all([
-      sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle(),
-      sbc.from('pl_profiles').select('*').eq('user_id',me.id).maybeSingle(),
-      sbc.from('sub_subscriptions').select('*').eq('user_id',me.id).maybeSingle()]);
-    bom=b.data||null; pl=p.data||null; sub=s.data||null;
+    const [b,p,s,pp,st,g,mm]=await Promise.all([
+      safe(sbc.from('bom_profiles').select('*').eq('user_id',me.id).maybeSingle()),
+      safe(sbc.from('pl_profiles').select('*').eq('user_id',me.id).maybeSingle()),
+      safe(sbc.from('sub_subscriptions').select('*').eq('user_id',me.id).maybeSingle()),
+      safe(sbc.from('sub_plans').select('*').order('sort')),
+      safe(sbc.from('sub_settings').select('grace_days').eq('id',1).maybeSingle()),
+      safe(sbc.from('sub_module_grants').select('*').eq('user_id',me.id)),
+      safe(sbc.rpc('sub_my_modules'))]);
+    bom=b.data||null; pl=p.data||null; sub=s.data||null; plans=pp.data||[]; cfg=st.data||{}; myGrants=g.data||[];
     isAdmin=!!(bom&&bom.role==='admin'&&bom.status==='active');
+    if(Array.isArray(mm.data)){ myMods={}; mm.data.forEach(r=>{ if(!myMods[r.module]) myMods[r.module]={src:r.source,until:r.until} }) }
+    else myMods=modsFor(sub,myGrants,isAdmin);
     if(isAdmin) await loadAll();
   }
   render();
 }
 async function loadAll(){
-  const [b,p,s]=await Promise.all([sbc.from('bom_profiles').select('*'),sbc.from('pl_profiles').select('*'),sbc.from('sub_subscriptions').select('*')]);
+  const [b,p,s,g]=await Promise.all([safe(sbc.from('bom_profiles').select('*')),safe(sbc.from('pl_profiles').select('*')),safe(sbc.from('sub_subscriptions').select('*')),safe(sbc.from('sub_module_grants').select('*'))]);
   const rows={}; const add=(r,k)=>{ if(!r||!r.user_id) return; (rows[r.user_id]=rows[r.user_id]||{id:r.user_id})[k]=r };
   (b.data||[]).forEach(r=>add(r,'bom')); (p.data||[]).forEach(r=>add(r,'pl')); (s.data||[]).forEach(r=>add(r,'sub'));
+  allGrants=g.data||[]; allGrants.forEach(x=>{ if(rows[x.user_id]) (rows[x.user_id].grants=rows[x.user_id].grants||[]).push(x) });
   all=Object.values(rows).filter(r=>!((r.bom&&r.bom.role==='admin')||(r.pl&&r.pl.role==='admin')));
+  all.forEach(r=>{ r.mods=modsFor(r.sub,r.grants,false) });
 }
+const meRow=()=>({bom,pl,sub,admin:isAdmin,self:true,mods:myMods||{}});
 
-const FEAT=[['B','BOM 運算中心','食材成本、配方 BOM、叫貨與庫存'],['損','損益分析中心','每月損益、成本結構與門市比較'],['人','人資與勞基法','人資範本、勞基法查詢'],['訂','BOM＋損益 訂閱版','線上訂閱、發票與每月健檢簡報']];
+const FEAT=[['B','BOM 運算中心','食材成本、配方 BOM、叫貨與庫存'],['損','損益分析中心','每月損益、成本結構與門市比較'],['人','人資與勞基法','人資範本、勞基法查詢、勞健保試算'],['訂','訂閱中心','方案、授權模組、發票與每月健檢簡報']];
+const logo=(sz)=>`<div class="lm"${sz?` style="width:${sz}px;height:${sz}px"`:''}>策</div>`;
 function viewLogin(){
   const fg=mode==='forgot';
-  return `<div class="split"><section class="brand"><div style="display:flex;gap:12px;align-items:center"><div class="lm">辣</div><div><b style="color:#fff">品牌加辣餐飲顧問工作室</b><div style="font-size:12px;color:#8fb0a7">業主入口</div></div></div>
-  <div><h1>一組帳號，<br>進入你的所有經營系統</h1><p>成本、損益、人資和訂閱都在這裡。登入一次，各系統之間不用再重新登入。</p></div>
+  return `<div class="split"><section class="brand"><div style="display:flex;gap:12px;align-items:center">${logo()}<div><b style="color:#fff;font-size:17px">${NAME} ${NAME_EN}</b><div style="font-size:12px;color:#8fb0a7">餐飲經營管理系統｜品牌加辣餐飲顧問工作室</div></div></div>
+  <div><h1>一組帳號，<br>管好你的每一家店</h1><p>${NAME} ${NAME_EN} 把成本、損益、人資和訂閱整合在一起。登入一次，各系統之間不用再重新登入。</p></div>
   <div class="feat">${FEAT.map(f=>`<div><i>${f[0]}</i><b>${f[1]}</b><span>${f[2]}</span></div>`).join('')}</div>
   <div class="foot">資料存在雲端，手機、平板、電腦都能用。</div></section>
-  <section class="auth"><div class="card"><h2>${fg?'重設密碼':'登入'}</h2><p class="sub">${fg?'輸入註冊的 Email，我們會寄重設連結給你。':'歡迎回來，請用你的 Email 登入。'}</p><div id="flash">${flash()}</div>
+  <section class="auth"><div class="card"><h2>${fg?'重設密碼':'登入 '+NAME_EN}</h2><p class="sub">${fg?'輸入註冊的 Email，我們會寄重設連結給你。':'歡迎回來，請用你的 Email 登入。'}</p><div id="flash">${flash()}</div>
   <form id="auth"><label for="em">Email</label><input id="em" type="email" required autocomplete="email" placeholder="name@example.com">
   ${fg?'':'<label for="pw">密碼</label><input id="pw" type="password" required minlength="6" autocomplete="current-password">'}
   <div class="row" style="margin-top:18px"><button class="pri" type="submit">${fg?'寄重設信':'登入'}</button></div>
-  <div class="row" style="justify-content:center;margin-top:8px">${fg?'<button type="button" class="kit-calm" data-mode="login" style="border:0;background:none;color:var(--accent)">回到登入</button>':'<button type="button" class="kit-calm" data-mode="forgot" style="border:0;background:none;color:var(--accent)">忘記密碼</button>'}</div></form>
-  <p class="note" style="text-align:center">還沒有帳號？<a href="${MEMBER}?mode=up">到會員中心註冊</a>，可以免費試用 14 天。<br>顧問開通的業主，請用顧問給你的 Email 登入。</p></div></section></div>`;
+  <div class="row" style="justify-content:center;margin-top:8px">${fg?'<button type="button" class="kit-calm link" data-mode="login">回到登入</button>':'<button type="button" class="kit-calm link" data-mode="forgot">忘記密碼</button>'}</div></form>
+  <p class="note" style="text-align:center">還沒有帳號？<a href="${MEMBER}?mode=up">到訂閱中心註冊</a>，可以免費試用 14 天。<br>顧問開通的業主，請用顧問給你的 Email 登入。</p></div></section></div>`;
 }
-function appCard(ic,name,desc,a,go,color){
-  const cls=a&&a.k==='ok'?'on':a&&(a.k==='none'||a.k==='off')?'off':'';
-  return `<article class="app ${cls}" style="--cc:var(${color||'--c1'})"><div class="hd"><div class="ic" aria-hidden="true">${ic}</div>${a?pillOf(a):''}</div><h3>${name}</h3><p>${desc}</p>${go?`<div class="go">${go}</div>`:''}</article>`;
+function viewRecover(){
+  return `<div class="auth" style="min-height:100vh"><div class="card"><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">${logo(36)}<b>${NAME} ${NAME_EN}</b></div><h2>設定新密碼</h2><p class="sub">${esc(me&&me.email||'')}<br>請輸入新的密碼（至少 8 碼），儲存後所有系統都用這組新密碼登入。</p><div id="flash">${flash()}</div>
+  <form id="pwf"><label for="np">新密碼</label><input id="np" type="password" required minlength="8" autocomplete="new-password"><label for="np2">再輸入一次</label><input id="np2" type="password" required minlength="8" autocomplete="new-password">
+  <div class="row" style="margin-top:18px"><button class="pri" type="submit">儲存新密碼</button></div></form></div></div>`;
 }
-function systems(){
-  const ab=access(bom,false), ap=access(pl,true);
-  const renew=`<a class="btn" href="${MEMBER}">到會員中心${sub?'續訂':'訂閱'}</a>`;
-  const btn=(a,url,label)=>a.k==='ok'?`<a class="btn pri" href="${url}">${label}</a>`:a.k==='pending'?`<a class="btn" href="${url}">查看開通進度</a>`:renew;
-  const list=[{ic:'B',name:'BOM 運算中心',desc:'食材成本、配方 BOM、叫貨與庫存。',a:ab,url:BOM,label:'進入 BOM 運算中心',c:'--c1'},
-    {ic:'損',name:'損益分析中心',desc:'每月損益、成本結構與門市比較。',a:ap,url:PL,label:'進入損益分析中心',c:'--c2'}];
-  EXTRA.filter(x=>x.rule!=='admin'||isAdmin).forEach((x,i)=>{const a=(x.rule==='login'||x.rule==='admin'||(x.rule==='any'&&(ab.k==='ok'||ap.k==='ok')))?{k:'ok',admin:isAdmin}:{k:'none'};
-    list.push({ic:esc(x.ic),name:esc(x.name),desc:esc(x.desc),a,url:esc(x.url),label:'進入'+esc(x.name),c:i?'--c5':'--c3',extra:1})});
-  return {ab,ap,list,btn,renew};
+function appCard(x,a){
+  const cls=a.k==='ok'?'on':(a.k==='none'||a.k==='off')?'off':'';
+  let go;
+  if(a.k==='ok') go=`<a class="btn pri" href="${esc(x.url)}">進入 ${esc(x.name.replace(/（.*）/,''))}</a>`;
+  else if(a.k==='pending') go=`<a class="btn" href="${esc(x.url)}">查看開通進度</a>`;
+  else go=`<a class="btn" href="${MEMBER}">${x.gate==='module'?'看包含這個系統的方案':sub?'到訂閱中心續訂':'到訂閱中心訂閱'}</a>`;
+  const src=a.k==='ok'&&a.src&&a.src!=='admin'?`<span class="note" style="margin:0">授權來源：${SRC[a.src]}</span>`:'';
+  return `<article class="app ${cls}" style="--cc:var(${x.c})"><div class="hd"><div class="ic" aria-hidden="true">${esc(x.ic)}</div>${pillOf(a)}</div><h3>${esc(x.name)}</h3><p>${esc(x.desc)}</p>${src}<div class="go">${go}</div></article>`;
 }
-function sideNav(S){
-  const nav=S.list.map(x=>`<a class="nv ${x.a.k==='ok'?'':'lock'}" href="${x.a.k==='ok'?x.url:MEMBER}"><i>${x.ic}</i>${x.name}</a>`).join('');
-  return `<aside class="side"><div class="logo"><div class="lm">辣</div><div><b>業主入口</b><span>品牌加辣餐飲顧問</span></div></div>
-   <div class="nav-h">首頁</div><a class="nv on" href="#"><i>⌂</i>我的系統</a><a class="nv" href="${MEMBER}"><i>訂</i>${isAdmin?'訂閱管理':'會員中心'}</a>
-   ${isAdmin?`<a class="nv" href="${BOM}consult/"><i>顧</i>顧問工作台</a><button type="button" class="nv" data-jump="owners"><i>總</i>業主總覽</button>`:''}
+function sideNav(list){
+  const nav=list.map(({x,a})=>`<a class="nv ${a.k==='ok'?'':'lock'}" href="${a.k==='ok'?esc(x.url):MEMBER}"><i>${esc(x.ic)}</i>${esc(x.short)}</a>`).join('');
+  return `<aside class="side"><div class="logo">${logo()}<div><b>${NAME} ${NAME_EN}</b><span>餐飲經營管理系統</span></div></div>
+   <div class="nav-h">首頁</div><button type="button" class="nv on" data-jump="top"><i>⌂</i>我的系統</button><button type="button" class="nv" data-jump="mysub"><i>訂</i>訂閱與授權</button><button type="button" class="nv" data-jump="account"><i>帳</i>帳號設定</button>
+   ${isAdmin?`<div class="nav-h">顧問</div><a class="nv" href="${BOM}consult/"><i>顧</i>顧問工作台</a><button type="button" class="nv" data-jump="owners"><i>總</i>業主總覽</button><a class="nv" href="${MEMBER}"><i>管</i>訂閱管理</a>`:''}
    <div class="navs"><div class="nav-h">系統</div>${nav}</div>
    <div class="foot">${esc(me.email)}<button type="button" data-act="out">登出</button></div></aside>`;
 }
+const chip=(x,a,extra)=>`<span class="mod ${a.k==='ok'?'ok':a.k==='pending'?'wait':'no'}" title="${esc(x.name)}：${a.k==='ok'?'可使用'+(a.src?'（'+SRC[a.src]+'）':''):a.k==='pending'?'等待開通':esc(a.why||'未開通')}">${a.k==='ok'?'✓':a.k==='pending'?'…':'✕'} ${esc(x.short)}${extra||''}</span>`;
+function mySubCard(){
+  const r=meRow();
+  if(isAdmin) return `<section class="subcard" id="mysub"><div class="sc-h"><div class="ic" aria-hidden="true">訂</div><div><b>訂閱與授權</b><div class="note" style="margin:0">你是管理員，所有系統都能使用。業主的訂閱與模組請看下方「業主總覽」。</div></div><a class="btn pri" href="${MEMBER}">進入訂閱管理</a></div></section>`;
+  const sa=sub?SUB[sub.status]||[sub.status,'mute']:null, u=sub?subUntil(sub):'';
+  const until=!sub?'–':sub.status==='comp'?'不限期':sub.status==='trial'?'試用到 '+esc(sub.trial_ends_on||''):u?'可用到 '+esc(u):'已停止';
+  return `<section class="subcard" id="mysub"><div class="sc-h"><div class="ic" aria-hidden="true">訂</div><div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>我的訂閱</b>${sa?`<span class="pill ${sa[1]}">${sa[0]}</span>`:'<span class="pill mute">還沒訂閱</span>'}</div><div class="note" style="margin:2px 0 0">${sub?'訂閱中心可以換方案、綁卡、下載發票與健檢簡報。':'訂閱後才能使用人資與勞基法中心等模組，可以先免費試用 14 天。'}</div></div><a class="btn pri" href="${MEMBER}">${sub?'進入訂閱中心':'看方案、免費試用'}</a></div>
+  <dl class="facts"><div><dt>方案</dt><dd>${sub?esc(PLAN[sub.plan]||sub.plan)+'・'+(sub.stores||1)+' 店':'–'}</dd></div><div><dt>期限</dt><dd>${until}</dd></div><div><dt>公司</dt><dd>${esc(sub&&sub.company||'–')}</dd></div></dl>
+  <div class="mods-h">授權使用的系統模組</div><div class="mods">${OWNER_MODS.map(x=>chip(x,sysAccess(x,r))).join('')}</div>
+  <p class="note">BOM 與損益分析中心由顧問開通帳號或訂閱後自動開通；人資與勞基法中心要訂閱進階版、顧問會員，或由顧問另外加開。</p></section>`;
+}
+function accountCard(){
+  return `<section class="card" id="account"><div class="sec" style="margin-top:0"><h2>帳號設定</h2></div><p class="sub">這組帳號密碼同時用在 ${NAME} 的所有系統（BOM、損益、人資、訂閱中心），只要在這裡改一次。</p>
+  <div class="acct"><div><label>登入 Email</label><div class="ro">${esc(me.email)}</div><p class="note">要換登入 Email，請聯絡顧問。</p></div>
+  <form id="pwf"><label for="np">新密碼（至少 8 碼）</label><input id="np" type="password" required minlength="8" autocomplete="new-password"><label for="np2">再輸入一次</label><input id="np2" type="password" required minlength="8" autocomplete="new-password">
+  <div class="row"><button class="pri" type="submit">更改密碼</button></div></form></div></section>`;
+}
 function viewHome(){
-  const S=systems(), {ab,ap}=S;
-  const subA=sub?SUB[sub.status]||[sub.status,'mute']:null;
-  const subPill=isAdmin?'<span class="pill good">管理員</span>':subA?`<span class="pill ${subA[1]}">${subA[0]}</span>`:'<span class="pill mute">還沒訂閱</span>';
-  const subDesc=isAdmin?'訂閱、試點名單、發票、設定。':sub?`${esc(PLAN[sub.plan]||sub.plan)}・${sub.stores} 店・${sub.status==='comp'?'不限期':sub.status==='trial'?'試用到 '+esc(sub.trial_ends_on||''):'已付到 '+esc(sub.period_end||'–')}`:'線上選方案、綁卡付款、下載發票與每月健檢簡報。';
+  const r=meRow(), list=SYSTEMS.filter(x=>x.gate!=='admin'||isAdmin).map(x=>({x,a:sysAccess(x,r)}));
   const h=new Date(Date.now()+8*3600e3).getUTCHours(), g=h<11?'早安':h<18?'午安':'晚安';
-  const who=sub&&sub.company||'';
-  const okN=S.list.filter(x=>x.a.k==='ok').length;
-  return `<div class="shell">${sideNav(S)}<main class="main" id="app">
-  <header class="hero"><div><h1>${g}${who?'，'+esc(who):''}</h1><p>你目前可以使用 <b data-count="${okN}">${okN}</b> 個系統。點卡片直接進入，不用再登入。</p></div></header>
+  const who=sub&&sub.company||'', okN=list.filter(o=>o.a.k==='ok').length;
+  return `<div class="shell">${sideNav(list)}<main class="main" id="app">
+  <header class="hero" id="top"><div><h1>${g}${who?'，'+esc(who):''}</h1><p>你目前可以使用 <b data-count="${okN}">${okN}</b> 個系統。點卡片直接進入，不用再登入。</p></div></header>
   <div id="flash">${flash()}</div>
   ${isAdmin?`<section class="consult"><div><h2>顧問工作台</h2><p>健檢名單、輔導客戶、組織診斷、加盟、SOP 等顧問專用系統，一頁切換。業主看不到。</p></div><a class="btn" href="${BOM}consult/">進入顧問工作台 →</a></section>`:''}
   <div class="sec"><h2>我的系統</h2><span class="note" style="margin:0">綠色標籤＝可以使用</span></div>
-  <div class="apps">${S.list.map(x=>appCard(x.ic,x.name,x.desc,x.a,x.extra?(x.a.k==='ok'?`<a class="btn pri" href="${x.url}">${x.label}</a>`:S.renew):S.btn(x.a,x.url,x.label),x.c)).join('')}</div>
-  <div class="sec"><h2>訂閱與帳號</h2></div>
-  <section class="subbar"><div class="ic" aria-hidden="true">訂</div><div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>BOM＋損益 訂閱版</b>${subPill}</div><div class="note" style="margin:2px 0 0">${subDesc}</div></div><div class="go"><a class="btn pri" href="${MEMBER}">${isAdmin?'進入訂閱管理':sub?'進入會員中心':'看方案、免費試用'}</a></div></section>
-  ${ab.k!=='ok'&&ap.k!=='ok'&&!sub&&!isAdmin?`<div class="card"><h2>這個帳號還沒開通任何系統</h2><p class="sub" style="margin:0">如果你已經跟顧問簽約，請等開通通知信；也可以先到會員中心開始 14 天免費試用。</p></div>`:''}
-  ${isAdmin?viewAdmin():''}</main></div>`;
+  <div class="apps">${list.map(o=>appCard(o.x,o.a)).join('')}</div>
+  ${!isAdmin&&!list.some(o=>o.a.k==='ok')&&!sub?`<div class="card"><h2>這個帳號還沒開通任何系統</h2><p class="sub" style="margin:0">如果你已經跟顧問簽約，請等開通通知信；也可以先到訂閱中心開始 14 天免費試用。</p></div>`:''}
+  <div class="sec"><h2>訂閱與授權</h2></div>${mySubCard()}
+  ${isAdmin?viewAdmin():''}
+  ${accountCard()}</main></div>`;
 }
+function filtered(){ const q=ownerQ.trim().toLowerCase(); return (all||[]).slice().sort((a,b)=>mail(a).localeCompare(mail(b))).filter(r=>!q||(mail(r)+' '+(r.sub&&r.sub.company||'')).toLowerCase().includes(q)) }
 function viewAdmin(){
-  const rows=(all||[]).slice().sort((a,b)=>(mail(a)).localeCompare(mail(b)));
-  const q=(ownerQ||'').trim().toLowerCase(), shown=rows.filter(r=>!q||(mail(r)+' '+(r.sub&&r.sub.company||'')).toLowerCase().includes(q));
-  const soon=d=>d&&d>=today()&&d<=new Date(Date.now()+8*3600e3+30*864e5).toISOString().slice(0,10);
-  const k={n:rows.length,act:rows.filter(r=>access(r.bom,false).k==='ok'||access(r.pl,false).k==='ok').length,
+  const rows=all||[], soonD=new Date(Date.now()+8*3600e3+30*864e5).toISOString().slice(0,10);
+  const soon=d=>d&&d>=today()&&d<=soonD;
+  const k={n:rows.length,subs:rows.filter(r=>subValid(r.sub)).length,
     pend:rows.filter(r=>access(r.bom,false).k==='pending'||access(r.pl,false).k==='pending').length,
-    soon:rows.filter(r=>soon(r.bom&&r.bom.expires_on)||soon(r.pl&&r.pl.expires_on)||soon(r.sub&&r.sub.period_end)).length};
+    soon:rows.filter(r=>soon(r.bom&&r.bom.expires_on)||soon(r.pl&&r.pl.expires_on)||soon(r.sub&&subUntil(r.sub))).length};
+  const mat=plans.filter(p=>p.active!==false).map(p=>`<tr><th>${esc(p.name)}</th>${OWNER_MODS.map(x=>`<td>${planMods(p.code).includes(x.key)?'<span class="mod ok">✓ 包含</span>':'<span class="mod no">✕</span>'}</td>`).join('')}</tr>`).join('');
   return `<section class="card" id="owners"><div class="sec" style="margin-top:0"><h2>業主總覽</h2><input class="search" id="ownerq" type="search" placeholder="搜尋業主或 Email" value="${esc(ownerQ)}" aria-label="搜尋業主"></div>
-  <p class="sub">每位業主可以進哪些系統。要開通、延長或停用，請到各系統的管理頁。</p>
-  <div class="kpis"><div class="kpi"><b data-count="${k.n}">${k.n}</b><span>業主</span></div><div class="kpi"><b data-count="${k.act}">${k.act}</b><span>使用中</span></div><div class="kpi"><b data-count="${k.pend}">${k.pend}</b><span>等待開通</span></div><div class="kpi"><b data-count="${k.soon}">${k.soon}</b><span>30 天內到期</span></div></div>
-  <div class="scroll"><table><thead><tr><th>業主</th><th>BOM 運算中心</th><th>損益分析中心</th><th>訂閱版</th></tr></thead><tbody id="ownerrows">${ownerRows(shown)}</tbody></table></div>
-  <div class="row"><a class="btn" href="${BOM}">BOM 帳號管理</a><a class="btn" href="${PL}">損益中心帳號管理</a><a class="btn" href="${MEMBER}">訂閱管理</a></div></section>`;
+  <p class="sub">每位業主的訂閱狀態，以及授權使用哪些系統模組。✓＝可使用、…＝等待開通、✕＝沒有。</p>
+  <div class="kpis"><div class="kpi"><b data-count="${k.n}">${k.n}</b><span>業主</span></div><div class="kpi"><b data-count="${k.subs}">${k.subs}</b><span>訂閱有效</span></div><div class="kpi"><b data-count="${k.pend}">${k.pend}</b><span>等待開通</span></div><div class="kpi"><b data-count="${k.soon}">${k.soon}</b><span>30 天內到期</span></div></div>
+  <div class="scroll"><table class="owners"><thead><tr><th>業主</th><th>訂閱狀態</th><th>授權模組</th><th>顧問加開</th></tr></thead><tbody id="ownerrows">${ownerRows(filtered())}</tbody></table></div>
+  <h3 style="margin:22px 0 8px">各方案包含的模組</h3><div class="scroll"><table class="matrix"><thead><tr><th>方案</th>${OWNER_MODS.map(x=>`<th>${esc(x.name)}</th>`).join('')}</tr></thead><tbody>${mat||'<tr><td colspan="4">讀不到方案。</td></tr>'}</tbody></table></div>
+  <p class="note">方案包含哪些模組，在「訂閱管理 → 設定與價格」調整。BOM、損益的帳號開通、延長或停用，到各系統的授權管理。</p>
+  <div class="row"><a class="btn" href="${MEMBER}">訂閱管理</a><a class="btn" href="${BOM}#admin">BOM 授權管理</a><a class="btn" href="${PL}">損益中心帳號管理</a></div></section>`;
 }
 function ownerRows(rows){
-  return rows.map(r=>{const s=r.sub, sa=s?SUB[s.status]||[s.status,'mute']:null; return `<tr><td>${esc(s&&s.company||'')}${s&&s.company?'<br>':''}<span class="note">${esc(mail(r))}</span></td><td>${pillOf(access(r.bom,false))}</td><td>${pillOf(access(r.pl,false))}</td><td>${sa?`<span class="pill ${sa[1]}">${sa[0]}</span> ${esc(PLAN[s.plan]||s.plan)}`:'<span class="pill mute">沒有</span>'}</td></tr>`}).join('')||`<tr><td colspan="4">${(all||[]).length?'找不到符合的業主。':'還沒有業主。'}</td></tr>`;
+  return rows.map(r=>{
+    const s=r.sub, sa=s?SUB[s.status]||[s.status,'mute']:null, u=s?subUntil(s):'';
+    const subTd=sa?`<span class="pill ${sa[1]}">${sa[0]}</span> ${esc(PLAN[s.plan]||s.plan)}<br><span class="note">${s.status==='comp'?'不限期':u?'到 '+esc(u):'已停止'}</span>`:'<span class="pill mute">沒有訂閱</span>';
+    const mods=OWNER_MODS.map(x=>chip(x,sysAccess(x,{...r,admin:false}))).join('');
+    const gr=GRANTABLE.map(x=>{const on=(r.grants||[]).some(g=>g.module===x.key); return `<button type="button" class="${on?'':'pri'} sm" data-grant="${esc(r.id)}" data-mod="${x.key}" data-on="${on?0:1}">${on?'取消加開'+esc(x.short):'加開'+esc(x.short)}</button>`}).join(' ');
+    return `<tr><td>${esc(s&&s.company||'')}${s&&s.company?'<br>':''}<span class="note">${esc(mail(r))}</span></td><td>${subTd}</td><td><div class="mods">${mods}</div></td><td>${gr}</td></tr>`}).join('')||`<tr><td colspan="4">${(all||[]).length?'找不到符合的業主。':'還沒有業主。'}</td></tr>`;
 }
-let ownerQ='';
 const mail=r=>(r.sub&&r.sub.email)||(r.bom&&r.bom.email)||(r.pl&&r.pl.email)||'';
 const flash=()=>msg?`<div class="msg ${bad?'bad':''}" role="status">${esc(msg)}</div>`:'';
 
 function render(){
-  $('#root').innerHTML=me?viewHome():viewLogin();
+  $('#root').innerHTML=recovering&&me?viewRecover():me?viewHome():viewLogin();
   if(window.Kit) Kit.countUp($('#root'));
+  if(me&&!recovering&&location.hash==='#account'){ const t=document.getElementById('account'); if(t) t.scrollIntoView({block:'start'}) }
 }
 const say=(t,b)=>{msg=t;bad=!!b;render()};
-const errMsg=e=>{const m=(e&&(e.message||e))+''; if(/Invalid login/i.test(m)) return 'Email 或密碼不正確。'; if(/Email not confirmed/i.test(m)) return '這個 Email 還沒驗證，請先到信箱點驗證信。'; return '登入失敗，請稍後再試。（'+m.slice(0,80)+'）'};
+const errMsg=e=>{const m=(e&&(e.message||e))+''; if(/Invalid login/i.test(m)) return 'Email 或密碼不正確。'; if(/Email not confirmed/i.test(m)) return '這個 Email 還沒驗證，請先到信箱點驗證信。'; if(/different from the old/i.test(m)) return '新密碼不能和原本的密碼一樣，請換一組。'; if(/Password should|at least/i.test(m)) return '密碼至少 8 碼。'; if(/reauth|recent/i.test(m)) return '為了安全，請先登出再用「忘記密碼」重設。'; return '操作失敗，請稍後再試。（'+m.slice(0,80)+'）'};
 
 document.addEventListener('click',async ev=>{
   const b=ev.target.closest('button'); if(!b) return; const d=b.dataset;
   if(d.mode){ mode=d.mode; msg=''; return render() }
-  if(d.act==='out'){ await sbc.auth.signOut(); msg=''; mode='login'; return load() }
-  if(d.jump){ const t=document.getElementById(d.jump); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}) }
+  if(d.act==='out'){ await sbc.auth.signOut(); msg=''; mode='login'; recovering=false; return load() }
+  if(d.jump){ const t=document.getElementById(d.jump); if(t) t.scrollIntoView({behavior:'smooth',block:'start'}); return }
+  if(d.grant){ b.disabled=true; try{
+      const on=d.on==='1', q=on?sbc.from('sub_module_grants').upsert({user_id:d.grant,module:d.mod,until:null,note:'顧問加開'}):sbc.from('sub_module_grants').delete().eq('user_id',d.grant).eq('module',d.mod);
+      const {error}=await q; if(error) throw error; await loadAll(); const n=(SYSTEMS.find(x=>x.key===d.mod)||{}).name||d.mod; say(on?'已加開'+n+'。':'已取消加開'+n+'（若方案本身包含，仍可使用）。');
+    }catch(e){ say(/sub_module_grants|relation|schema cache/i.test((e&&e.message)||'')?'資料庫還沒更新模組授權，請先執行資料庫更新。':errMsg(e),true) } }
 });
-document.addEventListener('input',ev=>{ if(ev.target.id==='ownerq'){ ownerQ=ev.target.value; const q=ownerQ.trim().toLowerCase(); const rows=(all||[]).slice().sort((a,b)=>mail(a).localeCompare(mail(b))).filter(r=>!q||(mail(r)+' '+(r.sub&&r.sub.company||'')).toLowerCase().includes(q)); $('#ownerrows').innerHTML=ownerRows(rows) } });
+document.addEventListener('input',ev=>{ if(ev.target.id==='ownerq'){ ownerQ=ev.target.value; $('#ownerrows').innerHTML=ownerRows(filtered()) } });
 document.addEventListener('submit',async ev=>{
-  if(ev.target.id!=='auth') return; ev.preventDefault();
-  const btn=ev.target.querySelector('button[type=submit]'); btn.disabled=true;
-  const em=$('#em').value.trim();
+  const f=ev.target; if(f.id!=='auth'&&f.id!=='pwf') return; ev.preventDefault();
+  const btn=f.querySelector('button[type=submit]'); btn.disabled=true;
   try{
-    if(mode==='forgot'){ const {error}=await sbc.auth.resetPasswordForEmail(em,{redirectTo:BOM}); if(error) throw error; mode='login'; return say('如果這個 Email 有註冊過，重設信已經寄出。請在一小時內點信裡的連結。') }
+    if(f.id==='pwf'){
+      const a=$('#np').value, c=$('#np2').value;
+      if(a.length<8) return say('密碼至少 8 碼。',true); if(a!==c) return say('兩次輸入的密碼不一樣，請再確認。',true);
+      const {error}=await sbc.auth.updateUser({password:a}); if(error) throw error;
+      const was=recovering; recovering=false; try{history.replaceState(null,'',location.pathname)}catch(_){}
+      return say(was?'新密碼已設定，現在已經登入。所有系統都用這組新密碼。':'密碼已更新，下次登入任何系統都用新密碼。');
+    }
+    const em=$('#em').value.trim();
+    if(mode==='forgot'){ const {error}=await sbc.auth.resetPasswordForEmail(em,{redirectTo:PORTAL}); if(error) throw error; mode='login'; return say('如果這個 Email 有註冊過，重設信已經寄出。請在一小時內點信裡的連結。') }
     const {error}=await sbc.auth.signInWithPassword({email:em,password:$('#pw').value}); if(error) throw error; msg=''; await load();
-  }catch(e){ say(errMsg(e),true) }finally{ btn.disabled=false }
+  }catch(e){ say(errMsg(e),true) }finally{ if(document.body.contains(btn)) btn.disabled=false }
 });
-sbc.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
+sbc.auth.onAuthStateChange(ev=>{ if(ev==='PASSWORD_RECOVERY'){ recovering=true; msg=''; return load() } if(ev==='SIGNED_IN'||ev==='SIGNED_OUT') load() });
+if(/type=recovery/.test(location.hash)) recovering=true;
 load();
 </script>
 <script src="../consult/kit/kit.js"></script>

@@ -194,11 +194,11 @@
     ['franchise','盟','加盟體系','consult/franchise/',[['','加盟方案'],['#new','新增方案']],1],
     ['sop','SOP','SOP 手冊與稽核','consult/sop/',[['','手冊列表'],['#audit','督導總覽'],['#new','新增手冊']],1],
     ['site','址','立地評估','site/',[['','評估店址']],1],
-    ['portal','入','業主入口','portal/',[['','我的系統']]],
+    ['portal','策','餐策雲 DineOS','portal/',[['','我的系統'],['#account','帳號設定']]],
     ['bom','B','BOM 運算中心','',null],
     ['pl','損','損益分析中心',PLC,[['','損益總覽']]],
     ['hr','人','人資與勞基法','hr/',[['','首頁'],['#qa','常見錯誤'],['#case','案例引導'],['#tpl','範本'],['#emp','員工名單'],['#calc','計算工具'],['#law','法規查詢'],['#set','公司設定']]],
-    ['member','訂','會員與訂閱','member/',[['','會員中心']]]];
+    ['member','訂','訂閱中心','member/',[['','方案與授權']]]];
   const sysUrl=s=>/^https?:/.test(s[3])?s[3]:ROOT+s[3];
   const N={on:false,role:null,open:false,q:'',side:false,hasSide:false};
   const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(_){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
@@ -234,7 +234,7 @@
     let el=document.querySelector('.kit-nav');
     if(!el){el=document.createElement('div');el.className='kit-nav noprint';document.body.insertBefore(el,document.body.firstChild)}
     const s=curSys(), p=curPage(s);
-    const crumb=[`<a href="${esc(homeUrl())}" class="kc-h"><span class="kl">辣</span><span class="kt">${N.role==='admin'?'顧問工作台':'業主入口'}</span></a>`];
+    const crumb=[`<a href="${esc(homeUrl())}" class="kc-h"><span class="kl">${N.role==='admin'?'辣':'策'}</span><span class="kt">${N.role==='admin'?'顧問工作台':'餐策雲 DineOS'}</span></a>`];
     if(s&&!(s[0]==='home'&&N.role==='admin')&&!(s[0]==='portal'&&N.role!=='admin')) crumb.push(`<a href="${esc(sysUrl(s))}">${esc(s[2])}</a>`);
     if(p&&p.h) crumb.push(`<span>${esc(p.n)}</span>`);
     el.innerHTML=`<div class="kn">
