@@ -75,6 +75,15 @@ const clean = async (pg, name) => { const t = await pg.innerText('body'); const 
     await pg.click('a[href$="t=diag"]'); await pg.waitForTimeout(100); await pg.selectOption('[data-gov="pl"]', '2'); await pg.waitForTimeout(1000);
     t = await pg.innerText('body'); log(t.includes('另一個視窗被改過'), 'conflict detected', W, await pg.$eval('#saved', e => e.textContent), JSON.stringify(await pg.evaluate(() => window.__S.tables.org_plans[0].data.gov)));
     await pg.goto('https://org.test/#'); await pg.waitForTimeout(250); t = await clean(pg, 'home ' + W); log(t.includes('阿明牛肉麵') && t.includes('現況'), 'home lists plan', W);
+    // 3 店、目標 10 店：建議組織要分階段補人，不是一次請 10 個
+    pg = await open(br, admin({ tables: { bom_profiles: [{ user_id: 'a1', role: 'admin', status: 'active' }], coach_clients: [{ id: 8, name: '三店鍋物', stores: 3 }], org_plans: [] } }), vw, '#t=new');
+    await pg.selectOption('#n_client', '8'); await pg.fill('#n_stores', '3'); await pg.fill('#n_target', '10'); await pg.click('[data-create]'); await pg.waitForTimeout(200);
+    await pg.click('a[href$="t=tobe"]'); await pg.waitForTimeout(100); await pg.click('[data-tpl="1"]'); await pg.waitForTimeout(150);
+    t = await clean(pg, 'phased tobe ' + W); log(t.includes('分階段補人計畫') && t.includes('現在（3 店）') && t.includes('開到第 4 店') && t.includes('開到第 8 店') && t.includes('店長（各店） ×3'), 'phased hiring', W);
+    await pg.click('[data-edit="dev"]'); await pg.fill('#d_at', '1'); await pg.click('[data-savepos]'); await pg.waitForTimeout(100);
+    t = await clean(pg, 'phase edit ' + W); log(!t.includes('開到第 8 店'), 'edit phase', W);
+    await pg.click('a[href$="t=rep"]'); await pg.waitForTimeout(150); t = await clean(pg, 'phased rep ' + W); log(t.includes('分階段補人計畫'), 'report has phases', W);
+    if (W > 500) await pg.click('a[href$="t=tobe"]').then(() => pg.waitForTimeout(100)).then(() => pg.screenshot({ path: path.join(__dirname, 'org-phase-desktop.png'), fullPage: true }));
     await pg.close();
   }
   await br.close(); console.log(fail ? fail + ' failed' : 'all passed'); process.exit(fail ? 1 : 0);
