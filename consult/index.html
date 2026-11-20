@@ -259,6 +259,8 @@ const GROUPS=[
   {ic:'損',name:'損益分析中心',desc:'客戶每月損益、成本結構、門市比較與紅燈。',where:'業主也用，你有管理員權限',go:[['進入損益中心',PL]]},
   {ic:'址',name:'餐飲立地評估',desc:'店面地址 → 商圈客群、人流、直接／替代競爭、租金與損益試算。',where:'顧問專用',go:[['進入立地評估',BOM+'site/']]}]},
  {k:'g3',t:'提案與輔導',s:'成交、輔導、交付',items:[
+  {ic:'景',name:'客戶全景',desc:'一位客戶一頁看完：路線圖、下一步建議、各店損益比較、KPI 對目標、健檢雷達、菜單四象限、創業籌備與回本試算，一鍵出整合報告。',where:'顧問專用',
+   go:[['打開客戶全景',C+'case/']]},
   {ic:'導',name:'營運輔導',desc:'輔導客戶主檔：訪視紀錄、改善待辦、每月 KPI 對目標，一鍵產出業主進度報告。其他工具都從這裡帶入客戶。',where:'顧問專用',
    go:[['進入營運輔導',C+'coach/'],['全部待辦',C+'coach/#todo']]},
   {ic:'案',name:'品牌案件工作台',desc:'開案 → 問題樹 → 證據 → 策略 → 提案；一鍵出簡報與服務建議書。',where:'Claude 網頁（需登入 claude.ai）',
@@ -431,7 +433,7 @@ function drawerClient(c){
     stepRow(7,'','立地評估與品牌提案','展店選址、品牌升級提案時用',[['立地評估',BOM+'site/'],['案件工作台','https://claude.ai/artifact/DEjP3mWn57z1SkgkkVhQMe',0,1]])
   ].join('');
   return `<div class="dh"><a class="btn ghost x" href="#" aria-label="關閉">✕</a><div style="display:flex;gap:14px;align-items:center"><div class="av">${esc(c.name.slice(0,1))}</div><div><h2>${esc(c.name)}</h2><div class="note" style="margin:2px 0 0"><span class="pill ${c.stage==='輔導中'?'good':'mute'}">${esc(c.stage)}</span> ${esc([c.biz_type,c.stores?c.stores+' 店':'',c.contact_name,c.phone].filter(Boolean).join('｜'))}</div></div></div></div>
-   <div class="db"><p class="note" style="margin:0 0 6px">同一位客戶在每個工具的進度。按「＋ 建立」會自動帶入客戶名稱與連結，不用重打。</p><ul class="steps">${steps}</ul></div>`;
+   <div class="db"><a class="btn pri" style="width:100%;margin:0 0 10px" href="${C}case/#c=${c.id}">打開客戶全景：數字、診斷與下一步 →</a><p class="note" style="margin:0 0 6px">同一位客戶在每個工具的進度。按「＋ 建立」會自動帶入客戶名稱與連結，不用重打。</p><ul class="steps">${steps}</ul></div>`;
 }
 function drawerLead(l){
   const c=convertedLead(l.id);

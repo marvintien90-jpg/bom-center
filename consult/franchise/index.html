@@ -277,7 +277,7 @@ async function loadData(){
     sbc.from('fr_stores').select('*').order('name'),
     sbc.from('fr_visits').select('*').order('visit_on',{ascending:false}),
     sbc.from('fr_dues').select('*').order('month',{ascending:false}),
-    sbc.from('coach_clients').select('id,name,brand_id,pl_client,pl_brand').order('name'),
+    sbc.from('coach_clients').select('id,name,brand_id,pl_client,pl_brand,stores,biz_type').order('name'),
     sbc.from('bom_brands').select('id,name').order('name'),
     sbc.rpc('coach_pl_clients'),
     sbc.from('qsc_audits').select('brand_id,store,audit_date,score').order('audit_date',{ascending:false}).limit(500)
@@ -395,7 +395,7 @@ function linkFields(p){
 }
 function readLink(){
   const name=val('f_name').trim(); if(!name){say('請填品牌名稱。',true);return null}
-  const pl=val('f_pl'), [pc,pb]=pl?pl.split('｜'):[null,null];
+  const pl=val('f_pl'), cut=pl.lastIndexOf('｜'), [pc,pb]=pl?(cut>=0?[pl.slice(0,cut),pl.slice(cut+1)]:[pl,null]):[null,null];
   return {name,status:val('f_status'),coach_client_id:num(val('f_coach')),brand_id:val('f_brand')||null,pl_client:pc||null,pl_brand:pb||null,note:val('f_note')||null};
 }
 function vNew(){return `<p><a href="#">← 加盟方案清單</a></p><div class="card"><h2>新增加盟方案</h2><p class="sub">選了營運輔導客戶，名稱和損益中心會自動帶入。</p>${linkFields({})}<div class="row"><button class="pri" data-saveplan="new">建立</button></div></div>`}
@@ -411,14 +411,17 @@ function vPlan(p,t){
 function tReady(p,rd){
   const r=P(p).ready;
   const qs=READY.map(g=>`<h3>${esc(g.t)}</h3>${g.q.map(([k0,t])=>{const k=k0.replace('!',''), v=r[k];
-    return `<div class="q"><span>${esc(t)}${k0.endsWith('!')?' <span class="pill bad">關鍵</span>':''}</span><span class="seg" role="radiogroup" aria-label="${esc(t)}">${[['0','沒有'],['1','部分'],['2','做到']].map(([n,l])=>`<label><input type="radio" name="r_${k}" value="${n}" data-ready="${k}"${v===+n?' checked':''}>${l}</label>`).join('')}</span></div>`}).join('')}`).join('');
+    const why=(P(p).evid||{})[k];
+    return `<div class="q"><span>${esc(t)}${k0.endsWith('!')?' <span class="pill bad">關鍵</span>':''}${why?`<small class="note" style="display:block;margin:2px 0 0">系統依據：${esc(why)}</small>`:''}</span><span class="seg" role="radiogroup" aria-label="${esc(t)}">${[['0','沒有'],['1','部分'],['2','做到']].map(([n,l])=>`<label><input type="radio" name="r_${k}" value="${n}" data-ready="${k}"${v===+n?' checked':''}>${l}</label>`).join('')}</span></div>`}).join('')}`).join('');
   const res=`<div class="card"><h2>結果</h2>${rd.answered?`<div class="row" style="margin:0 0 8px;align-items:baseline"><span class="big">${rd.pct}%</span>${pill(rd.lv,rd.verdict)}</div>`:`<p class="sub">${esc(rd.verdict)}</p>`}
     ${rd.dims.map(d=>`<div class="dim"><span>${esc(d.t)}</span><div class="bar ${d.pct>=75?'good':d.pct>=50?'warn':'bad'}"><i style="width:${d.pct}%"></i></div><b>${d.pct}%</b></div>`).join('')}
     ${rd.rec?`<p style="margin:10px 0 0">建議模式：<b>${esc(rd.rec)}</b>${rd.fatal.length?`（關鍵題沒做到：${rd.fatal.map(esc).join('、')}）`:''}</p>`:''}
     <p class="note">75% 以上且關鍵題都有做到才建議開放加盟；50–74% 先補強，可用委託加盟試 1–2 家。</p></div>`;
   const gaps=rd.gaps.length?`<div class="card"><h2>要補強的地方（${rd.gaps.length}）</h2>${rd.gaps.map(g=>`<div class="item"><b>${esc(g.t)}</b> ${g.crit?pill('bad','關鍵'):''}${pill(g.v===0?'bad':'warn',g.v===0?'沒有':'部分')}<div class="meta">${esc(GAP[g.k]||'')}</div></div>`).join('')}
    ${p.coach_client_id?`<p class="note">可以把這些項目開成營運輔導待辦：<a href="${COACH}#c=${p.coach_client_id}&t=actions">到營運輔導</a></p>`:''}</div>`:'';
-  return `<div class="two"><div class="card"><h2>加盟準備度健檢</h2><p class="sub">和業主一起逐題回答，答完右邊會給結論與補強清單。</p>${qs}</div><div>${res}${gaps}</div></div>`;
+  const ev=P(p).evid||{}, evn=Object.keys(ev).length;
+  return `<div class="two"><div class="card"><h2>加盟準備度健檢</h2><p class="sub">和業主一起逐題回答，答完右邊會給結論與補強清單。</p>
+   <div class="row noprint" style="margin:0 0 6px"><button class="sm" data-evid="${p.id}">依系統資料帶入（損益、SOP、稽核、組織、BOM）</button><span class="note">只填還沒答的題，會註明依據</span></div>${qs}</div><div>${res}${gaps}</div></div>`;
 }
 function fld(path,label,o={}){
   const v0=o.p?getK(P(o.p),path):''; const v=v0==null?'':v0;
@@ -692,6 +695,39 @@ function vStore(s){
 const val=id=>($('#'+id)||{}).value??'';
 async function act(fn){ if(busy) return; busy=true; try{ await fn() }catch(e){ console.warn(e) } finally{ busy=false } }
 function curPlan(){return D.plans.find(x=>x.id===route().p)}
+/* ===== 從客戶與其他工具帶入（不用重打） ===== */
+function fmtOf(biz){ const b=String(biz||''); const M=[[/咖哩|丼|定食/,'小吃麵食'],[/火鍋|鍋物|燒肉|燒烤/,'火鍋燒肉'],[/手搖|飲料|茶飲/,'手搖飲'],[/咖啡|早午餐|西式/,'咖啡早午餐'],[/烘焙|甜點|麵包/,'烘焙甜點'],[/便當|自助/,'便當外帶'],[/炸/,'炸物小吃攤'],[/麵|小吃/,'小吃麵食'],[/中式|日式|韓式|餐酒|正餐|熱炒/,'餐酒館正餐']];
+  const f=(M.find(([r])=>r.test(b))||[])[1]; return f&&FORMATS[f]?f:null }
+async function nowFromClient(o){
+  const c=o.coach_client_id&&D.coach.find(x=>x.id===o.coach_client_id); if(!c) return null;
+  const n={...DEF_NOW}; const f=fmtOf(c.biz_type); if(f) n.fmt=f; if(+c.stores>0) n.direct=+c.stores;
+  if(o.pl_client){ try{ const r=await sbc.rpc('coach_pl_months',{p_client:o.pl_client,p_brand:o.pl_brand||''}); const rows=(r.data||[]).filter(x=>x.revenue>0).slice(-3);
+    if(rows.length) n.avgRev=Math.round(rows.reduce((a,x)=>a+(+x.revenue),0)/rows.length/Math.max(1,n.direct)) }catch(_){} }
+  return n;
+}
+async function evidence(p){
+  const d=P(p), r=d.ready, ev=d.evid=d.evid||{}; let n=0;
+  const set=(k,v,why)=>{ if(r[k]!=null) return; r[k]=v; ev[k]=why; n++ };
+  const c=p.coach_client_id&&D.coach.find(x=>x.id===p.coach_client_id)||{}, brand=p.brand_id||c.brand_id, plc=p.pl_client||c.pl_client, plb=p.pl_brand||c.pl_brand;
+  if(plc){ try{
+    let qb=sbc.from('pl_statements').select('store_name,period_month').eq('client_name',plc); if(plb) qb=qb.eq('brand_name',plb);
+    const st=(await qb).data||[]; const per={}; st.forEach(x=>{(per[x.store_name||'門市']=per[x.store_name||'門市']||new Set()).add(String(x.period_month).slice(0,7))});
+    const ns=Object.keys(per).length, n12=Object.values(per).filter(s=>s.size>=12).length;
+    if(ns) set('p1',n12>=2?2:ns>=2?1:0,`損益中心有 ${ns} 家店，${n12} 家有滿 12 個月的月報`);
+    if(ns) set('f3',ns>=2?2:1,`損益中心可分 ${ns} 家店看損益`);
+    const m=(await sbc.rpc('coach_pl_months',{p_client:plc,p_brand:plb||''})).data||[]; const last=m.filter(x=>x.net_pct!=null).slice(-6);
+    if(last.length){ const a=last.reduce((s,x)=>s+(+x.net_pct),0)/last.length; set('p2',a>=12?2:a>=6?1:0,`近 ${last.length} 個月平均淨利率 ${a.toFixed(1)}%`) }
+  }catch(_){} }
+  try{ const s=(await sbc.from('sop_manuals').select('id,status,sections').or(`coach_client_id.eq.${p.coach_client_id||0}${brand?`,brand_id.eq.${brand}`:''}`)).data||[];
+    if(s.length){ const steps=s.reduce((a,x)=>a+(x.sections||[]).reduce((b,y)=>b+((y.steps||[]).length),0),0), pub=s.some(x=>/交付|發布|publish/.test(x.status||''));
+      set('s1',pub?2:1,`SOP 手冊 ${s.length} 份、${steps} 個步驟${pub?'，已交付門市':'，還沒交付門市'}`) } }catch(_){}
+  if(brand){ const qa=D.qsc.filter(x=>x.brand_id===brand); if(qa.length) set('s4',qa.length>=3?2:1,`門市稽核 ${qa.length} 次，最近 ${qa[0].score??'—'} 分`);
+    try{ const b=(await sbc.from('bom_brands').select('data').eq('id',brand).maybeSingle()).data; const it=((b&&b.data&&b.data.items)||[]).filter(x=>(x.lines||[]).length);
+      if(it.length) set('s2',it.length>=5?1:0,`BOM 中心有 ${it.length} 道標準配方${it.length>=5?'；出餐檢核點要在 SOP 確認':''}`) }catch(_){} }
+  if(p.coach_client_id){ try{ const o=(await sbc.from('org_plans').select('data').eq('client_id',p.coach_client_id).limit(1)).data||[]; const pos=((o[0]&&o[0].data&&o[0].data.asis)||{}).positions||[];
+    if(o.length){ const sup=pos.filter(x=>x.id!=='boss'&&!x.st&&(x.funcs||[]).some(f=>f==='sup'||f==='ops')); set('o1',sup.length?1:0,sup.length?`組織圖有 ${sup.map(x=>x.title).join('、')} 負責營運`:'組織診斷現況：營運督導由老闆或店長兼') } }catch(_){} }
+  return n;
+}
 function queueSave(p){
   clearTimeout(saveT); const s=$('#saved'); if(s) s.textContent='儲存中…';
   saveT=setTimeout(()=>act(async()=>{const at=new Date().toISOString(); await q(sbc.from('fr_plans').update({data:p.data,updated_at:at}).eq('id',p.id),'自動儲存'); p.updated_at=at; const s=$('#saved'); if(s) s.textContent='已自動儲存'}),600);
@@ -735,8 +771,9 @@ document.addEventListener('click',async e=>{
   if(d.copydoc){const p=D.plans.find(x=>x.id===+d.copydoc); const t=`${p.name} 加盟重要資訊揭露書（草稿）\n\n`+discLines(p).map(([h,ls])=>h+'\n'+ls.map(l=>'・'+l).join('\n')).join('\n\n');
     try{await navigator.clipboard.writeText(t); say('已複製揭露書文字，可以貼到 Word 或 Google 文件再修。')}catch(_){say('瀏覽器不讓複製，請改用「列印／存成 PDF」。',true)} return}
   if(d.saveplan) return act(async()=>{const o=readLink(); if(!o) return; o.updated_at=new Date().toISOString();
-    if(d.saveplan==='new'){o.data={}; const r=await q(sbc.from('fr_plans').insert(o).select().single(),'建立'); r.data=r.data||{}; D.plans.push(r); say('已建立。先和業主一起做準備度健檢。'); go('p='+r.id)}
+    if(d.saveplan==='new'){o.data={}; const pre=await nowFromClient(o); if(pre) o.data.now=pre; const r=await q(sbc.from('fr_plans').insert(o).select().single(),'建立'); r.data=r.data||{}; D.plans.push(r); say(pre?`已建立，並從客戶帶入：${pre.fmt}、直營 ${pre.direct} 家${pre.avgRev?`、單店月營收約 ${money(pre.avgRev)}`:''}。下一步到「① 準備度」按「依系統資料帶入」。`:'已建立。先和業主一起做準備度健檢。'); go('p='+r.id)}
     else{const id=+d.saveplan; await q(sbc.from('fr_plans').update(o).eq('id',id)); Object.assign(D.plans.find(x=>x.id===id),o); say('已儲存設定。'); render()}});
+  if(d.evid) return act(async()=>{const p=D.plans.find(x=>x.id===+d.evid); const n=await evidence(p); if(n){queueSave(p); render()} say(n?`已依系統資料帶入 ${n} 題，每題下面有依據，請跟業主確認。`:'沒有可以帶入的題目：還沒連結損益中心、SOP、稽核或組織診斷，或這些題已經答過。',!n)});
   if(d.plfill) return act(async()=>{const p=D.plans.find(x=>x.id===+d.plfill);
     const r=await sbc.rpc('coach_pl_months',{p_client:p.pl_client,p_brand:p.pl_brand||''});
     if(r.error){say('讀不到損益中心（營運輔導系統的資料庫功能可能還沒安裝）：'+r.error.message,true);return}
