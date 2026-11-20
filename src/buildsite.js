@@ -1,6 +1,7 @@
 const fs=require('fs');let h=fs.readFileSync('bom-center.html','utf8');
 const rep=(a,b)=>{if(!h.includes(a))throw new Error('miss '+a.slice(0,60));h=h.split(a).join(b)};
 rep("function render(){","function renderApp(){");
+/* 換頁要留在瀏覽器的上一頁／下一頁 */ rep("try{history.replaceState(null,'','#'+tab)}catch(x){} render(); return}","try{if(location.hash!=='#'+tab) history.pushState(null,'','#'+tab)}catch(x){} render(); return}");
 rep("else { try{localStorage.setItem('bom-brands',JSON.stringify(brands))}catch(x){} }","else siteDeleteBrand(id);");
 rep("else saveLocalVers(); render(); return }","else siteDeleteVer(id); render(); return }");
 /* btnNew 改走品牌管理 */ rep("if(t.id==='btnNew'||d.newbrand){ const id=uid('b'); brands[id]=norm(blank('新品牌 '+(Object.keys(brands).length+1))); cur=id; tab='ing'; touch(); render(); return }","if(t.id==='btnNew'||d.newbrand){ tab='brands'; armed=null; render(); const f=document.getElementById('nbName'); if(f) f.focus(); return }");

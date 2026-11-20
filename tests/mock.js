@@ -72,7 +72,7 @@ async function rpc(n,a){ await new Promise(r=>setTimeout(r,5));
   if(n==='bom_pl_entities') return {data:isAdmin()?[{client:'測試客戶',brand:'測試石鍋',store:'中山店',months:2},{client:'茗人茶館',brand:'茗人茶館',store:'草屯店',months:7}]:[],error:null};
   return {data:null,error:null} }
 window.supabase={createClient(){ return {from:B, rpc,
-  auth:{getSession:async()=>({data:{session:me?{user:me}:null}}),onAuthStateChange(){ return {data:{subscription:{unsubscribe(){}}}} },signOut:async()=>({}),signInWithPassword:async()=>({error:{message:'x'}})},
+  auth:{getSession:async()=>({data:{session:me?{user:me}:null}}),onAuthStateChange(){ return {data:{subscription:{unsubscribe(){}}}} },signOut:async()=>({}),signInWithPassword:async(a)=>({error:a&&a.password==='pass1234'?null:{message:'Invalid login credentials'}})},
   storage:{from:(bk)=>({upload:async(p,f)=>{ (window.__up=window.__up||[]).push({bk,p,type:f&&f.type,size:f&&f.size}); return {error:null} },createSignedUrl:async()=>({data:{signedUrl:'#'}}),
     createSignedUrls:async(ps)=>({data:ps.map(p=>({path:p,signedUrl:'data:image/gif;base64,R0lGODlhAQABAAAAACw='})),error:null}),remove:async(ps)=>{ (window.__rm=window.__rm||[]).push(...ps); return {error:null} }})},
   channel:()=>({on(){ return this },subscribe(){ return this }}),removeChannel(){} } }};
